@@ -1,0 +1,36 @@
+{
+  "name": "ring-bound-notepad",
+  "version": "1.0.0",
+  "description": "A GPU-accelerated, 3D notepad effect that simulates the tactile experience of flipping through a spiral-bound notebook",
+  "main": "src/index.html",
+  "type": "module",
+  "scripts": {
+    "start": "serve src",
+    "lint": "eslint src/js/**/*.js",
+    "format": "prettier --write \"src/**/*.{js,css,html}\"",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+  },
+  "keywords": [
+    "3d",
+    "animation",
+    "notebook",
+    "webgl",
+    "interactive"
+  ],
+  "author": "Alex Beck",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "prettier": "^3.2.5",
+    "serve": "^14.2.1"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
+} 
