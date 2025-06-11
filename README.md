@@ -98,4 +98,11 @@ npm test
 
 ## License
 
-MIT License 
+MIT License
+
+### Scripts
+
+- `npm start`: Starts a local server that serves the built application from the `dist` directory.
+- `npm run build`: Bundles the application into the `dist` directory.
+- `npm test`: Runs the test suite.
+- `npm run lint`: Lints the JavaScript files. 
