@@ -17,8 +17,8 @@ export const PAGE_ANIMATION = {
   stack: {
     visibleDepth: 7,         // Number of visible trailing pages
     depthUnit: 10,            // Z-depth separation per page (px)
-    startZ: -20,              // Z pos for back of stack (px)
-    startY: 110,                // Y pos for back of stack (px)
+    startZ: -10,              // Z pos for back of stack (px)
+    startY: 100,                // Y pos for back of stack (px)
     opacityFade: [7, 3],     // [start, end] stack fade range
     stickPixels: 10,         // Dead zone in pixels before rotation begins
   },

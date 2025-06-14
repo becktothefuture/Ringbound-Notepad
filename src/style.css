@@ -432,4 +432,15 @@ backface-visibility: hidden;
 .page-tab:hover {
   transform: translateY(-4px);
   box-shadow: 0 -4px 8px rgba(0,0,0,0.1);
+}
+
+/* Shadow layer positioned behind notebook pages */
+.notebook__shadow {
+  position: absolute;
+  top: 10%;
+  left: 10%;
+  right: 10%;
+  bottom: 10%;
+  pointer-events: none;
+  z-index: 0; /* ensure it sits below pages and rings */
 } 
