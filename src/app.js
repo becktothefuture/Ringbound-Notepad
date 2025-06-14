@@ -150,8 +150,15 @@ function animateNotebook() {
   const rotY = curX * maxRotationY;
   const rotX = -curY * maxRotationX;
 
+  // --- GLOBAL NOTEBOOK OFFSET (distinct from mouse transforms) ---
+  // These values are set in PAGE_ANIMATION.global and move the entire notebook in 3D space.
+  // They do NOT interact with mouse or scroll transforms.
+  const { offsetX, offsetY, offsetZ } = PAGE_ANIMATION.global;
+
+  // Apply both global offset and mouse-driven transforms
   notepadInner.style.transformOrigin = '50% 50%';
-  notepadInner.style.transform = `translate3d(${tx}px, ${ty}px, 0) rotateY(${rotY}deg) rotateX(${rotX}deg)`;
+  notepadInner.style.transform =
+    `translate3d(${offsetX + tx}px, ${offsetY + ty}px, ${offsetZ}px) rotateY(${rotY}deg) rotateX(${rotX}deg)`;
 
   requestAnimationFrame(animateNotebook);
 }
