@@ -164,6 +164,7 @@ export const easeInOutExpo = t =>
  * @param {number} options.spreadStep - Additional spread per layer (px).
  * @param {number} options.offsetX - X offset (px).
  * @param {number} options.offsetY - Y offset (px).
+ * @param {boolean} options.inset - Whether to apply as inset shadow
  */
 export function applyBeautifulShadow(el, {
   layers = 6,
@@ -175,6 +176,7 @@ export function applyBeautifulShadow(el, {
   spreadStep = 2,
   offsetX = 0,
   offsetY = 24,
+  inset = false,
 } = {}) {
   const shadows = [];
   for (let i = 0; i < layers; i++) {
@@ -182,7 +184,7 @@ export function applyBeautifulShadow(el, {
     const spread = spreadBase + i * spreadStep;
     const alpha = opacity * (1 - i / (layers * 1.1)); // fade out with each layer
     shadows.push(
-      `${offsetX}px ${offsetY + i * 2}px ${blur}px ${spread}px rgba(${color},${alpha.toFixed(3)})`
+      `${offsetX}px ${offsetY + i * 2}px ${blur}px ${spread}px rgba(${color},${alpha.toFixed(3)})${inset ? ' inset' : ''}`
     );
   }
   el.style.boxShadow = shadows.join(', ');

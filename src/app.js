@@ -197,15 +197,26 @@ if (PAGE_ANIMATION.loop.infinite) {
 window.addEventListener('DOMContentLoaded', () => {
   const notepad = document.getElementById('notepad');
   if (notepad) {
-    applyBeautifulDropShadow(notepad, {
-      layers: 6,
-      color: '0,0,0',
-      opacity: 0.16,
-      blurBase: 24,
-      blurStep: 12,
-      offsetX: 0,
-      offsetY: 24,
-    });
+    // Prepare dedicated shadow element
+    const shadowEl = notepad.querySelector('.notebook__shadow');
+
+    if (shadowEl) {
+      // Ensure the shadow element is rendered beneath notebook content
+      shadowEl.style.transformStyle = 'preserve-3d';
+
+      applyBeautifulShadow(shadowEl, {
+        layers: 5,
+        color: '0,0,0',
+        opacity: 0.35,
+        blurBase: 28,
+        blurStep: 16,
+        spreadBase: 12,   // enlarge so it peeks out even with 10% inset
+        spreadStep: 2,
+        offsetX: 0,
+        offsetY: 60,      // drop below notepad
+        inset: false,
+      });
+    }
   }
 }); 
 
