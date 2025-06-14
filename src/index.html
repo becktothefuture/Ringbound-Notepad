@@ -1,24 +1,112 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ring-Bound Notepad</title>
-    <link rel="stylesheet" href="css/styles.css" />
+    <!-- External CSS file containing all the visual styling and 3D transforms -->
+    <link rel="stylesheet" href="style.css" />
+    <!-- Google Fonts for clean typography -->
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap"
     />
   </head>
   <body>
-    <div class="notepad" data-pages="50">
-      <!-- Pages will be dynamically generated -->
-    </div>
-
-    <script type="module" src="js/config.js"></script>
-    <script type="module" src="js/debug.js"></script>
-    <script type="module" src="js/utils.js"></script>
-    <script type="module" src="js/render.js"></script>
-    <script type="module" src="js/init.js"></script>
+    <main>
+      <!-- 
+        Main notepad container: This div acts as the 3D stage where all the magic happens.
+        It uses CSS 3D transforms with perspective to create the illusion of a real notepad.
+        Each child element (rings and pages) can be positioned in 3D space.
+      -->
+      <div id="notepad">
+        <div id="notepad-inner">
+        
+        <!-- 
+          NOTEPAD PAGES: Each div represents a single page in the notepad.
+          The pages are stacked on top of each other in 3D space.
+          
+          KEY CONCEPTS:
+          1. All pages start at the same position (absolutely positioned)
+          2. JavaScript calculates each page's 3D position based on scroll
+          3. Each page has a gradient background color (HSL values create rainbow effect)
+          4. Pages can be rotated, translated, and have various effects applied
+          5. Each page contains a .content div for future text/media content
+          
+          COLOR SYSTEM:
+          - Uses HSL color model for smooth color transitions
+          - Hue rotates from 0° (red) to 360° (red again) across all pages
+          - Saturation: 70% (vibrant but not overwhelming)
+          - Lightness: 96% (very light, almost white with subtle tint)
+        -->
+        
+        <!-- Pages with portfolio images -->
+        <div class="page" data-deck-number="01"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="03"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="04"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="05"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="06"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="07"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="08"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="09"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="10"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="11"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="12"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="13"><div class="page-content"></div></div>
+        
+        <!-- Pages with portfolio images (continued) -->
+        <div class="page" data-deck-number="14"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="15"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="16"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="17"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="18"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="19"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="20"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="21"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="22"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="23"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="24"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="25"><div class="page-content"></div></div>
+        
+        <!-- Pages with portfolio images (continued) -->
+        <div class="page" data-deck-number="26"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="27"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="28"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="29"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="30"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="31"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="32"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="33"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="34"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="35"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="36"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="37"><div class="page-content"></div></div>
+        
+        <!-- Pages with portfolio images (final set) -->
+        <div class="page" data-deck-number="38"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="39"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="40"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="41"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="42"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="43"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="44"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="45"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="46"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="47"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="48"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="49"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="50"><div class="page-content"></div></div>
+        <div class="page" data-deck-number="51"><div class="page-content"></div></div>
+        </div>
+      </div>
+    </main>
+    
+    <!-- 
+      JAVASCRIPT MODULE: The main application logic
+      - type="module" enables ES6 import/export syntax
+      - app.js orchestrates the entire application
+      - It imports and initializes all other modules (config, utils, scroll engine, renderer)
+    -->
+    <script type="module" src="app.js"></script>
   </body>
 </html>

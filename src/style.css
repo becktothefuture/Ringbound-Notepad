@@ -1,0 +1,435 @@
+/* 
+  ROOT THEME VARIABLES
+  These CSS custom properties define the core design system.
+  They're centralized here for easy customization and consistency.
+*/
+:root {
+  /* Notepad dimensions and spacing */
+  --notepad-width: 90vw;              /* Width of the entire notepad */
+  --notepad-aspect: 16/9;             /* Aspect ratio (widescreen format) */
+  --notepad-radius: 0.25rem;          /* Border radius for rounded corners */
+  --notepad-bg: #ffffff;              /* Background color of the page body */
+  
+  /* Individual page styling */
+  --page-bg: #ffffff;                 /* Default page background (white) */
+  --page-radius: 0.25rem;             /* Page corner radius */
+  --page-shadow: 0 8px 32px 0 rgba(148, 0, 0, 0.08); /* Subtle drop shadow */
+  
+  /* Spiral ring appearance */
+  --ring-color: #b0b0b0;              /* Ring color (light gray) */
+  --ring-size: 40px;                  /* Diameter of each ring */
+  --ring-gap: 3px;                    /* Space between rings */
+  --ring-top-offset: -35px;           /* How far rings extend above the notepad (adjusted) */
+  
+  /* Typography */
+  --font-family: 'Inter', system-ui, sans-serif; /* Clean, modern font stack */
+  
+  /* Page rotation origin */
+  --page-rotation-origin-x: 50%;
+  --page-rotation-origin-y: 0%;
+  
+  /* SHADOW OVERLAY (page::after) */
+  --shadow-overlay-max-opacity: 1;
+  --shadow-overlay-fade-start-angle: 0deg;
+  --shadow-overlay-fade-end-angle: 110deg;
+
+  /* BACKFACE (page::before) */
+  --backface-fade-start-angle: 90deg;
+  --backface-fade-end-angle: 180deg;
+  --backface-fade-start-opacity: 1;
+  --backface-fade-end-opacity: 0;
+
+  /* Page background fade (if needed) */
+  --page-background-fade-start: 180deg;
+  --page-background-fade-end: 270deg;
+  --page-background-start-opacity: 1;
+  --page-background-end-opacity: 0.5;
+
+  /* Inner shadow (legacy, can be removed if not used) */
+  --inner-shadow-start-opacity: 0;
+  --inner-shadow-end-opacity: 0;
+  --inner-shadow-top-opacity: 1;
+  --inner-shadow-bottom-opacity: 0.3;
+}
+
+/* 
+  GLOBAL RESET AND BASE STYLES
+  Ensures consistent rendering across browsers and sets up the full-height layout.
+*/
+body, html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  background: var(--notepad-bg);      /* Light gray background */
+  font-family: var(--font-family);
+  min-height: 100vh;                  /* Ensure full viewport height */
+  width: 100vw;                       /* Full viewport width */
+  display: flex;                      /* Flexbox for centering */
+  align-items: center;                /* Vertical centering */
+  justify-content: center;            /* Horizontal centering */
+}
+
+main {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 5vh;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* 
+  MAIN NOTEPAD CONTAINER
+  This is the 3D stage where all the magic happens.
+  
+  KEY 3D CONCEPTS:
+  - perspective: Creates the 3D viewing context (like a camera distance)
+  - perspective-origin: Sets the vanishing point (50% 0% = center top)
+  - transform-style: preserve-3d ensures child elements maintain their 3D positions
+  - All child elements (.page, .rings) can be positioned in 3D space
+*/
+#notepad {
+  position: relative;
+  width: 90vw;
+  max-width: 90vw;
+  aspect-ratio: var(--notepad-aspect); /* Maintains 16:9 ratio */
+  background: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 1;
+  perspective: 1500px;
+  perspective-origin: 50% 0%;
+  transform-style: preserve-3d;        /* Enable 3D positioning for children */
+  
+  /* Centering within the viewport */
+  margin: auto;
+  top: 0; left: 0; bottom: 0; right: 0;
+  
+  /* Remove any filter or drop-shadow that could flatten the 3D effect */
+}
+
+#notepad-inner {
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+/* 
+  INDIVIDUAL PAGE STYLING
+  Each page is a 3D object that can be rotated, translated, and styled independently.
+  
+  ANIMATION PRINCIPLES:
+  - All pages start at the same position (absolutely positioned)
+  - JavaScript calculates 3D transforms based on scroll position
+  - CSS handles the visual rendering and transitions
+  - Pseudo-elements (::before, ::after) add depth and shadow effects
+*/
+.page {
+  position: absolute;                  /* All pages stack at same position initially */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 16/9;                  /* Matches parent aspect ratio */
+  background: var(--page-bg);          /* Default white background (can be overridden) */
+  border-radius: var(--page-radius);
+  
+  /* Page content styling */
+  background-size: cover;              /* Cover the entire page */
+  background-position: center;         /* Center the background image */
+  background-repeat: no-repeat;        /* Don't repeat the image */
+  z-index: 20;                         /* Base z-index (adjusted by JavaScript) */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform-origin: var(--page-rotation-origin-x) var(--page-rotation-origin-y);
+  transform-style: preserve-3d;
+  will-change: transform, opacity, filter;
+
+
+  /* Custom properties for controlling pseudo-element visibility */
+  --backface-opacity: var(--backface-fade-start-opacity);
+  --shadow-overlay: 0;
+}
+
+.page-content {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: var(--page-radius);
+  z-index: 1;
+  opacity: 1;
+  transform-style: preserve-3d;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  /* Ensure backface-visibility applies by giving element its own 3D transform */
+  transform: translateZ(0.1px);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* 
+  PAGE BACKGROUND PSEUDO-ELEMENT
+  Creates a light paper background that fades out as the page rotates.
+  Positioned behind the main page content to simulate paper texture.
+*/
+.page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* Dark brown back side that fades based on --backface-alpha */
+  background-color: hsla(30, 25%, 15%, var(--backface-alpha, 0));
+  opacity: 1;
+  border-radius: var(--page-radius);
+  z-index: -1;
+  pointer-events: none;
+  
+}
+
+/* 
+  INNER SHADOW PSEUDO-ELEMENT
+  Creates a dynamic shadow that appears on pages underneath a flipping page.
+  This simulates the shadow cast by the page above with a controlled gradient.
+*/
+.page::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, 
+    hsla(240, 5%, 10%, calc(1 * var(--shadow-overlay, 0))), 
+    hsla(240, 5%, 10%, calc(0.4 * var(--shadow-overlay, 0)))
+  );
+  opacity: 1;
+  border-radius: var(--page-radius);
+  z-index: 10;
+  pointer-events: none;
+backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* 
+  PSEUDO-ELEMENT OPACITY CONTROL
+  These custom properties will be set by JavaScript based on page rotation
+*/
+.page {
+  /* Custom properties for controlling pseudo-element visibility */
+  --page-background-opacity: var(--page-background-start-opacity);  /* Uses global start value */
+  --inner-shadow-opacity: var(--inner-shadow-end-opacity);          /* Top page has no shadow (0) */
+}
+
+/* 
+  TOP PAGE OVERRIDE
+  The topmost page should have no inner shadow since nothing casts shadow on it
+*/
+.page:first-child {
+  --shadow-overlay: 0;
+}
+
+/* 
+  SPIRAL RINGS CONTAINER
+  The metal rings that bind the notepad together.
+  Positioned at the top and distributed evenly across the width.
+*/
+.rings {
+  position: absolute;
+  top: var(--ring-top-offset);         /* Extend above the notepad */
+  left: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;      /* Even distribution across width */
+  padding: 0;
+  z-index: 1000; /* Ensure rings are always above pages */
+  background: none;
+  pointer-events: none; /* Don't interfere with page interactions */
+  perspective: 1000px; /* 3D context for ring rotation */
+}
+
+/* 
+  INDIVIDUAL SPIRAL RINGS
+  Each ring is an SVG ellipse rotated 90 degrees to appear as a circle.
+  The rotation creates the illusion that we're looking through the ring.
+*/
+.ring {
+  width: var(--ring-size);
+  height: var(--ring-size);
+  display: flex;
+  align-items: center;
+  border-radius: 50%;                  /* Circular container */
+  justify-content: center;
+  border: 5px solid var(--ring-color);
+  transform: rotateY(-90deg);
+  transform-style: preserve-3d;
+  background: none;
+  z-index: 1;
+  position: relative; /* Needed for pseudo-elements */
+}
+
+.ring::before,
+.ring::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 5px solid var(--ring-color);
+  pointer-events: none;
+}
+
+.ring::before {
+  /* Front face highlight */
+  z-index: 2;
+  filter: brightness(1.25) drop-shadow(0 2px 4px rgba(255,255,255,0.2));
+  transform: translateZ(1px) rotateY(10deg);
+}
+
+.ring::after {
+  /* Back face shadow */
+  z-index: 0;
+  filter: brightness(0.7) blur(0.5px);
+  transform: translateZ(-1px) rotateY(-10deg);
+}
+
+/* Page-specific background images */
+.page[data-deck-number="01"] .page-content { background-image: url('assets/portfolio-pages/Deck 01.jpg'); }
+.page[data-deck-number="03"] .page-content { background-image: url('assets/portfolio-pages/Deck 03.jpg'); }
+.page[data-deck-number="04"] .page-content { background-image: url('assets/portfolio-pages/Deck 04.jpg'); }
+.page[data-deck-number="05"] .page-content { background-image: url('assets/portfolio-pages/Deck 05.jpg'); }
+.page[data-deck-number="06"] .page-content { background-image: url('assets/portfolio-pages/Deck 06.jpg'); }
+.page[data-deck-number="07"] .page-content { background-image: url('assets/portfolio-pages/Deck 07.jpg'); }
+.page[data-deck-number="08"] .page-content { background-image: url('assets/portfolio-pages/Deck 08.jpg'); }
+.page[data-deck-number="09"] .page-content { background-image: url('assets/portfolio-pages/Deck 09.jpg'); }
+.page[data-deck-number="10"] .page-content { background-image: url('assets/portfolio-pages/Deck 10.jpg'); }
+.page[data-deck-number="11"] .page-content { background-image: url('assets/portfolio-pages/Deck 11.jpg'); }
+.page[data-deck-number="12"] .page-content { background-image: url('assets/portfolio-pages/Deck 12.jpg'); }
+.page[data-deck-number="13"] .page-content { background-image: url('assets/portfolio-pages/Deck 13.jpg'); }
+.page[data-deck-number="14"] .page-content { background-image: url('assets/portfolio-pages/Deck 14.jpg'); }
+.page[data-deck-number="15"] .page-content { background-image: url('assets/portfolio-pages/Deck 15.jpg'); }
+.page[data-deck-number="16"] .page-content { background-image: url('assets/portfolio-pages/Deck 16.jpg'); }
+.page[data-deck-number="17"] .page-content { background-image: url('assets/portfolio-pages/Deck 17.jpg'); }
+.page[data-deck-number="18"] .page-content { background-image: url('assets/portfolio-pages/Deck 18.jpg'); }
+.page[data-deck-number="19"] .page-content { background-image: url('assets/portfolio-pages/Deck 19.jpg'); }
+.page[data-deck-number="20"] .page-content { background-image: url('assets/portfolio-pages/Deck 20.jpg'); }
+.page[data-deck-number="21"] .page-content { background-image: url('assets/portfolio-pages/Deck 21.jpg'); }
+.page[data-deck-number="22"] .page-content { background-image: url('assets/portfolio-pages/Deck 22.jpg'); }
+.page[data-deck-number="23"] .page-content { background-image: url('assets/portfolio-pages/Deck 23.jpg'); }
+.page[data-deck-number="24"] .page-content { background-image: url('assets/portfolio-pages/Deck 24.jpg'); }
+.page[data-deck-number="25"] .page-content { background-image: url('assets/portfolio-pages/Deck 25.jpg'); }
+.page[data-deck-number="26"] .page-content { background-image: url('assets/portfolio-pages/Deck 26.jpg'); }
+.page[data-deck-number="27"] .page-content { background-image: url('assets/portfolio-pages/Deck 27.jpg'); }
+.page[data-deck-number="28"] .page-content { background-image: url('assets/portfolio-pages/Deck 28.jpg'); }
+.page[data-deck-number="29"] .page-content { background-image: url('assets/portfolio-pages/Deck 29.jpg'); }
+.page[data-deck-number="30"] .page-content { background-image: url('assets/portfolio-pages/Deck 30.jpg'); }
+.page[data-deck-number="31"] .page-content { background-image: url('assets/portfolio-pages/Deck 31.jpg'); }
+.page[data-deck-number="32"] .page-content { background-image: url('assets/portfolio-pages/Deck 32.jpg'); }
+.page[data-deck-number="33"] .page-content { background-image: url('assets/portfolio-pages/Deck 33.jpg'); }
+.page[data-deck-number="34"] .page-content { background-image: url('assets/portfolio-pages/Deck 34.jpg'); }
+.page[data-deck-number="35"] .page-content { background-image: url('assets/portfolio-pages/Deck 35.jpg'); }
+.page[data-deck-number="36"] .page-content { background-image: url('assets/portfolio-pages/Deck 36.jpg'); }
+.page[data-deck-number="37"] .page-content { background-image: url('assets/portfolio-pages/Deck 37.jpg'); }
+.page[data-deck-number="38"] .page-content { background-image: url('assets/portfolio-pages/Deck 38.jpg'); }
+.page[data-deck-number="39"] .page-content { background-image: url('assets/portfolio-pages/Deck 39.jpg'); }
+.page[data-deck-number="40"] .page-content { background-image: url('assets/portfolio-pages/Deck 40.jpg'); }
+.page[data-deck-number="41"] .page-content { background-image: url('assets/portfolio-pages/Deck 41.jpg'); }
+.page[data-deck-number="42"] .page-content { background-image: url('assets/portfolio-pages/Deck 42.jpg'); }
+.page[data-deck-number="43"] .page-content { background-image: url('assets/portfolio-pages/Deck 43.jpg'); }
+.page[data-deck-number="44"] .page-content { background-image: url('assets/portfolio-pages/Deck 44.jpg'); }
+.page[data-deck-number="45"] .page-content { background-image: url('assets/portfolio-pages/Deck 45.jpg'); }
+.page[data-deck-number="46"] .page-content { background-image: url('assets/portfolio-pages/Deck 46.jpg'); }
+.page[data-deck-number="47"] .page-content { background-image: url('assets/portfolio-pages/Deck 47.jpg'); }
+.page[data-deck-number="48"] .page-content { background-image: url('assets/portfolio-pages/Deck 48.jpg'); }
+.page[data-deck-number="49"] .page-content { background-image: url('assets/portfolio-pages/Deck 49.jpg'); }
+.page[data-deck-number="50"] .page-content { background-image: url('assets/portfolio-pages/Deck 50.jpg'); }
+.page[data-deck-number="51"] .page-content { background-image: url('assets/portfolio-pages/Deck 51.jpg'); }
+
+.page:nth-child(1) { background-color: hsl(0, 70%, 96%); }
+.page:nth-child(2) { background-color: hsl(7, 70%, 96%); }
+.page:nth-child(3) { background-color: hsl(15, 70%, 96%); }
+.page:nth-child(4) { background-color: hsl(22, 70%, 96%); }
+.page:nth-child(5) { background-color: hsl(29, 70%, 96%); }
+.page:nth-child(6) { background-color: hsl(37, 70%, 96%); }
+.page:nth-child(7) { background-color: hsl(44, 70%, 96%); }
+.page:nth-child(8) { background-color: hsl(51, 70%, 96%); }
+.page:nth-child(9) { background-color: hsl(59, 70%, 96%); }
+.page:nth-child(10) { background-color: hsl(66, 70%, 96%); }
+.page:nth-child(11) { background-color: hsl(73, 70%, 96%); }
+.page:nth-child(12) { background-color: hsl(81, 70%, 96%); }
+.page:nth-child(13) { background-color: hsl(88, 70%, 96%); }
+.page:nth-child(14) { background-color: hsl(95, 70%, 96%); }
+.page:nth-child(15) { background-color: hsl(103, 70%, 96%); }
+.page:nth-child(16) { background-color: hsl(110, 70%, 96%); }
+.page:nth-child(17) { background-color: hsl(117, 70%, 96%); }
+.page:nth-child(18) { background-color: hsl(125, 70%, 96%); }
+.page:nth-child(19) { background-color: hsl(132, 70%, 96%); }
+.page:nth-child(20) { background-color: hsl(139, 70%, 96%); }
+.page:nth-child(21) { background-color: hsl(147, 70%, 96%); }
+.page:nth-child(22) { background-color: hsl(154, 70%, 96%); }
+.page:nth-child(23) { background-color: hsl(161, 70%, 96%); }
+.page:nth-child(24) { background-color: hsl(169, 70%, 96%); }
+.page:nth-child(25) { background-color: hsl(176, 70%, 96%); }
+.page:nth-child(26) { background-color: hsl(183, 70%, 96%); }
+.page:nth-child(27) { background-color: hsl(191, 70%, 96%); }
+.page:nth-child(28) { background-color: hsl(198, 70%, 96%); }
+.page:nth-child(29) { background-color: hsl(205, 70%, 96%); }
+.page:nth-child(30) { background-color: hsl(213, 70%, 96%); }
+.page:nth-child(31) { background-color: hsl(220, 70%, 96%); }
+.page:nth-child(32) { background-color: hsl(227, 70%, 96%); }
+.page:nth-child(33) { background-color: hsl(235, 70%, 96%); }
+.page:nth-child(34) { background-color: hsl(242, 70%, 96%); }
+.page:nth-child(35) { background-color: hsl(249, 70%, 96%); }
+.page:nth-child(36) { background-color: hsl(257, 70%, 96%); }
+.page:nth-child(37) { background-color: hsl(264, 70%, 96%); }
+.page:nth-child(38) { background-color: hsl(271, 70%, 96%); }
+.page:nth-child(39) { background-color: hsl(279, 70%, 96%); }
+.page:nth-child(40) { background-color: hsl(286, 70%, 96%); }
+.page:nth-child(41) { background-color: hsl(293, 70%, 96%); }
+.page:nth-child(42) { background-color: hsl(301, 70%, 96%); }
+.page:nth-child(43) { background-color: hsl(308, 70%, 96%); }
+.page:nth-child(44) { background-color: hsl(315, 70%, 96%); }
+.page:nth-child(45) { background-color: hsl(323, 70%, 96%); }
+.page:nth-child(46) { background-color: hsl(330, 70%, 96%); }
+.page:nth-child(47) { background-color: hsl(337, 70%, 96%); }
+.page:nth-child(48) { background-color: hsl(345, 70%, 96%); }
+.page:nth-child(49) { background-color: hsl(352, 70%, 96%); }
+.page:nth-child(50) { background-color: hsl(360, 70%, 96%); }
+
+/* CHAPTER TAB STYLES */
+.page-tab {
+  position: absolute;
+  cursor: pointer;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 4px 4px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(0,0,0,0.7);
+  text-align: center;
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+  z-index: var(--tab-index, 1);
+  transition: transform 0.2s ease-out;
+}
+
+.page-tab:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 -4px 8px rgba(0,0,0,0.1);
+} 
