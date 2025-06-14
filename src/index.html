@@ -14,14 +14,10 @@
   </head>
   <body>
     <main>
-      <!-- 
-        Main notepad container: This div acts as the 3D stage where all the magic happens.
-        It uses CSS 3D transforms with perspective to create the illusion of a real notepad.
-        Each child element (rings and pages) can be positioned in 3D space.
-      -->
+      <!-- Dedicated shadow layer (now outside #notepad for 2D detachment) -->
+      <div class="notebook__shadow" aria-hidden="true"></div>
+      <!-- Main notepad container: This div acts as the 3D stage where all the magic happens. -->
       <div id="notepad">
-        <!-- Dedicated shadow layer -->
-        <div class="notebook__shadow" aria-hidden="true"></div>
         <div id="notepad-inner">
         
         <!-- 

@@ -74,6 +74,7 @@ body {
 }
 
 main {
+  position: relative;
   width: 100vw;
   height: 100vh;
   display: flex;
@@ -82,6 +83,8 @@ main {
   padding-bottom: 5vh;
   box-sizing: border-box;
   overflow: hidden;
+  perspective: 3500px; /* enable 3D context for children */
+  perspective-origin: 50% 50%;
 }
 
 /* 
@@ -96,22 +99,22 @@ main {
 */
 #notepad {
   position: relative;
-  width: 90vw;
-  max-width: 90vw;
-  aspect-ratio: var(--notepad-aspect); /* Maintains 16:9 ratio */
-  background: none;
+  width: 100%;
+  max-width: 60vw;
+  max-height: 45vh;
+  aspect-ratio: 16/9;
+  background: var(--notepad-bg, #fff); /* Ensure background is above shadow */
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  z-index: 1;
-  perspective: 1500px;
+  z-index: 10; /* ensure notebook is above shadow and in its own stacking context */
+
   perspective-origin: 50% 0%;
   transform-style: preserve-3d;        /* Enable 3D positioning for children */
-  
+  overflow: visible; /* allow 3D transforms to extend outside */
   /* Centering within the viewport */
   margin: auto;
   top: 0; left: 0; bottom: 0; right: 0;
-  
   /* Remove any filter or drop-shadow that could flatten the 3D effect */
 }
 
@@ -434,13 +437,19 @@ backface-visibility: hidden;
   box-shadow: 0 -4px 8px rgba(0,0,0,0.1);
 }
 
-/* Shadow layer positioned behind notebook pages */
+/*
+  SHADOW LAYER: Simple, flat, always behind the notebook
+  Absolutely centered, no 3D transforms, matches notebook size
+*/
 .notebook__shadow {
   position: absolute;
-  top: 10%;
-  left: 10%;
-  right: 10%;
-  bottom: 10%;
+  left: 50%;
+  top: 50%;
+  width: 80vw;
+  height: 60vh;
+  aspect-ratio: 16/9;
+  transform: translate(-50%, -50%) translateZ(-800px);
   pointer-events: none;
-  z-index: 0; /* ensure it sits below pages and rings */
+  z-index: 0; /* below notebook, above body */
+  box-sizing: border-box;
 } 

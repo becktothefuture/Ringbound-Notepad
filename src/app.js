@@ -151,11 +151,8 @@ function animateNotebook() {
   const rotX = -curY * maxRotationX;
 
   // --- GLOBAL NOTEBOOK OFFSET (distinct from mouse transforms) ---
-  // These values are set in PAGE_ANIMATION.global and move the entire notebook in 3D space.
-  // They do NOT interact with mouse or scroll transforms.
   const { offsetX, offsetY, offsetZ } = PAGE_ANIMATION.global;
 
-  // Apply both global offset and mouse-driven transforms
   notepadInner.style.transformOrigin = '50% 50%';
   notepadInner.style.transform =
     `translate3d(${offsetX + tx}px, ${offsetY + ty}px, ${offsetZ}px) rotateY(${rotY}deg) rotateX(${rotX}deg)`;
@@ -202,28 +199,25 @@ if (PAGE_ANIMATION.loop.infinite) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  const notepad = document.getElementById('notepad');
-  if (notepad) {
-    // Prepare dedicated shadow element
-    const shadowEl = notepad.querySelector('.notebook__shadow');
-
-    if (shadowEl) {
-      // Ensure the shadow element is rendered beneath notebook content
-      shadowEl.style.transformStyle = 'preserve-3d';
-
-      applyBeautifulShadow(shadowEl, {
-        layers: 5,
-        color: '0,0,0',
-        opacity: 0.35,
-        blurBase: 28,
-        blurStep: 16,
-        spreadBase: 12,   // enlarge so it peeks out even with 10% inset
-        spreadStep: 2,
-        offsetX: 0,
-        offsetY: 60,      // drop below notepad
-        inset: false,
-      });
-    }
+  // Select the shadow element as a sibling of #notepad
+  const shadowEl = document.querySelector('.notebook__shadow');
+  if (shadowEl) {
+    // No 3D context or transformStyle for the shadow
+    shadowEl.style.transformStyle = '';
+    shadowEl.style.perspective = '';
+    // Center alignment and sizing handled by CSS
+    applyBeautifulShadow(shadowEl, {
+      layers: 5,
+      color: '0,0,0',
+      opacity: 0.35,
+      blurBase: 28,
+      blurStep: 16,
+      spreadBase: 12,   // enlarge so it peeks out even with 10% inset
+      spreadStep: 2,
+      offsetX: 0,
+      offsetY: 60,      // drop below notepad
+      inset: false,
+    });
   }
 }); 
 

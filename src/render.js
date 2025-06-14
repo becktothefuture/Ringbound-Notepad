@@ -112,36 +112,19 @@ export function renderStack(pages, scrollState) {
     const isChapterStart = chapterStartPages.includes(i);
     const isInVisibleRange = rel >= -PAGE_ANIMATION.loop.buffer && rel < visibilityRange;
 
-    if (isInVisibleRange || isChapterStart) {
-      
-      const isDistantChapter = isChapterStart && rel > stack.visibleDepth;
-
+    if (isInVisibleRange) {
       // === PHASE 1: PAGES IN THE STACK ===
       // These pages are waiting their turn, stacked behind the current page
-      
       if (rel >= 1) {
         let displayRel = rel;
-        if (isDistantChapter) {
-          const numDistantChaptersBefore = chapterStartPages.filter(p => p < i && (p - scroll) > stack.visibleDepth).length;
-          displayRel = stack.visibleDepth + numDistantChaptersBefore * 0.5 + 0.5;
-        }
-
         angle = mapRange(stack.visibleDepth, 1, flip.startRotationX, flip.readyRotationX, displayRel);
         z = mapRange(stack.visibleDepth - 1, 1, stack.startZ, flip.readyZ, displayRel);
         y = mapRange(stack.visibleDepth - 1, 1, stack.startY, flip.readyY, displayRel);
-        
         // Apply smooth separation for pages in the stack
         z -= (displayRel - 1) * stack.depthUnit;
-        
         opacity = mapRange(stack.opacityFade[0], stack.opacityFade[1], 0, 1, displayRel);
         opacity = Math.max(0, opacity);
-
-        if (isDistantChapter) {
-          opacity = 0.5; // Ensure distant chapters are always visible
-        }
-        
         backfaceAlpha = 0;
-
       } else {
         // === PHASE 2: THE FLIPPING PAGE ===
         // This is the top page that's currently being flipped
