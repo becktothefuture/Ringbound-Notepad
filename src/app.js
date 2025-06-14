@@ -219,19 +219,20 @@ window.addEventListener('DOMContentLoaded', () => {
     const deckNumberRaw = page.dataset.deckNumber;
     if (!deckNumberRaw) return;
 
-    // Ensure the deck number is always two digits ("1" -> "01")
-    const deckNumber = deckNumberRaw.toString().padStart(2, '0');
+    // Convert to integer to remove any leading zeros ("01" -> 1)
+    const deckNumberInt = parseInt(deckNumberRaw, 10);
+    if (Number.isNaN(deckNumberInt)) return;
 
-    // Build URL-encoded filename to avoid problems with spaces
-    const fileName = `Deck ${deckNumber}.jpg`;
-    const encodedFileName = encodeURIComponent(fileName).replace(/%20/g, ' ');
-    const imgPath = `assets/portfolio-pages/${encodedFileName}`;
+    // Construct filename that matches the actual files on disk: deck_<n>.jpg (all lowercase)
+    const fileName = `deck_${deckNumberInt}.jpg`;
+    const imgPath = `assets/portfolio-pages/${fileName}`;
 
     const contentEl = page.querySelector('.page-content');
     if (contentEl) {
+      // Inline style takes priority over any CSS rules defined elsewhere
       contentEl.style.backgroundImage = `url('${imgPath}')`;
 
-      // Preload the image and warn if it fails (helps debugging)
+      // Preload the image and warn in the console if it cannot be loaded
       const img = new Image();
       img.src = page.baseURI.replace(/\/[^/]*$/, '/') + imgPath;
       img.onerror = () => console.warn(`⚠️ Image not found: ${imgPath}`);
