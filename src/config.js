@@ -1,6 +1,6 @@
 import { easeOutCubic, easeInCubic, easeInOutCubic, linear, easeInOutExpo } from './utils.js';
 
-/**
+/*
  * CONFIGURATION SYSTEM
  * 
  * This file centralizes all animation parameters and visual settings.
@@ -73,5 +73,16 @@ export const PAGE_ANIMATION = {
   jump: {
     duration: 1000, // ms, duration of jump animation
     easing: easeInOutCubic, // easing function for jump
+  },
+  // === GLOBAL NOTEBOOK OFFSET ===
+  global: {
+    /**
+     * Global notebook translation in 3D space (applied to the entire notepad, not pages)
+     * These are in pixels and do NOT interact with mouse or scroll transforms.
+     * Use to move the whole notebook in X (right), Y (down), or Z (toward viewer) directions.
+     */
+    offsetX: 0, // px, right (+) / left (-)
+    offsetY: 0, // px, down (+) / up (-)
+    offsetZ: 0, // px, forward (+) / back (-)
   },
 }; 
