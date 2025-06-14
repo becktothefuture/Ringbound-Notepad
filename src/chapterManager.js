@@ -18,27 +18,15 @@ export function initChapters(pages, notepad) {
       const tab = document.createElement('div');
       tab.className = 'page-tab';
       tab.textContent = chapter.title;
-      tab.dataset.targetPage = chapter.page;
-
       // Style the tab
       tab.style.backgroundColor = chapter.color;
       tab.style.width = `${TAB_WIDTH}px`;
       tab.style.height = `${TAB_HEIGHT}px`;
       tab.style.bottom = `-${TAB_HEIGHT / 2}px`;
       tab.style.left = `${10 + (index * TAB_CASCADE_OFFSET)}px`;
-
       // Set CSS variable for z-index to ensure tabs stack correctly
       tab.style.setProperty('--tab-index', CHAPTERS.length - index);
-
       pageElement.appendChild(tab);
-    }
-  });
-
-  // Add a single delegated event listener to the notepad container
-  notepad.addEventListener('click', (e) => {
-    if (e.target.classList.contains('page-tab')) {
-      const targetPage = parseInt(e.target.dataset.targetPage, 10);
-      jumpToPage(targetPage);
     }
   });
 } 

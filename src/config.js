@@ -1,6 +1,6 @@
 import { easeOutCubic, easeInCubic, easeInOutCubic, linear, easeInOutExpo } from './utils.js';
 
-/*
+/**
  * CONFIGURATION SYSTEM
  * 
  * This file centralizes all animation parameters and visual settings.
@@ -17,15 +17,15 @@ export const PAGE_ANIMATION = {
   stack: {
     visibleDepth: 7,         // Number of visible trailing pages
     depthUnit: 10,            // Z-depth separation per page (px)
-    startZ: -10,              // Z pos for back of stack (px)
-    startY: 100,                // Y pos for back of stack (px)
+    startZ: -1,              // Z pos for back of stack (px)
+    startY: 30,                // Y pos for back of stack (px)
     opacityFade: [7, 3],     // [start, end] stack fade range
     stickPixels: 10,         // Dead zone in pixels before rotation begins
   },
   flip: {
     readyZ: 0,              // Z pos before flip (px)
     readyY: 0,               // Y pos before flip (px)
-    startRotationX: -30,     // Initial X rotation in stack (deg)
+    startRotationX: -10,     // Initial X rotation in stack (deg)
     readyRotationX: 4,       // X rotation ready to flip (deg)
     maxAngle: 270,           // Max flip angle (deg)
     fadeStart: 200,          // Angle to start fading out (deg)
@@ -83,6 +83,6 @@ export const PAGE_ANIMATION = {
      */
     offsetX: 0, // px, right (+) / left (-)
     offsetY: 0, // px, down (+) / up (-)
-    offsetZ: 0, // px, forward (+) / back (-)
+    offsetZ: 200, // px, forward (+) / back (-)
   },
 }; 
