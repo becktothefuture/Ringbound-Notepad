@@ -152,77 +152,6 @@ export const easeInOutExpo = t =>
     : (2 - Math.pow(2, -20 * t + 10)) / 2;
 
 /**
- * Adds a beautiful, soft shadow to the notebook element, simulating a floating effect.
- * @param {HTMLElement} el - The notebook DOM element.
- * @param {Object} options - Shadow parameters.
- * @param {number} options.layers - Number of shadow layers.
- * @param {string} options.color - Base shadow color (e.g. '0,0,0' for black).
- * @param {number} options.opacity - Max opacity (0-1).
- * @param {number} options.blurBase - Base blur (px).
- * @param {number} options.blurStep - Additional blur per layer (px).
- * @param {number} options.spreadBase - Base spread (px).
- * @param {number} options.spreadStep - Additional spread per layer (px).
- * @param {number} options.offsetX - X offset (px).
- * @param {number} options.offsetY - Y offset (px).
- * @param {boolean} options.inset - Whether to apply as inset shadow
- */
-export function applyBeautifulShadow(el, {
-  layers = 6,
-  color = '0,0,0',
-  opacity = 0.16,
-  blurBase = 24,
-  blurStep = 12,
-  spreadBase = 0,
-  spreadStep = 2,
-  offsetX = 0,
-  offsetY = 24,
-  inset = false,
-} = {}) {
-  const shadows = [];
-  for (let i = 0; i < layers; i++) {
-    const blur = blurBase + i * blurStep;
-    const spread = spreadBase + i * spreadStep;
-    const alpha = opacity * (1 - i / (layers * 1.1)); // fade out with each layer
-    shadows.push(
-      `${offsetX}px ${offsetY + i * 2}px ${blur}px ${spread}px rgba(${color},${alpha.toFixed(3)})${inset ? ' inset' : ''}`
-    );
-  }
-  el.style.boxShadow = shadows.join(', ');
-}
-
-/**
- * Adds a beautiful, soft drop-shadow filter to the notebook element.
- * @param {HTMLElement} el - The notebook DOM element.
- * @param {Object} options - Shadow parameters.
- * @param {number} options.layers - Number of shadow layers.
- * @param {string} options.color - Base shadow color (e.g. '0,0,0' for black).
- * @param {number} options.opacity - Max opacity (0-1).
- * @param {number} options.blurBase - Base blur (px).
- * @param {number} options.blurStep - Additional blur per layer (px).
- * @param {number} options.offsetX - X offset (px).
- * @param {number} options.offsetY - Y offset (px).
- */
-export function applyBeautifulDropShadow(el, {
-  layers = 6,
-  color = '0,0,0',
-  opacity = 0.16,
-  blurBase = 24,
-  blurStep = 12,
-  offsetX = 0,
-  offsetY = 24,
-} = {}) {
-  const filters = [];
-  for (let i = 0; i < layers; i++) {
-    const blur = blurBase + i * blurStep;
-    const alpha = opacity * (1 - i / (layers * 1.1));
-    filters.push(
-      `drop-shadow(${offsetX}px ${offsetY + i * 2}px ${blur}px rgba(${color},${alpha.toFixed(3)}))`
-    );
-  }
-  el.style.filter = filters.join(' ');
-}
-
-/**
  * Damped spring easing for multiple bounces.
  * @param {number} t - Time progress from 0 to 1
  * @param {number} bounces - Number of bounces (e.g., 2.5)
@@ -245,4 +174,106 @@ export function easeOutDampedSpring(t, bounces = 2.5, damping = 8) {
 export function easeOutSingleSpring(t, overshoot = 0.05) {
   const s = overshoot;
   return 1 + s * Math.exp(-8 * t) * Math.sin(10 * t - 1.5);
-} 
+}
+
+/**
+ * Generate layered shadow CSS for realistic depth effect
+ * @param {Object} config - Shadow configuration from PAGE_ANIMATION.layeredShadow
+ * @param {number} tiltX - Current X tilt in normalized range (-1 to 1)
+ * @param {number} tiltY - Current Y tilt in normalized range (-1 to 1)
+ * @returns {string} CSS box-shadow value
+ */
+export function generateLayeredShadow(config, tiltX = 0, tiltY = 0) {
+  if (!config.enabled) return 'none';
+  
+  const shadows = [];
+  
+  for (let i = 0; i < config.layers; i++) {
+    // Calculate layer properties
+    const layerMultiplier = i + 1;
+    const blur = config.baseBlur + (config.blurStep * i);
+    const spread = config.baseSpread + (config.spreadStep * i);
+    const opacity = config.baseOpacity * Math.pow(config.opacityDecay, i);
+    
+    // Apply tilt influence to shadow position
+    const tiltInfluence = config.tiltMultiplier * layerMultiplier;
+    const offsetX = config.offsetX + (config.offsetStep * i) + (tiltX * tiltInfluence * 20);
+    const offsetY = config.offsetY + (config.offsetStep * i) + (tiltY * tiltInfluence * 10);
+    
+    // Create shadow layer
+    const shadowValue = `${offsetX}px ${offsetY}px ${blur}px ${spread}px rgba(${config.color}, ${opacity})`;
+    shadows.push(shadowValue);
+  }
+  
+  return shadows.join(', ');
+}
+
+/**
+ * Apply layered shadow to an element with performance optimization
+ * Uses a debounce/throttle technique to limit shadow updates
+ * for better performance on lower-end devices
+ * 
+ * @param {HTMLElement} element - Element to apply shadow to
+ * @param {Object} config - Shadow configuration
+ * @param {number} tiltX - X tilt value (-1 to 1)
+ * @param {number} tiltY - Y tilt value (-1 to 1)
+ */
+// Cache for shadow values to avoid recalculations of identical values
+const shadowCache = new Map();
+// Track last update time for throttling
+let lastShadowUpdate = 0;
+// Track last values to detect significant changes
+let lastTiltX = 0;
+let lastTiltY = 0;
+// Minimum interval between shadow updates (ms)
+const SHADOW_UPDATE_INTERVAL = 16; // ~60fps
+// Minimum change in tilt to trigger update
+const TILT_CHANGE_THRESHOLD = 0.01;
+
+export function applyLayeredShadow(element, config, tiltX = 0, tiltY = 0) {
+  if (!element || !config.enabled) return;
+  
+  // Normalize tilt values to prevent extreme values
+  tiltX = Math.max(-1, Math.min(1, tiltX));
+  tiltY = Math.max(-1, Math.min(1, tiltY));
+  
+  // Check if we should skip this update for performance optimization
+  const now = performance.now();
+  const timeDelta = now - lastShadowUpdate;
+  const xDelta = Math.abs(tiltX - lastTiltX);
+  const yDelta = Math.abs(tiltY - lastTiltY);
+  
+  // Skip update if not enough time has passed or change is too small
+  if (timeDelta < SHADOW_UPDATE_INTERVAL || (xDelta < TILT_CHANGE_THRESHOLD && yDelta < TILT_CHANGE_THRESHOLD)) {
+    return;
+  }
+  
+  // Round tilt values slightly to increase cache hits
+  const roundedTiltX = Math.round(tiltX * 100) / 100;
+  const roundedTiltY = Math.round(tiltY * 100) / 100;
+  
+  // Create cache key from configuration and tilt
+  const cacheKey = `${roundedTiltX},${roundedTiltY}`;
+  
+  let shadowValue;
+  // Check cache first
+  if (shadowCache.has(cacheKey)) {
+    shadowValue = shadowCache.get(cacheKey);
+  } else {
+    // Generate new shadow value
+    shadowValue = generateLayeredShadow(config, roundedTiltX, roundedTiltY);
+    // Store in cache (limit cache size to prevent memory issues)
+    if (shadowCache.size > 100) {
+      // Clear old entries if cache gets too large
+      const oldestKey = shadowCache.keys().next().value;
+      shadowCache.delete(oldestKey);
+    }
+    shadowCache.set(cacheKey, shadowValue);
+  }
+  
+  // Apply shadow and update tracking variables
+  element.style.setProperty('--layered-shadow-styles', shadowValue);
+  lastShadowUpdate = now;
+  lastTiltX = tiltX;
+  lastTiltY = tiltY;
+}

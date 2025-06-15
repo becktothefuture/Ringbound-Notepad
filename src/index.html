@@ -14,10 +14,41 @@
   </head>
   <body>
     <main>
-      <!-- Dedicated shadow layer (now outside #notepad for 2D detachment) -->
-      <div class="notebook__shadow" aria-hidden="true"></div>
+      <!-- Video Background -->
+      <video id="video-bg" autoplay loop muted playsinline poster="" style="position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:0;pointer-events:none;" aria-hidden="true">
+        <source src="assets/video/background-video.mp4" type="video/mp4" />
+        <!-- If no video, fallback to a light gray background -->
+      </video>
+
+      <!-- Homepage Overlay Elements -->
+      <div id="homepage-overlay">
+        <!-- Titles -->
+        <div class="homepage-titles">
+          <h1>Alexander Beck</h1>
+          <h2>UX/UI Designer & Creative Technologist</h2>
+        </div>
+        <!-- Logo -->
+        <div class="homepage-logo">
+          <!-- Inline SVG from Figma (beck logo) -->
+          <svg viewBox="0 0 111 31" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g id="beck">
+              <path d="M110.408 30.3452L91.7377 22.9639V29.6939H85.2249V0.217103H91.7377V7.40538L110.408 7.29749e-06V7.06768L92.7267 14.5937V15.7033L110.408 23.3981V30.3452Z" fill="black"/>
+              <path d="M82.4011 29.6936H65.7758C62.3184 29.6936 59.5846 28.19 57.5744 25.1828C55.7734 22.4812 54.8728 19.1524 54.8728 15.1964C54.8728 11.1761 55.7894 7.75084 57.6227 4.92056C59.6489 1.78473 62.3666 0.216817 65.7758 0.216817L82.4011 0.216817V6.44023H66.8613C65.2532 6.44023 63.9908 7.29253 63.0742 8.99713C62.2541 10.5248 61.844 12.4144 61.844 14.6657C61.844 16.9814 62.2701 18.9594 63.1224 20.5997C64.0552 22.4008 65.3014 23.3013 66.8613 23.3013H82.4011V29.6936Z" fill="black"/>
+              <path d="M52.5314 29.6935H35.7668C33.2581 29.6935 31.2721 28.7527 29.8087 26.8712C28.49 25.1827 27.8307 23.1082 27.8307 20.6478C27.8307 18.4286 28.3855 16.5069 29.4951 14.8827C28.3855 13.2585 27.8307 11.3529 27.8307 9.16588C27.8307 6.7537 28.49 4.70335 29.8087 3.01483C31.2721 1.14942 33.2581 0.216708 35.7668 0.216708H52.5314V6.44012H36.8522C36.1447 6.44012 35.5818 6.7135 35.1637 7.26026C34.7617 7.79094 34.5607 8.4181 34.5607 9.14175C34.5607 9.84932 34.7536 10.4524 35.1396 10.9509C35.5416 11.4494 36.1125 11.6987 36.8522 11.6987H52.5314V17.8979V18.0668H35.9597C35.5255 18.2598 35.1798 18.5975 34.9225 19.0799C34.6813 19.5623 34.5607 20.093 34.5607 20.6719C34.5607 21.3956 34.7536 22.0228 35.1396 22.5534C35.5416 23.0841 36.1125 23.3495 36.8522 23.3495H52.5314V29.6935Z" fill="black"/>
+              <path d="M23.2457 14.9792C23.8407 15.7511 24.2829 16.6195 24.5724 17.5844C24.8779 18.5492 25.0307 19.5784 25.0307 20.6719C25.0307 23.0841 24.3633 25.1425 23.0286 26.8471C21.5491 28.7447 19.555 29.6935 17.0464 29.6935H0.000430346V23.5424H15.9609C16.6845 23.5424 17.2635 23.261 17.6977 22.6982C18.0836 22.1997 18.2766 21.5805 18.2766 20.8408C18.2766 20.1171 18.0916 19.5221 17.7218 19.0558C17.3037 18.5251 16.7167 18.2598 15.9609 18.2598H0.281761V11.6987H15.9609C16.7006 11.6987 17.2715 11.4494 17.6735 10.9509C18.0756 10.4363 18.2766 9.83324 18.2766 9.14175C18.2766 8.40202 18.0836 7.78289 17.6977 7.28438C17.2635 6.72154 16.6845 6.44012 15.9609 6.44012H0.000430346V0.216708L17.0464 0.216708C19.539 0.216708 21.5411 1.18158 23.0527 3.11132C24.4196 4.86416 25.103 6.95471 25.103 9.38297C25.103 10.4604 24.9422 11.4816 24.6206 12.4464C24.3151 13.4113 23.8567 14.2556 23.2457 14.9792Z" fill="black"/>
+            </g>
+          </svg>
+        </div>
+        <!-- Buttons -->
+        <div class="homepage-buttons">
+          <a href="#" class="homepage-btn">Download CV</a>
+          <a href="#" class="homepage-btn">Linkedin</a>
+        </div>
+      </div>
       <!-- Main notepad container: This div acts as the 3D stage where all the magic happens. -->
       <div id="notepad">
+        <!-- Layered shadow system -->
+      
         <div id="notepad-inner">
         
         <!-- 
@@ -96,6 +127,7 @@
         <div class="page" data-deck-number="50"><div class="page-content"></div></div>
         <div class="page" data-deck-number="51"><div class="page-content"></div></div>
         </div>
+        <div class="notebook__shadow" aria-hidden="true"></div>
       </div>
     </main>
     

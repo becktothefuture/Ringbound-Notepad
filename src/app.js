@@ -21,7 +21,7 @@
 
 // Import all required modules
 import { PAGE_ANIMATION } from './config.js';            // Animation settings and parameters
-import { clamp, lerp, mapRange, applyBeautifulShadow, applyBeautifulDropShadow } from './utils.js';      // Mathematical utility functions  
+// import { applyBeautifulShadow } from './utils.js';      // Mathematical utility functions  
 import { initScrollEngine, subscribe } from './scrollEngine.js'; // Scroll handling system
 import { renderStack } from './render.js';               // Visual rendering system
 import { debug, debugOverlay } from './debug.js';       // Debug system
@@ -29,155 +29,148 @@ import { getInfiniteLoopDebugInfo, shouldUseInfiniteLoop } from './infiniteLoop.
 import { initChapters } from './chapterManager.js';
 import { initMouseTracker } from './mouseTracker.js';
 
-// Placeholder imports for future features (currently not implemented)
-// import { domManager } from './domManager.js';         // Future: Dynamic DOM manipulation
-// import { videoController } from './videoController.js'; // Future: Video content management
+// Dynamic page & chapter generation
+import manifest from './portfolioManifest.js';
+import { createPagesFromManifest } from './portfolioLoader.js';
 
-/*
-  DOM ELEMENT SETUP
-  Get references to the main notepad container and all page elements.
-  These will be manipulated by the rendering system.
-*/
-const notepad = document.getElementById('notepad');      // Perspective container
-const notepadInner = document.getElementById('notepad-inner'); // Main 3D transform target
-const pages = Array.from(notepadInner.querySelectorAll('.page')); // All page elements as array
+async function bootstrap() {
+  /*
+    1. Build pages from the manifest
+    2. Initialise scroll engine & chapters once pages exist
+  */
 
-/*
-  AUTOMATIC RING POSITIONING (Z-DEPTH)
-  -----------------------------------
-  Places the <div class="rings"> element halfway between the Z position of the
-  first (top) page and the last visible page in the stack. This keeps the rings
-  visually centred through the depth of the notebook regardless of how many
-  pages are configured to be visible.
-*/
-const rings = notepad.querySelector('.rings');
-if (rings) {
-  const { stack, flip } = PAGE_ANIMATION;
-  // Approximate Z of the deepest visible page.
-  const bottomZ = stack.startZ - (stack.visibleDepth - 1) * stack.depthUnit;
-  // Mid-point between front (0) and back of the stack.
-  const middleZ = (flip.readyZ + bottomZ) / 2;
-  rings.style.transform = `translateZ(${middleZ}px)`;
-  // Ensure the rings participate in 3D space
-  rings.style.transformStyle = 'preserve-3d';
+  // DOM references that exist regardless of pages
+  const notepad = document.getElementById('notepad');
+  const notepadInner = document.getElementById('notepad-inner');
+
+  // Clear any pre-existing page markup (useful during dev when HTML still contains pages)
+  notepadInner.querySelectorAll('.page').forEach((el) => el.remove());
+
+  // Generate pages and update CHAPTERS array
+  const pages = createPagesFromManifest(notepadInner, manifest);
+
+  /* ================= SCROLL ENGINE INITIALISATION ================= */
+  debug.log('Initializing scroll engine...');
+  debug.log(`Generated ${pages.length} pages from manifest`);
+  debug.log(`Infinite loop enabled: ${shouldUseInfiniteLoop(pages.length)}`);
+
+  initScrollEngine(notepad, pages.length);
+  initChapters(pages, notepad);
+
+  /* ================= RENDER SYSTEM CONNECTION ================= */
+  subscribe((state) => {
+    renderStack(pages, state);
+
+    // Update debug overlay with current state and infinite loop info
+    const debugInfo = {
+      scroll: state.scroll,
+      page: state.page,
+      progress: state.progress,
+      rotation: state.rotation,
+    };
+
+    if (shouldUseInfiniteLoop(pages.length)) {
+      const loopInfo = getInfiniteLoopDebugInfo(state.scroll, pages.length);
+      debugInfo.cycle = loopInfo.cycle;
+      debugInfo.cyclePosition = loopInfo.cyclePosition;
+    }
+
+    debugOverlay.update(debugInfo);
+  });
+
+  /* ======= Mouse parallax & other existing logic remains unchanged ======= */
+  setupNotebookParallax(notepad, notepadInner);
 }
 
-/*
-  SCROLL ENGINE INITIALIZATION
-  Set up the scroll handling system that:
-  - Listens for mouse wheel and touch events on the notepad
-  - Converts physical scroll/swipe into virtual scroll position
-  - Manages animation timing and page snapping
-  - Provides scroll state to other systems
-  - Handles infinite loop bounds and wrapping
-*/
-debug.log('Initializing scroll engine...');
-debug.log(`Found ${pages.length} pages`);
-debug.log(`Infinite loop enabled: ${shouldUseInfiniteLoop(pages.length)}`);
+function setupNotebookParallax(notepad, notepadInner) {
+  // === Configurable mouse-to-rotation mapping (from config) ===
+  const {
+    maxRotationX,
+    maxRotationY,
+    maxRotationZ,
+    translateFactor,
+    damp: configDamp,
+    fps: parallaxFPS,
+    mouseUpdateRate,
+  } = PAGE_ANIMATION.parallax;
 
-// Initialize scroll engine with page count for infinite loop calculations
-initScrollEngine(notepad, pages.length);
-initChapters(pages, notepad);
+  const mouse = initMouseTracker({ updateRate: mouseUpdateRate });
+  const damp = configDamp; // 0-1, lower = slower follow
+  let curX = 0,
+    curY = 0,
+    targetX = 0,
+    targetY = 0;
 
-/*
-  RENDER SYSTEM CONNECTION
-  Subscribe to scroll state changes and update the visual appearance.
-  
-  HOW IT WORKS:
-  1. User scrolls or swipes on the notepad
-  2. ScrollEngine calculates new virtual scroll position
-  3. ScrollEngine notifies all subscribers (including this renderer)
-  4. renderStack() function receives the new scroll state
-  5. renderStack() calculates 3D transforms for each page
-  6. Visual changes are applied to the DOM
-  
-  The subscription pattern allows multiple systems to react to scroll changes
-  without tight coupling between modules.
-*/
-subscribe(state => {
-  // Pass all pages and current scroll state to the renderer
-  renderStack(pages, state);
-  
-  // Update debug overlay with current state and infinite loop info
-  const debugInfo = {
-    scroll: state.scroll,
-    page: state.page,
-    progress: state.progress,
-    rotation: state.rotation
-  };
-  
-  // Add infinite loop debug information
-  if (shouldUseInfiniteLoop(pages.length)) {
-    const loopInfo = getInfiniteLoopDebugInfo(state.scroll, pages.length);
-    debugInfo.cycle = loopInfo.cycle;
-    debugInfo.cyclePosition = loopInfo.cyclePosition;
+  let lastMouse = { x: 0, y: 0 };
+  mouse.subscribe((pos) => {
+    targetX = pos.x; // -1 .. 1
+    targetY = pos.y; // -1 .. 1
+    lastMouse = { x: pos.x, y: pos.y };
+  });
+
+  // Cache DOM references and calculations for performance
+  let lastFrameTime = 0;
+  const targetFPS = parallaxFPS;
+  const frameInterval = 1000 / targetFPS;
+
+  function animateNotebook(currentTime = 0) {
+    // Frame rate limiting for better performance
+    if (currentTime - lastFrameTime < frameInterval) {
+      requestAnimationFrame(animateNotebook);
+      return;
+    }
+    lastFrameTime = currentTime;
+
+    // Damped interpolation toward target
+    curX += (targetX - curX) * damp;
+    curY += (targetY - curY) * damp;
+
+    // Limit movement to 4% of viewport size (cache viewport calculations)
+    const maxTranslateX = window.innerWidth * translateFactor;
+    const maxTranslateY = window.innerHeight * translateFactor;
+    const tx = curX * maxTranslateX;
+    const ty = curY * maxTranslateY;
+
+    // Map mouse position from full viewport to rotation range
+    // -1 (left/top) to +1 (right/bottom) maps to -maxRotationY/X to +maxRotationY/X
+    const rotY = curX * maxRotationY; // Horizontal mouse -> Y-axis rotation (left/right turn)
+    const rotX = -curY * maxRotationX; // Vertical mouse -> X-axis rotation (up/down tilt)
+    const rotZ = curX * maxRotationZ; // Horizontal mouse -> Z-axis rotation (roll/tilt effect)
+
+    // --- GLOBAL NOTEBOOK OFFSET (distinct from mouse transforms) ---
+    const { offsetX, offsetY, offsetZ } = PAGE_ANIMATION.global;
+
+    // Cache transform string for performance
+    const transformString = `translate3d(${offsetX + tx}px, ${offsetY + ty}px, ${offsetZ}px) rotateY(${rotY}deg) rotateX(${rotX}deg) rotateZ(${rotZ}deg)`;
+
+    notepadInner.style.transformOrigin = '50% 50%';
+    notepadInner.style.transform = transformString;
+
+    // Visual indicator for Z-rotation testing
+    const zRotationActive = Math.abs(rotZ) > 1; // Show indicator when Z-rotation > 1 degree
+    notepad.classList.toggle('notepad--z-rotating', zRotationActive);
+
+    requestAnimationFrame(animateNotebook);
   }
-  
-  debugOverlay.update(debugInfo);
-});
-
-/* ================= MOUSE-DRIVEN NOTEBOOK PARALLAX ================= */
-// === Configurable mouse-to-rotation mapping ===
-let maxRotationY = 10; // degrees, left/right
-let maxRotationX = 10; // degrees, up/down
-
-// For debug overlay
-let lastMouse = { x: 0, y: 0 };
-
-const mouse = initMouseTracker({ updateRate: 60 }); // adjustable FPS
-const damp = 0.075; // 0-1, lower = slower follow
-let curX = 0, curY = 0, targetX = 0, targetY = 0;
-
-mouse.subscribe(pos => {
-  targetX = pos.x; // -1 .. 1
-  targetY = pos.y; // -1 .. 1
-  lastMouse = { x: pos.x, y: pos.y };
-});
-
-function animateNotebook() {
-  // Damped interpolation toward target
-  curX += (targetX - curX) * damp;
-  curY += (targetY - curY) * damp;
-
-  // Limit movement to 4% of viewport size
-  const maxTranslateX = window.innerWidth * 0.04;
-  const maxTranslateY = window.innerHeight * 0.04;
-  const tx = curX * maxTranslateX;
-  const ty = curY * maxTranslateY;
-
-  // Map mouse position from full viewport to rotation range
-  // -1 (left/top) to +1 (right/bottom) maps to -maxRotationY/X to +maxRotationY/X
-  const rotY = curX * maxRotationY;
-  const rotX = -curY * maxRotationX;
-
-  // --- GLOBAL NOTEBOOK OFFSET (distinct from mouse transforms) ---
-  const { offsetX, offsetY, offsetZ } = PAGE_ANIMATION.global;
-
-  notepadInner.style.transformOrigin = '50% 50%';
-  notepadInner.style.transform =
-    `translate3d(${offsetX + tx}px, ${offsetY + ty}px, ${offsetZ}px) rotateY(${rotY}deg) rotateX(${rotX}deg)`;
-
   requestAnimationFrame(animateNotebook);
-}
-requestAnimationFrame(animateNotebook);
 
-// === Debug overlay: show mouse position and rotation config ===
-debugOverlay.update = (function(orig) {
-  return function(info) {
-    orig.call(this, {
-      ...info,
-      mouseX: lastMouse.x.toFixed(3),
-      mouseY: lastMouse.y.toFixed(3),
-      maxRotationY,
-      maxRotationX
-    });
-  };
-})(debugOverlay.update);
-
-// Ensure debug panel is visible
-if (typeof debug !== 'undefined' && debugOverlay && debugOverlay.show) {
-  debugOverlay.show();
+  // === Debug overlay: show mouse position and rotation config ===
+  debugOverlay.update = (function (orig) {
+    return function (info) {
+      orig.call(this, {
+        ...info,
+        mouseX: lastMouse.x.toFixed(3),
+        mouseY: lastMouse.y.toFixed(3),
+        maxRotationY,
+        maxRotationX,
+        maxRotationZ,
+        currentRotZ: (lastMouse.x * maxRotationZ).toFixed(1) + '°',
+      });
+    };
+  })(debugOverlay.update);
 }
+
+bootstrap();
 
 // TODO: Future feature implementations
 // These are placeholders for additional functionality that could be added:
@@ -186,68 +179,4 @@ if (typeof debug !== 'undefined' && debugOverlay && debugOverlay.show) {
 // domManager.init();          // Dynamic content management
 // videoController.init();     // Video playback synchronization
 
-// Debug information for development
-debug.log('Notepad initialized with', pages.length, 'pages.');
-debug.log('Debug mode is active. Press Ctrl+D to toggle debug overlay.');
-debug.log('Configuration:', PAGE_ANIMATION);
-
-// Show infinite loop status
-if (PAGE_ANIMATION.loop.infinite) {
-  debug.log('🔄 Infinite loop mode enabled - pages will cycle seamlessly');
-} else {
-  debug.log('📝 Standard mode - scrolling stops at last page');
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-  // Select the shadow element as a sibling of #notepad
-  const shadowEl = document.querySelector('.notebook__shadow');
-  if (shadowEl) {
-    // No 3D context or transformStyle for the shadow
-    shadowEl.style.transformStyle = '';
-    shadowEl.style.perspective = '';
-    // Center alignment and sizing handled by CSS
-    applyBeautifulShadow(shadowEl, {
-      layers: 5,
-      color: '0,0,0',
-      opacity: 0.35,
-      blurBase: 28,
-      blurStep: 16,
-      spreadBase: 12,   // enlarge so it peeks out even with 10% inset
-      spreadStep: 2,
-      offsetX: 0,
-      offsetY: 60,      // drop below notepad
-      inset: false,
-    });
-  }
-}); 
-
-// ===================== PAGE IMAGE INITIALISATION =====================
-// Dynamically assigns a background image to each .page-content element
-// based on the data-deck-number attribute on its parent .page. This
-// guarantees that the correct image is applied even if the CSS mapping
-// is incomplete or overridden elsewhere.
-(function assignPageImages() {
-  pages.forEach(page => {
-    const deckNumberRaw = page.dataset.deckNumber;
-    if (!deckNumberRaw) return;
-
-    // Convert to integer to remove any leading zeros ("01" -> 1)
-    const deckNumberInt = parseInt(deckNumberRaw, 10);
-    if (Number.isNaN(deckNumberInt)) return;
-
-    // Construct filename that matches the actual files on disk: deck_<n>.jpg (all lowercase)
-    const fileName = `deck_${deckNumberInt}.jpg`;
-    const imgPath = `assets/portfolio-pages/${fileName}`;
-
-    const contentEl = page.querySelector('.page-content');
-    if (contentEl) {
-      // Inline style takes priority over any CSS rules defined elsewhere
-      contentEl.style.backgroundImage = `url('${imgPath}')`;
-
-      // Preload the image and warn in the console if it cannot be loaded
-      const img = new Image();
-      img.src = page.baseURI.replace(/\/[^/]*$/, '/') + imgPath;
-      img.onerror = () => console.warn(`⚠️ Image not found: ${imgPath}`);
-    }
-  });
-})(); 
+// (General debug logs are now handled in bootstrap where pages are defined) 
