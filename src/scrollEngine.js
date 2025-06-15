@@ -17,7 +17,11 @@ import { PAGE_ANIMATION } from './config.js';
 import { clamp } from './utils.js';
 import { debug } from './debug.js';
 import { normalizeScrollPosition, shouldUseInfiniteLoop } from './infiniteLoop.js';
-import { easeOutCubic, easeInOutCubic, easeOutDampedSpring, easeOutSingleSpring } from './utils.js';
+
+// Device-specific optimizations
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+const hasHighRefreshRate = window.screen && window.screen.availWidth > 1920;
+const scrollSensitivity = PAGE_ANIMATION.misc.scrollSensitivity * (isMobile ? 1.5 : 1) * (hasHighRefreshRate ? 0.8 : 1);
 
 // === INTERNAL STATE ===
 // These variables maintain the current state of the scroll system
@@ -70,9 +74,17 @@ let snapAnimationCancel = null;
 /**
  * Notify all subscribed listeners of scroll state changes
  * Called whenever the scroll value changes
+ * Optimized to prevent excessive notifications
  */
+let lastNotifiedScroll = -1;
+const SCROLL_THRESHOLD = 0.001; // Minimum change required to notify
+
 function notify() {
-  listeners.forEach(fn => fn(getState()));
+  // Only notify if scroll changed significantly to prevent excessive renders
+  if (Math.abs(scroll - lastNotifiedScroll) > SCROLL_THRESHOLD) {
+    lastNotifiedScroll = scroll;
+    listeners.forEach(fn => fn(getState()));
+  }
 }
 
 /**
@@ -153,7 +165,7 @@ function onWheel(e) {
   interruptSnapAnimation();
   if (animationFrameId) cancelAnimationFrame(animationFrameId);
   const oldScroll = scroll;
-  scroll += e.deltaY * PAGE_ANIMATION.misc.scrollSensitivity / 100;
+  scroll += e.deltaY * scrollSensitivity / 100;
   scroll = applyScrollBounds(scroll);
   debug.log(`Wheel event: deltaY=${e.deltaY}, scroll: ${oldScroll.toFixed(3)} → ${scroll.toFixed(3)}`);
   notify();
@@ -185,7 +197,7 @@ function onTouchMove(e) {
     const dy = lastY - e.touches[0].clientY;
     lastY = e.touches[0].clientY;
     const oldScroll = scroll;
-    scroll += dy * PAGE_ANIMATION.misc.scrollSensitivity / 100;
+    scroll += dy * scrollSensitivity / 100;
     scroll = applyScrollBounds(scroll);
     debug.log(`Touch move: dy=${dy}, scroll: ${oldScroll.toFixed(3)} → ${scroll.toFixed(3)}`);
     notify();
@@ -229,9 +241,8 @@ function onTouchEnd(e) {
 
 /**
  * Handle touch cancel events
- * @param {TouchEvent} e
  */
-function onTouchCancel(e) {
+function onTouchCancel() {
   // Reset touch tracking
   lastY = null;
 }
@@ -388,6 +399,58 @@ function animateJumpTo(target) {
   animationFrameId = requestAnimationFrame(step);
 }
 
+// === CLICK-TO-TURN FUNCTIONALITY ===
+
+/**
+ * Handle click events to advance pages
+ * If a page is currently flipping, complete the flip
+ * Otherwise, advance to the next page
+ */
+function onPageClick(e) {
+  // Only handle clicks on pages or page content
+  const clickedPage = e.target.closest('.page');
+  if (!clickedPage) {
+    return; // Not clicking on a page, ignore
+  }
+  
+  // Prevent default click behavior
+  e.preventDefault();
+  e.stopPropagation();
+  
+  debug.log('Page click detected, advancing page...');
+  
+  // Get current scroll state
+  const state = getState();
+  const { page, progress } = state;
+  
+  // Determine target page
+  let targetPage;
+  
+  if (progress > 0.01) {
+    // Page is currently flipping - complete the flip
+    targetPage = page + 1;
+    debug.log(`Completing flip from page ${page} to ${page + 1}`);
+  } else {
+    // Page is stable - advance to next page
+    targetPage = page + 1;
+    debug.log(`Advancing from page ${page} to ${page + 1}`);
+  }
+  
+  // Apply bounds and animate to target
+  targetPage = applyScrollBounds(targetPage);
+  
+  // Interrupt any current animations
+  interruptSnapAnimation();
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId);
+    isAnimating = false;
+    animationFrameId = null;
+  }
+  
+  // Animate to target page
+  animateScrollTo(targetPage);
+}
+
 // === INITIALIZATION ===
 
 /**
@@ -409,6 +472,13 @@ export function initScrollEngine(container, pageCount = 0) {
   document.addEventListener('touchmove', onTouchMove, { passive: true });
   document.addEventListener('touchend', onTouchEnd, { passive: true });
   document.addEventListener('touchcancel', onTouchCancel, { passive: true });
+  
+  // Click-to-turn functionality - add to container only
+  if (container) {
+    container.addEventListener('click', onPageClick, { passive: false });
+    debug.log('Click-to-turn listener added to notepad container');
+  }
+  
   debug.log('Scroll engine event listeners attached to document');
   // Note: { passive: true } allows us to preventDefault() if needed
   // This prevents the page from scrolling normally while using the notepad
@@ -425,4 +495,4 @@ export function updatePageCount(newPageCount) {
   // Reapply bounds with new page count
   scroll = applyScrollBounds(scroll);
   notify();
-} 
+}

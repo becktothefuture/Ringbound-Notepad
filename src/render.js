@@ -21,9 +21,30 @@ import {
   shouldUseInfiniteLoop,
   getInfiniteLoopDebugInfo 
 } from './infiniteLoop.js';
-import { CHAPTERS } from './chapters.js';
+import { perf } from './performance.js';
+// import { CHAPTERS } from './chapters.js'; // TODO: Implement chapter-based styling  // TODO: Implement chapter-based styling if needed
+  // const chapterStartPages = CHAPTERS.map(c => c.page);
 
-const chapterStartPages = CHAPTERS.map(c => c.page);
+// Frame counter for debug output - using module scope
+const state = {
+  frameCount: 0
+};
+
+/**
+ * Updates the layered shadow effect based on notepad tilt
+ * @param {number} tiltAngle - Current tilt angle of the notepad
+ */
+function updateLayeredShadow(tiltAngle) {
+  const shadowElement = document.querySelector('.notebook__layered-shadow');
+  if (!shadowElement) return;
+  
+  // Convert tilt angle to shadow offset (max ±20px)
+  const maxOffset = 20;
+  const offset = mapRange(tiltAngle, -30, 30, -maxOffset, maxOffset);
+  
+  // Update the CSS variable for shadow x-offset
+  document.documentElement.style.setProperty('--shadow-x-offset', `${offset}px`);
+}
 
 /**
  * MAIN RENDERING FUNCTION
@@ -45,33 +66,33 @@ const chapterStartPages = CHAPTERS.map(c => c.page);
  * @param {Object} scrollState - Current scroll state from scroll engine
  */
 export function renderStack(pages, scrollState) {
-  const { scroll, totalPages } = scrollState;
+  // Cache frequently accessed values
+  const { stack, flip, loop } = PAGE_ANIMATION;
   
-  // Extract configuration values for easier access
-  const { 
-    stack,
-    flip,
-    ROTATE_MAX,              // Maximum rotation angle (270°)
-    FADE_START,              // Angle where fade begins (200°)
-    FADE_END,                // Angle where fade completes (270°)
-    SHADOW_MAX_OPACITY,      // Max shadow opacity on pages below
-    SHADOW_FADE_START_ANGLE, // Angle where shadow starts fading
-    SHADOW_FADE_END_ANGLE    // Angle where shadow is fully gone
-  } = PAGE_ANIMATION;
-  
+  const { scroll, totalPages, velocity } = scrollState;
   const pageCount = pages.length;
   const infiniteLoop = shouldUseInfiniteLoop(totalPages);
+  
+  // Calculate tilt and update shadow
+  const tiltAngle = Math.min(Math.max(velocity * -0.5, -30), 30);
+  updateLayeredShadow(tiltAngle);
 
-  // Debug output to track current state
-  debug.group('Render Frame', () => {
-    debug.log(`Scroll: ${scroll.toFixed(2)}, Infinite: ${infiniteLoop}`);
-    if (infiniteLoop) {
-      const loopInfo = getInfiniteLoopDebugInfo(scroll, totalPages);
-      debug.log(`Loop cycle: ${loopInfo.cycle}, position: ${loopInfo.cyclePosition.toFixed(2)}`);
-    }
-  });
+  // Optimize debug output - only log every 60 frames in debug mode
+  if (PAGE_ANIMATION.misc.debug && (++state.frameCount % 60 === 0)) {
+    debug.group('Render Frame (every 60th)', () => {
+      debug.log(`Scroll: ${scroll.toFixed(2)}, Infinite: ${infiniteLoop}`);
+      if (infiniteLoop) {
+        const loopInfo = getInfiniteLoopDebugInfo(scroll, totalPages);
+        debug.log(`Loop cycle: ${loopInfo.cycle}, position: ${loopInfo.cyclePosition.toFixed(2)}`);
+      }
+    });
+  }
 
-  // === MAIN RENDERING LOOP ===
+  // Pre-calculate visibility range to avoid repeated calculations
+  const visibilityRange = infiniteLoop ? stack.visibleDepth + loop.buffer : stack.visibleDepth;
+  const bufferRange = -loop.buffer;
+
+  // === OPTIMIZED RENDERING LOOP ===
   // Process each page individually based on its relative position
   
   for (let i = 0; i < pageCount; i++) {
@@ -102,21 +123,23 @@ export function renderStack(pages, scrollState) {
     let backfaceBlur = 0; // blur px
     let shadowOverlay = 0;   // Shadow cast on pages below
 
-    debug.log(`Page ${i}: rel=${rel.toFixed(2)}`);
+    // Optimize debug logging - only for specific pages when needed
+    if (PAGE_ANIMATION.misc.debug && state.frameCount % 60 === 0 && i < 3) {
+      debug.log(`Page ${i}: rel=${rel.toFixed(2)}`);
+    }
 
     // === VISIBILITY CHECK ===
     // Only render pages that are currently visible
     // For infinite loop, this range is expanded to handle cycling
     
-    const visibilityRange = infiniteLoop ? stack.visibleDepth + PAGE_ANIMATION.loop.buffer : stack.visibleDepth;
-    const isChapterStart = chapterStartPages.includes(i);
-    const isInVisibleRange = rel >= -PAGE_ANIMATION.loop.buffer && rel < visibilityRange;
+    // Optimized visibility check with pre-calculated ranges
+    const isInVisibleRange = rel >= bufferRange && rel < visibilityRange;
 
     if (isInVisibleRange) {
       // === PHASE 1: PAGES IN THE STACK ===
       // These pages are waiting their turn, stacked behind the current page
       if (rel >= 1) {
-        let displayRel = rel;
+        const displayRel = rel;
         angle = mapRange(stack.visibleDepth, 1, flip.startRotationX, flip.readyRotationX, displayRel);
         z = mapRange(stack.visibleDepth - 1, 1, stack.startZ, flip.readyZ, displayRel);
         y = mapRange(stack.visibleDepth - 1, 1, stack.startY, flip.readyY, displayRel);
@@ -131,7 +154,7 @@ export function renderStack(pages, scrollState) {
         
         // Implement dead zone (stick) before rotation begins
         const stickFraction = (stack.stickPixels || 0) / 100;
-        let t = Math.max(0, 1 - rel);
+        const t = Math.max(0, 1 - rel);
         if (t < stickFraction) {
           // Stick: no rotation yet
           angle = flip.readyRotationX;
@@ -157,20 +180,9 @@ export function renderStack(pages, scrollState) {
         }
 
         // === BACKFACE EFFECT ===
-        // Show dark back side when page is rotated enough to see through
-        if (angle > PAGE_ANIMATION.backface.fadeStartAngle) {
-          backfaceAlpha = mapRange(
-            PAGE_ANIMATION.backface.fadeStartAngle,
-            PAGE_ANIMATION.backface.fadeEndAngle,
-            PAGE_ANIMATION.backface.startOpacity,
-            PAGE_ANIMATION.backface.endOpacity,
-            angle
-          );
-          backfaceBlur = backfaceAlpha * 4; // up to 4px blur
-        } else {
-          backfaceAlpha = 0; // Hidden before it starts turning
-          backfaceBlur = 0;
-        }
+        // Show solid back side when page is rotated enough to see through
+        // Remove any dynamic opacity/blur for backface
+        page.style.setProperty('--backface-color', 'linear-gradient(to bottom, red 0%, #8B0000 100%)');
         
         // No shadows on the actively flipping page
         shadowOverlay = 0;
@@ -179,76 +191,323 @@ export function renderStack(pages, scrollState) {
       // === SHADOW OVERLAY SYSTEM ===
       // Pages in the stack are in shadow by default. The shadow fades as the page
       // above it is turned, revealing the page below.
-      
       // Apply dynamic shadow only to pages deeper in the stack.
       // The first stacked page (rel === 1) should have no overlay so its image is visible.
+      const shadowCfg = PAGE_ANIMATION.effects.shadow;
       if (rel > 1) {
         // This page is in the stack.
         const pageAboveRel = rel - 1;
-        
         // Calculate the angle of the page directly above this one.
         const pageAboveProgress = Math.max(0, 1 - pageAboveRel);
         const pageAboveAngle = flip.readyRotationX + (pageAboveProgress * flip.maxAngle);
-        
         // The shadow on the current page fades out as the page above rotates.
         // Shadow is full when page above is flat (angle=0), and gone when it's vertical (angle=90).
         shadowOverlay = mapRange(
-          PAGE_ANIMATION.shadow.fadeStartAngle, 
-          PAGE_ANIMATION.shadow.fadeEndAngle, 
-          PAGE_ANIMATION.shadow.maxOpacity, 
-          0, 
+          shadowCfg.fadeStartAngle, 
+          shadowCfg.fadeEndAngle, 
+          shadowCfg.startOpacity, 
+          shadowCfg.endOpacity, 
           pageAboveAngle
         );
-        shadowOverlay = Math.max(0, shadowOverlay); // Ensure it doesn't go negative.
-
-        debug.log(`*** STACK SHADOW *** Page ${i}: rel=${rel.toFixed(2)}, pageAboveAngle=${pageAboveAngle.toFixed(1)}°, shadow=${shadowOverlay.toFixed(2)}`);
-
+        shadowOverlay = Math.max(0, shadowOverlay); // Ensure it doesn't go negative
       } else {
-        // The currently flipping page does not have a shadow overlay on itself.
+        shadowOverlay = 0;
+      }
+      // Set shadow color and blur as CSS variables
+      page.style.setProperty('--shadow-color', shadowCfg.color);
+      page.style.setProperty('--shadow-blur', shadowCfg.blur.enabled ? `${shadowOverlay * shadowCfg.blur.maxBlur}px` : '0px');
+
+      // === PAGE BACKDROP FADE ===
+      let backdropOpacity = 1;
+      if (rel <= 1) {
+        backdropOpacity = 1;
+      } else if (rel > 0.5 && rel <= 1.5) {
+        backdropOpacity = 1.5 - rel;
+      } else {
+        backdropOpacity = 0;
+      }
+      page.style.setProperty('--backdrop-opacity', backdropOpacity);
+
+      // === APPLY ALL VISUAL PROPERTIES ===
+      // Batch DOM operations for better performance
+      const style = page.style;
+      // Set rotation origin as CSS variables (cached at module level for performance)
+      style.setProperty('--page-rotation-origin-x', flip.rotationOriginX);
+      style.setProperty('--page-rotation-origin-y', flip.rotationOriginY);
+      // Set CSS custom properties for visual effects
+      style.setProperty('--shadow-overlay', shadowOverlay);
+      // Apply 3D transform (hardware accelerated)
+      style.transform = `translate3d(0, ${y}px, ${z}px) rotateX(${angle}deg)`;
+      // Apply visual effects
+      style.opacity = opacity;
+      style.filter = blur > 0 ? `blur(${blur}px)` : '';
+      // === OPTIMIZED CONTENT VISIBILITY ===
+      // Cache content element reference to avoid repeated queries
+      const content = page.querySelector('.page-content');
+      if (content) {
+        content.style.opacity = 1;
+        // Keep blur logic if needed, or remove if you want no blur at all:
+        // content.style.filter = '';
+      }
+      
+      // Layout and visibility (batch these operations)
+      style.visibility = 'visible';
+      style.zIndex = rel <= 1 ? 200 : 100 - Math.floor(rel);
+      style.display = 'flex';
+
+    } else {
+      // === HIDDEN PAGES OPTIMIZATION ===
+      // Batch DOM operations for hidden pages and avoid unnecessary work
+      
+      const style = page.style;
+      
+      // Early exit if already hidden to prevent redundant operations
+      if (style.display === 'none') continue;
+      
+      style.visibility = 'hidden';
+      style.zIndex = 0;
+      style.display = 'none';
+      
+      // Reset all effects for hidden pages (batch operations)
+      style.setProperty('--shadow-overlay', 0);
+    }
+  }
+  
+  // End performance monitoring
+  perf.endRender();
+}
+
+/**
+ * MAIN RENDERING FUNCTION
+ * 
+ * Calculates and applies all visual styles for every page based on scroll state.
+ * This function uses a "continuous position" model where every page's appearance
+ * is a direct function of its float-based position in the stack (e.g., page 2.5).
+ * 
+ * For infinite loop mode, pages can appear at multiple virtual positions to create
+ * seamless cycling through the notepad.
+ * 
+ * COORDINATE SYSTEM REMINDER:
+ * - X: Left(-) / Right(+) 
+ * - Y: Up(-) / Down(+) in screen space
+ * - Z: Away(-) / Toward viewer(+)
+ * - RotateX: Tip backward(-) / forward(+)
+ * 
+ * @param {HTMLElement[]} pages - Array of all page DOM elements
+ * @param {Object} scrollState - Current scroll state from scroll engine
+ */
+// Cache frequently accessed values
+const { stack, flip, loop } = PAGE_ANIMATION;
+
+export function render(pages, scrollState) {
+  perf.mark('render-start');
+  
+  const { scroll, totalPages } = scrollState;
+  const pageCount = pages.length;
+  const infiniteLoop = shouldUseInfiniteLoop(totalPages);
+
+  // Optimize debug output - only log every 60 frames in debug mode
+  if (PAGE_ANIMATION.misc.debug && (++state.frameCount % 60 === 0)) {
+    debug.group('Render Frame (every 60th)', () => {
+      debug.log(`Scroll: ${scroll.toFixed(2)}, Infinite: ${infiniteLoop}`);
+      if (infiniteLoop) {
+        const loopInfo = getInfiniteLoopDebugInfo(scroll, totalPages);
+        debug.log(`Loop cycle: ${loopInfo.cycle}, position: ${loopInfo.cyclePosition.toFixed(2)}`);
+      }
+    });
+  }
+
+  // Pre-calculate visibility range to avoid repeated calculations
+  const visibilityRange = infiniteLoop ? stack.visibleDepth + loop.buffer : stack.visibleDepth;
+  const bufferRange = -loop.buffer;
+
+  // Calculate the overall tilt based on scroll velocity
+  const tiltAngle = Math.min(Math.max(scrollState.velocity * -0.5, -30), 30);
+  
+  // Update shadow effect
+  updateLayeredShadow(tiltAngle);
+
+  // === OPTIMIZED RENDERING LOOP ===
+  // Process each page individually based on its relative position
+  
+  for (let i = 0; i < pageCount; i++) {
+    const page = pages[i];
+    
+    // Calculate this page's relative position using infinite loop logic
+    // rel = 0: This is the top page (currently flipping)
+    // rel = 1: This is the next page (ready to flip)  
+    // rel = 2+: This page is in the stack behind
+    // rel < 0: This page has been flipped past (hidden)
+    
+    let rel;
+    if (infiniteLoop) {
+      // Use infinite loop calculation for seamless cycling
+      rel = calculateInfiniteRelativePosition(i, totalPages, scroll);
+    } else {
+      // Standard calculation for bounded mode
+      rel = i - scroll;
+    }
+
+    // Initialize all visual properties
+    let opacity = 1;          // Page transparency (0-1)
+    let angle = 0;           // X-axis rotation in degrees
+    let z = 0;               // Z-axis position (depth)
+    let y = 0;               // Y-axis position (vertical)
+    let blur = 0;            // Blur filter amount (px)
+    let backfaceAlpha = 0; // Alpha for the back side of flipping pages
+    let backfaceBlur = 0; // blur px
+    let shadowOverlay = 0;   // Shadow cast on pages below
+
+    // Optimize debug logging - only for specific pages when needed
+    if (PAGE_ANIMATION.misc.debug && state.frameCount % 60 === 0 && i < 3) {
+      debug.log(`Page ${i}: rel=${rel.toFixed(2)}`);
+    }
+
+    // === VISIBILITY CHECK ===
+    // Only render pages that are currently visible
+    // For infinite loop, this range is expanded to handle cycling
+    
+    // Optimized visibility check with pre-calculated ranges
+    const isInVisibleRange = rel >= bufferRange && rel < visibilityRange;
+
+    if (isInVisibleRange) {
+      // === PHASE 1: PAGES IN THE STACK ===
+      // These pages are waiting their turn, stacked behind the current page
+      if (rel >= 1) {
+        const displayRel = rel;
+        angle = mapRange(stack.visibleDepth, 1, flip.startRotationX, flip.readyRotationX, displayRel);
+        z = mapRange(stack.visibleDepth - 1, 1, stack.startZ, flip.readyZ, displayRel);
+        y = mapRange(stack.visibleDepth - 1, 1, stack.startY, flip.readyY, displayRel);
+        // Apply smooth separation for pages in the stack
+        z -= (displayRel - 1) * stack.depthUnit;
+        opacity = mapRange(stack.opacityFade[0], stack.opacityFade[1], 0, 1, displayRel);
+        opacity = Math.max(0, opacity);
+        backfaceAlpha = 0;
+      } else {
+        // === PHASE 2: THE FLIPPING PAGE ===
+        // This is the top page that's currently being flipped
+        
+        // Implement dead zone (stick) before rotation begins
+        const stickFraction = (stack.stickPixels || 0) / 100;
+        const t = Math.max(0, 1 - rel);
+        if (t < stickFraction) {
+          // Stick: no rotation yet
+          angle = flip.readyRotationX;
+          y = flip.readyY;
+          z = flip.readyZ;
+        } else {
+          // After stick, start rotation as usual, remap t to [0,1]
+          const tAdj = (t - stickFraction) / (1 - stickFraction);
+          angle = flip.readyRotationX + (tAdj * flip.maxAngle);
+          y = flip.readyY; // Keep y-position constant during the flip
+          z = mapRange(0, 1, flip.readyZ, stack.startZ, tAdj);
+        }
+        
+        // === FADE AND BLUR EFFECTS ===
+        // As page rotates past certain angle, it becomes edge-on and hard to see
+        
+        if (angle > flip.fadeStart) {
+          // Progressive fade-out as page becomes edge-on
+          opacity = mapRange(flip.fadeStart, flip.fadeEnd, 1, 0, angle);
+          
+          // Motion blur effect for realism
+          blur = mapRange(flip.fadeStart, flip.fadeEnd, 0, flip.blurMax, angle);
+        }
+
+        // === BACKFACE EFFECT ===
+        // Show solid back side when page is rotated enough to see through
+        // Remove any dynamic opacity/blur for backface
+        page.style.setProperty('--backface-color', 'linear-gradient(to bottom, red 0%, #8B0000 100%)');
+        
+        // No shadows on the actively flipping page
         shadowOverlay = 0;
       }
 
-      // Set the rotation origin as a CSS variable for each page
-      page.style.setProperty('--page-rotation-origin-x', flip.rotationOriginX);
-      page.style.setProperty('--page-rotation-origin-y', flip.rotationOriginY);
+      // === SHADOW OVERLAY SYSTEM ===
+      // Pages in the stack are in shadow by default. The shadow fades as the page
+      // above it is turned, revealing the page below.
+      // Apply dynamic shadow only to pages deeper in the stack.
+      // The first stacked page (rel === 1) should have no overlay so its image is visible.
+      const shadowCfg = PAGE_ANIMATION.effects.shadow;
+      if (rel > 1) {
+        // This page is in the stack.
+        const pageAboveRel = rel - 1;
+        // Calculate the angle of the page directly above this one.
+        const pageAboveProgress = Math.max(0, 1 - pageAboveRel);
+        const pageAboveAngle = flip.readyRotationX + (pageAboveProgress * flip.maxAngle);
+        // The shadow on the current page fades out as the page above rotates.
+        // Shadow is full when page above is flat (angle=0), and gone when it's vertical (angle=90).
+        shadowOverlay = mapRange(
+          shadowCfg.fadeStartAngle, 
+          shadowCfg.fadeEndAngle, 
+          shadowCfg.startOpacity, 
+          shadowCfg.endOpacity, 
+          pageAboveAngle
+        );
+        shadowOverlay = Math.max(0, shadowOverlay); // Ensure it doesn't go negative
+      } else {
+        shadowOverlay = 0;
+      }
+      // Set shadow color and blur as CSS variables
+      page.style.setProperty('--shadow-color', shadowCfg.color);
+      page.style.setProperty('--shadow-blur', shadowCfg.blur.enabled ? `${shadowOverlay * shadowCfg.blur.maxBlur}px` : '0px');
+
+      // === PAGE BACKDROP FADE ===
+      let backdropOpacity = 1;
+      if (rel <= 0.5) {
+        backdropOpacity = 1;
+      } else if (rel > 0.5 && rel <= 1.5) {
+        backdropOpacity = 1.5 - rel;
+      } else {
+        backdropOpacity = 0;
+      }
+      page.style.setProperty('--backdrop-opacity', backdropOpacity);
 
       // === APPLY ALL VISUAL PROPERTIES ===
-      // Set CSS custom properties and styles for this page
-      page.style.setProperty('--backface-alpha', backfaceAlpha);
-      page.style.setProperty('--backface-blur', `${backfaceBlur}px`);
-      page.style.setProperty('--shadow-overlay', shadowOverlay);
-      
-      // 3D transform: Always apply Y and Z for all pages
-      page.style.transform = `translate3d(0, ${y}px, ${z}px) rotateX(${angle}deg)`;
-      
-      // Visual effects
-      page.style.opacity = opacity;
-      page.style.filter = `blur(${blur}px)`;
-      
-      // === FRONT CONTENT VISIBILITY ===
-      // Hide the page-content (image) when the page back is facing the viewer (>90deg)
+      // Batch DOM operations for better performance
+      const style = page.style;
+      // Set rotation origin as CSS variables (cached at module level for performance)
+      style.setProperty('--page-rotation-origin-x', flip.rotationOriginX);
+      style.setProperty('--page-rotation-origin-y', flip.rotationOriginY);
+      // Set CSS custom properties for visual effects
+      style.setProperty('--shadow-overlay', shadowOverlay);
+      // Apply 3D transform (hardware accelerated)
+      style.transform = `translate3d(0, ${y}px, ${z}px) rotateX(${angle}deg)`;
+      // Apply visual effects
+      style.opacity = opacity;
+      style.filter = blur > 0 ? `blur(${blur}px)` : '';
+      // === OPTIMIZED CONTENT VISIBILITY ===
+      // Cache content element reference to avoid repeated queries
       const content = page.querySelector('.page-content');
       if (content) {
-        content.style.opacity = angle > 90 ? 0 : 1;
+        content.style.opacity = 1;
+        // Keep blur logic if needed, or remove if you want no blur at all:
+        // content.style.filter = '';
       }
       
-      // Layout and visibility
-      page.style.visibility = 'visible';
-      page.style.zIndex = rel <= 1 ? 200 : 100 - Math.floor(rel); // Higher z-index for pages closer to top
-      page.style.display = 'flex';
+      // Layout and visibility (batch these operations)
+      style.visibility = 'visible';
+      style.zIndex = rel <= 1 ? 200 : 100 - Math.floor(rel);
+      style.display = 'flex';
 
     } else {
-      // === HIDDEN PAGES ===
-      // Pages that are outside the visible range
+      // === HIDDEN PAGES OPTIMIZATION ===
+      // Batch DOM operations for hidden pages and avoid unnecessary work
       
-      page.style.visibility = 'hidden';
-      page.style.zIndex = 0;
-      page.style.display = 'none';
+      const style = page.style;
       
-      // Reset all effects for hidden pages
-      page.style.setProperty('--shadow-overlay', 0);
-      page.style.setProperty('--backface-alpha', 0);
-      page.style.setProperty('--backface-blur', '0px');
+      // Early exit if already hidden to prevent redundant operations
+      if (style.display === 'none') continue;
+      
+      style.visibility = 'hidden';
+      style.zIndex = 0;
+      style.display = 'none';
+      
+      // Reset all effects for hidden pages (batch operations)
+      style.setProperty('--shadow-overlay', 0);
     }
   }
-} 
+  
+  perf.mark('render-end');
+  perf.measure('render');
+}
