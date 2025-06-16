@@ -12,116 +12,64 @@ console.log('Browser Theme Initialised');
 const prefersDarkMode = window.matchMedia("(prefers-color-scheme: dark)");
 const root = document.documentElement;
 
-// Enhanced color presets with additional properties
-const COLOR_PRESETS = {
+// Browser-specific background colors
+const BROWSER_BACKGROUNDS = {
     chrome: { 
-        light: { 
-            main: "#ffffff",
-            accent: "#e8eaed",
-            text: "#202124"
-        }, 
-        dark: { 
-            main: "#3c3c3c",
-            accent: "#444746",
-            text: "#e8eaed"
-        }
+        light: "#ffffff",
+        dark: "#3c3c3c"
     },
     safari: { 
-        light: { 
-            main: "#f3f3f2",
-            accent: "#cdcdcc",
-            text: "#1d1d1f"
-        }, 
-        dark: { 
-            main: "#242424",
-            accent: "#000000",
-            text: "#f5f5f7"
-        }
+        light: "#f3f3f2",
+        dark: "#242424"
     },
     firefox: { 
-        light: { 
-            main: "#f5f5f5",
-            accent: "#d4d4d2",
-            text: "#20123a"
-        }, 
-        dark: { 
-            main: "#2e2e2e",
-            accent: "#2d2d2d",
-            text: "#f9f9fa"
-        }
+        light: "#f5f5f5",
+        dark: "#2e2e2e"
     },
     edge: { 
-        light: { 
-            main: "#f3f2f1",
-            accent: "#e2e3e1",
-            text: "#323130"
-        }, 
-        dark: { 
-            main: "#323130",
-            accent: "#444746",
-            text: "#f3f2f1"
-        }
+        light: "#f3f2f1",
+        dark: "#323130"
     },
     opera: { 
-        light: { 
-            main: "#fafafa",
-            accent: "#e2e3e1",
-            text: "#202124"
-        }, 
-        dark: { 
-            main: "#3b3b3b",
-            accent: "#444746",
-            text: "#f5f5f7"
-        }
+        light: "#fafafa",
+        dark: "#3b3b3b"
     },
     brave: { 
-        light: { 
-            main: "#ffffff",
-            accent: "#e2e3e1",
-            text: "#202124"
-        }, 
-        dark: { 
-            main: "#2d2d2d",
-            accent: "#444746",
-            text: "#f5f5f7"
-        }
+        light: "#ffffff",
+        dark: "#2d2d2d"
     },
     arc: { 
-        light: { 
-            main: "#e8e8e8",
-            accent: "#e2e3e1",
-            text: "#202124"
-        }, 
-        dark: { 
-            main: "#292a2b",
-            accent: "#444746",
-            text: "#f5f5f7"
-        }
+        light: "#e8e8e8",
+        dark: "#292a2b"
     },
     default: { 
-        light: { 
-            main: "#ffffff",
-            accent: "#e2e3e1",
-            text: "#202124"
-        }, 
-        dark: { 
-            main: "#1b1c1c",
-            accent: "#444746",
-            text: "#f5f5f7"
-        }
+        light: "#ffffff",
+        dark: "#1b1c1c"
     }
 };
 
-// Presets for the hairline colors (optional)
-const COLOR_LINE_PRESETS = {
-    chrome: { light: "#e2e3e1", dark: "#444746" },
-    safari: { light: "#cdcdcc", dark: "#000000" },
-    firefox: { light: "#d4d4d2", dark: "#2d2d2d" },
-    edge: { light: "#e2e3e1", dark: "#444746" },
-    opera: { light: "#e2e3e1", dark: "#444746" },
-    brave: { light: "#e2e3e1", dark: "#444746" },
-    arc: { light: "#e2e3e1", dark: "#444746" },
-    default: { light: "#e2e3e1", dark: "#444746" }
+// Universal UI theme colors (same for all browsers)
+const UI_THEME = {
+    light: {
+        text: "#202124",
+        textSecondary: "#5f6368",
+        buttonFill: "#ffffff",
+        buttonOutline: "#dadce0",
+        buttonText: "#202124",
+        spine: "#f1f3f4",
+        commentaryBg: "rgba(255, 255, 255, 0.95)",
+        commentaryText: "rgba(32, 33, 36, 0.8)"
+    },
+    dark: {
+        text: "#e8eaed",
+        textSecondary: "#9aa0a6",
+        buttonFill: "#444746",
+        buttonOutline: "#5f6368",
+        buttonText: "#e8eaed",
+        spine: "#2d2d2d",
+        commentaryBg: "rgba(60, 60, 60, 0.95)",
+        commentaryText: "rgba(232, 234, 237, 0.8)"
+    }
 };
 
 // Detect user's browser with improved accuracy
@@ -170,24 +118,29 @@ function detectBrowser() {
 function applyBrowserColors() {
     const browser = detectBrowser();
     const mode = prefersDarkMode.matches ? "dark" : "light";
-    const colors = COLOR_PRESETS[browser] || COLOR_PRESETS.default;
-    const theme = colors[mode];
+    const browserBg = BROWSER_BACKGROUNDS[browser] || BROWSER_BACKGROUNDS.default;
+    const uiColors = UI_THEME[mode];
 
     // Add transition class
     root.classList.add('theme-transitioning');
 
-    // Apply colors to CSS variables
-    root.style.setProperty("--browser-color", theme.main);
-    root.style.setProperty("--browser-accent", theme.accent);
-    root.style.setProperty("--browser-text", theme.text);
+    // Apply browser-specific background color
+    root.style.setProperty("--browser-color", browserBg[mode]);
     
-    // Apply background color to body
-    document.body.style.backgroundColor = theme.main;
+    // Apply universal UI theme colors
+    root.style.setProperty("--browser-text", uiColors.text);
+    root.style.setProperty("--browser-text-secondary", uiColors.textSecondary);
+    root.style.setProperty("--browser-button-fill", uiColors.buttonFill);
+    root.style.setProperty("--browser-button-outline", uiColors.buttonOutline);
+    root.style.setProperty("--browser-button-text", uiColors.buttonText);
+    root.style.setProperty("--browser-spine", uiColors.spine);
+    root.style.setProperty("--browser-commentary-bg", uiColors.commentaryBg);
+    root.style.setProperty("--browser-commentary-text", uiColors.commentaryText);
     
     // Update theme-color meta tag
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-        metaThemeColor.setAttribute('content', theme.main);
+        metaThemeColor.setAttribute('content', browserBg[mode]);
     }
 
     // Remove transition class after animation completes
@@ -198,28 +151,7 @@ function applyBrowserColors() {
 
 // Initialize theme settings
 export function initBrowserTheme() {
-    // Add transition styles
-    const style = document.createElement('style');
-    style.textContent = `
-        :root {
-            --browser-color: #ffffff;
-            --browser-accent: #e2e3e1;
-            --browser-text: #202124;
-            transition: background-color 0.3s ease;
-        }
-        
-        :root.theme-transitioning * {
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        
-        body {
-            background-color: var(--browser-color);
-            color: var(--browser-text);
-        }
-    `;
-    document.head.appendChild(style);
-
-    // Initial application
+    // Apply colors immediately before page shows
     applyBrowserColors();
 
     // Listen for theme changes
