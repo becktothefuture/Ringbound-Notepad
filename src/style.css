@@ -115,11 +115,25 @@ main {
   justify-content: center;
   transform-origin: var(--page-rotation-origin-x) var(--page-rotation-origin-y);
   transform-style: preserve-3d;
-  /* GPU acceleration and performance optimizations */
   overflow: visible;
   --shadow-overlay: 0;
   backface-visibility: visible;
   -webkit-backface-visibility: visible;
+}
+
+/* Commentary layer */
+.commentary {
+  position: absolute;
+  bottom: 4rem;
+  width: 100%;
+  text-align: center;
+  font-style: italic;
+  pointer-events: none;
+  color: rgba(0, 0, 0, 0.7);
+  font-size: 0.9rem;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+  z-index: 101;
+  transform: translateZ(0.2px);
 }
 
 /* =====================================================
@@ -432,4 +446,52 @@ body, * {
   pointer-events: none;
   /* Slight 3D effect for realism */
   transform: translateZ(2px);
+}
+
+/* =====================================================
+   COMMENTARY OVERLAY
+   ===================================================== */
+.commentary-overlay {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  max-width: 800px;
+  text-align: center;
+  font-family: var(--font-family);
+  font-size: 1.1rem;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.8);
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  opacity: 0;
+  transform: translate(-50%, 20px);
+}
+
+.commentary-overlay.visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* Ensure the overlay is above the notebook but below any UI elements */
+#notepad {
+  z-index: 100;
+}
+
+/* Ensure the overlay is visible on all devices */
+@media (max-width: 768px) {
+  .commentary-overlay {
+    width: 90%;
+    font-size: 1rem;
+    padding: 1rem;
+    bottom: 1rem;
+  }
 }

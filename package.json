@@ -6,12 +6,13 @@
   "type": "module",
   "scripts": {
     "start": "serve dist",
-    "build": "node build.cjs",
-    "build:watch": "node build.cjs --watch",
+    "build": "node scripts/generatePortfolioJson.js && node scripts/generatePages.js && node build.cjs",
+    "build:watch": "concurrently \"node scripts/generatePortfolioJson.js --watch\" \"node scripts/generatePages.js --watch\" \"node build.cjs --watch\"",
     "dev": "concurrently \"npm:build:watch\" \"npm:start\"",
     "lint": "eslint src/js/**/*.js",
     "format": "prettier --write \"src/**/*.{js,css,html}\"",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "generate-portfolio": "node scripts/generatePortfolioJson.js"
   },
   "keywords": [
     "3d",
@@ -23,6 +24,7 @@
   "author": "Alex Beck",
   "license": "MIT",
   "devDependencies": {
+    "ajv": "^8.12.0",
     "chokidar": "^4.0.3",
     "concurrently": "^9.1.2",
     "esbuild": "^0.25.5",

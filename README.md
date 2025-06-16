@@ -99,4 +99,45 @@ Evergreen browsers released since 2021 (Chromium 94+, Firefox 94+, Safari 15+) w
 
 ## License
 
-MIT License 
+MIT License
+
+## Portfolio System
+
+The portfolio content is now driven by a single JSON source of truth at `/data/portfolio.json`. This makes it easy to update content without touching the code.
+
+### Structure
+
+```json
+{
+  "projects": [
+    {
+      "id": "chapter-1",
+      "title": "Client rebrand",
+      "pages": [
+        {
+          "asset": "chapter-1-1.jpg",
+          "type": "image",
+          "commentary": "Kick-off mood-board"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Development
+
+1. **Build-time Generation**
+   - Run `npm run build` to generate static HTML from the JSON
+   - The generator validates the JSON schema before building
+   - Assets should be placed in `/assets/<project-id>/<filename>`
+
+2. **Development Mode**
+   - Run `npm run dev` to start the development server
+   - Use `?preview=true` in the URL to load JSON at runtime
+   - Changes to `portfolio.json` will trigger a rebuild
+
+3. **Performance**
+   - Images use `loading="lazy"` for better performance
+   - Videos are loaded only when they become visible
+   - Commentary text is positioned with `pointer-events: none` 
