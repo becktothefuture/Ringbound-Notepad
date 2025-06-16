@@ -30,6 +30,10 @@ const state = {
   frameCount: 0
 };
 
+// Cache the commentary overlay element and last shown commentary
+let commentaryOverlay = null;
+let lastCommentary = null;
+
 /**
  * Updates the layered shadow effect based on notepad tilt
  * @param {number} tiltAngle - Current tilt angle of the notepad
@@ -76,6 +80,35 @@ export function renderStack(pages, scrollState) {
   // Calculate tilt and update shadow
   const tiltAngle = Math.min(Math.max(velocity * -0.5, -30), 30);
   updateLayeredShadow(tiltAngle);
+
+  // Update commentary overlay based on current page
+  // Use Math.round to get the actual current page, handling both forward and backward scrolling
+  const currentPageIndex = Math.round(scroll);
+  // Handle infinite loop wrapping
+  const wrappedIndex = infiniteLoop ? 
+    ((currentPageIndex % pageCount) + pageCount) % pageCount : 
+    Math.max(0, Math.min(currentPageIndex, pageCount - 1));
+  
+  const currentPage = pages[wrappedIndex];
+  
+  // Lazy initialize commentary overlay
+  if (!commentaryOverlay) {
+    commentaryOverlay = document.getElementById('commentary-overlay');
+  }
+  
+  if (currentPage && commentaryOverlay) {
+    const commentary = currentPage.dataset.commentary;
+    // Only update if commentary has changed
+    if (commentary !== lastCommentary) {
+      commentaryOverlay.textContent = commentary;
+      if (commentary) {
+        commentaryOverlay.classList.add('visible');
+      } else {
+        commentaryOverlay.classList.remove('visible');
+      }
+      lastCommentary = commentary;
+    }
+  }
 
   // Optimize debug output - only log every 60 frames in debug mode
   if (PAGE_ANIMATION.misc.debug && (++state.frameCount % 60 === 0)) {

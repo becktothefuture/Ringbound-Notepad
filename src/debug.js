@@ -343,7 +343,8 @@ if (PAGE_ANIMATION.misc.debug) {
   debugOverlayInstance = new DebugOverlay();
 }
 
-export const debugOverlay = debugOverlayInstance || {
+// Export a no-op overlay if debug is disabled
+export const debugOverlay = {
   update: () => {},
   toggle: () => {},
   init: () => {}

@@ -41,11 +41,26 @@ export const PAGE_ANIMATION = {
     buffer: 15,              // Preload buffer size
   },
   misc: {
+    debug: false,  // Disable debug mode
+    maxVisiblePages: 15,
+    pageBuffer: 15,
+    showPageNumbers: false,
+    showDebugInfo: false,
+    showPerformance: false,
+    showMemory: false,
+    showTiming: false,
+    showEvents: false,
+    showState: false,
+    showConfig: false,
+    showErrors: false,
+    showWarnings: false,
+    showInfo: false,
+    showDebug: false,
+    showTrace: false,
+    showAll: false,
     rotationEasing: easeInOutExpo,  // Easing for rotation
     videoPreloadDeg: 270,    // Video preload trigger angle
     scrollSensitivity: 0.3, // Scroll sensitivity
-    debug: true,            // Debug mode (optimized for production)
-    frameCap: 120,            // Animation FPS cap
     // Performance optimizations
     enableGPUAcceleration: true, // Enable GPU acceleration hints
   },
@@ -77,12 +92,12 @@ export const PAGE_ANIMATION = {
    */
   parallax: {
     // Maximum rotation angles (degrees)
-    maxRotationX: 5, // Up/Down tilt
-    maxRotationY: 5, // Left/Right turn
-    maxRotationZ: 2,  // Roll / twist
+    maxRotationX: 0, // Disable Up/Down tilt
+    maxRotationY: 0, // Disable Left/Right turn
+    maxRotationZ: 0, // Disable Roll / twist
 
     // Maximum translation as fraction of viewport size (0–1)
-    translateFactor: 0.04, // 0.04 = 4% of viewport width/height
+    translateFactor: 0, // Disable translation
 
     // Damping factor for smooth follow (0–1, lower = slower)
     damp: 0.5,
@@ -125,4 +140,71 @@ export const PAGE_ANIMATION = {
       }
     }
   },
+};
+
+// Debug mode
+export const DEBUG = {
+  enabled: false,  // Set to false by default
+  showFPS: false,
+  showScroll: false,
+  showPageNumbers: false,
+  showPageInfo: false,
+  showStackInfo: false,
+  showPerformance: false,
+  showMemory: false,
+  showTiming: false,
+  showEvents: false,
+  showState: false,
+  showConfig: false,
+  showErrors: false,
+  showWarnings: false,
+  showInfo: false,
+  showDebug: false,
+  showTrace: false,
+  showAll: false,
+  showDebugWindow: false  // Explicitly disable debug window
+};
+
+// Debug window configuration
+export const DEBUG_WINDOW = {
+  enabled: false,  // Disable debug window by default
+  position: 'top-right',
+  width: 300,
+  height: 400,
+  opacity: 0.9,
+  backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  textColor: '#fff',
+  fontSize: '12px',
+  fontFamily: 'monospace',
+  padding: '10px',
+  borderRadius: '5px',
+  zIndex: 9999,
+  showTimestamp: false,
+  showMemory: false,
+  showFPS: false,
+  showScroll: false,
+  showPageInfo: false,
+  showStackInfo: false,
+  showPerformance: false,
+  showTiming: false,
+  showEvents: false,
+  showState: false,
+  showConfig: false,
+  showErrors: false,
+  showWarnings: false,
+  showInfo: false,
+  showDebug: false,
+  showTrace: false,
+  showAll: false
+};
+
+// Mouse movement settings
+export const MOUSE_MOVEMENT = {
+  enabled: false,  // Disable mouse movement
+  sensitivity: 0,  // Set sensitivity to 0
+  maxRotationX: 0, // Disable X rotation
+  maxRotationY: 0, // Disable Y rotation
+  maxRotationZ: 0, // Disable Z rotation
+  smoothing: 0.1,  // Keep smoothing for future use
+  deadzone: 0.1    // Keep deadzone for future use
 }; 
