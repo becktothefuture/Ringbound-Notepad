@@ -7,11 +7,32 @@
 const fs = require('fs');
 const path = require('path');
 const esbuild = require('esbuild');
+const args = process.argv.slice(2);
+const isWatch = args.includes('--watch') || args.includes('-w');
+
+// Chokidar is only required in watch mode to avoid needless dependency cost
+let chokidar;
+if (isWatch) {
+  try {
+    chokidar = require('chokidar');
+  } catch (err) {
+    console.error('❌ chokidar is required for watch mode. Run `npm i -D chokidar`');
+    process.exit(1);
+  }
+}
 
 const ROOT = path.resolve(__dirname, 'src');
 const ASSET_ROOT = path.join(ROOT, 'assets', 'portfolio-pages');
 const OUT_MANIFEST = path.join(ROOT, 'portfolioManifest.js');
 const DIST_DIR = path.resolve(__dirname, 'dist');
+
+/** Simple logger helpers */
+const log = {
+  js: () => console.log('🔄 JS rebuilt'),
+  manifest: () => console.log('📝 manifest updated'),
+  copy: (rel) => console.log(`📂 copied ${rel}`),
+  remove: (rel) => console.log(`🗑 removed ${rel}`),
+};
 
 /**
  * Recursively walks a directory and returns a sorted list of files relative to the root.
@@ -72,14 +93,14 @@ function buildManifest() {
 
   const jsContent = `// AUTO-GENERATED FILE – do not edit directly.\nexport default ${JSON.stringify(chapters, null, 2)};\n`;
   fs.writeFileSync(OUT_MANIFEST, jsContent, 'utf8');
-  console.log(`✅ Generated portfolio manifest with ${chapters.length} chapter(s).`);
+  log.manifest();
 }
 
 /**
  * Bundle source into dist/ using esbuild so that users can just run `npm run start`.
  * The bundling is very simple: copy all static assets and let esbuild handle JS.
  */
-async function bundle() {
+async function bundle({ watch = false } = {}) {
   if (fs.existsSync(DIST_DIR)) fs.rmSync(DIST_DIR, { recursive: true, force: true });
   fs.mkdirSync(DIST_DIR, { recursive: true });
 
@@ -93,6 +114,7 @@ async function bundle() {
         copyRecursive(absSrc, absDest);
       } else if (entry.isFile()) {
         fs.copyFileSync(absSrc, absDest);
+        if (watch) log.copy(path.relative(ROOT, absSrc));
       }
     }
   }
@@ -103,8 +125,8 @@ async function bundle() {
   fs.copyFileSync(path.join(ROOT, 'index.html'), path.join(DIST_DIR, 'index.html'));
   fs.copyFileSync(path.join(ROOT, 'style.css'), path.join(DIST_DIR, 'style.css'));
 
-  // Bundle JS entry app.js and its imports; let esbuild handle ES modules.
-  await esbuild.build({
+  // Shared esbuild options
+  const esOpts = {
     entryPoints: [path.join(ROOT, 'app.js')],
     bundle: true,
     outdir: DIST_DIR,
@@ -123,12 +145,85 @@ async function bundle() {
       '.mov': 'file',
     },
     assetNames: 'assets/[name]-[hash]',
-  });
-  console.log('✅ Build complete');
+  };
+
+  if (!watch) {
+    await esbuild.build(esOpts);
+    console.log('✅ Build complete');
+  } else {
+    const ctx = await esbuild.context(esOpts);
+    await ctx.watch();
+log.js();
+  }
 }
 
-buildManifest();
-bundle().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// --------------------------- MAIN -----------------------------
+(async () => {
+  try {
+    buildManifest();
+    await bundle({ watch: isWatch });
+
+    if (!isWatch) return; // single build done
+
+    // ----------------- WATCH MODE -----------------
+
+    /**
+     * 1) Watch portfolio-pages to regenerate manifest and copy affected media
+     */
+    const portfolioWatcher = chokidar.watch('src/assets/portfolio-pages', {
+      ignoreInitial: true,
+    });
+
+    function handleAssetChange(absPath, event) {
+      const relFromSrc = path.relative(ROOT, absPath);
+      const destPath = path.join(DIST_DIR, relFromSrc);
+
+      if (event === 'add' || event === 'change') {
+        fs.mkdirSync(path.dirname(destPath), { recursive: true });
+        fs.copyFileSync(absPath, destPath);
+        log.copy(relFromSrc);
+      } else if (event === 'unlink') {
+        fs.rmSync(destPath, { force: true });
+        log.remove(relFromSrc);
+      }
+      buildManifest();
+    }
+
+    portfolioWatcher
+      .on('add', (p) => handleAssetChange(p, 'add'))
+      .on('change', (p) => handleAssetChange(p, 'change'))
+      .on('unlink', (p) => handleAssetChange(p, 'unlink'))
+      .on('error', (err) => {
+        console.error('❌ portfolio watcher error:', err);
+        process.exit(1);
+      });
+
+    /**
+     * 2) Watch other static assets (html, css, non-JS assets excluding portfolio-pages)
+     */
+    const staticWatcher = chokidar.watch([
+      'src/**/*',
+      '!src/**/*.js',
+      '!src/**/*.ts',
+      '!src/**/*.tsx',
+      '!src/assets/portfolio-pages/**',
+      '!src/**/.*',
+    ], {
+      ignoreInitial: true,
+    });
+
+    staticWatcher
+      .on('add', (abs) => handleAssetChange(abs, 'add'))
+      .on('change', (abs) => handleAssetChange(abs, 'change'))
+      .on('unlink', (abs) => handleAssetChange(abs, 'unlink'))
+      .on('error', (err) => {
+        console.error('❌ static watcher error:', err);
+        process.exit(1);
+      });
+
+    console.log('👀 Watch mode active – waiting for changes...');
+  } catch (err) {
+    console.error(err);
+    process.exit(1);
+  }
+})();

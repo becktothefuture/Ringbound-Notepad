@@ -33,7 +33,7 @@ body, html {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background: var(--page-bg);
+  /* background: var(--page-bg); */
 }
 
 body {
@@ -69,7 +69,6 @@ main {
   max-width: 1100px;
   height: auto;
   aspect-ratio: 16/9;
-  background: var(--notepad-bg);
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -88,6 +87,8 @@ main {
   --shadow-blur: 28px;         /* Base blur amount */
   --shadow-offset-y: 60px;     /* Vertical offset */
   --shadow-anim-duration: 0.3s; /* Shadow movement animation duration */
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center center;
 }
 
 #notepad-inner {
@@ -107,7 +108,6 @@ main {
   width: 100%;
   height: 100%;
   aspect-ratio: 16/9;
-  background: var(--page-bg);
   z-index: 2;
   display: flex;
   flex-direction: column;
@@ -118,6 +118,8 @@ main {
   /* GPU acceleration and performance optimizations */
   overflow: visible;
   --shadow-overlay: 0;
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
 }
 
 /* =====================================================
@@ -127,43 +129,30 @@ main {
   position: relative;
   width: 100%;
   height: 100%;
-  z-index: 200;
+  z-index: 100;
   transform: translateZ(0.1px);
   overflow: hidden;
   will-change: opacity, transform;
   transform-style: preserve-3d;
   padding: 1vh;
   box-sizing: border-box;
+  border-radius: 0.5rem;
+  background: #fff !important;
 }
 
 .page-content__inner{
-  outline:2px solid #000;
+  outline:1px solid #c2c2c21f;
   outline-offset:-2px; /* keeps border inside */
   box-sizing:border-box;
+  background: #fff !important;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 /* =====================================================
    PAGE PSEUDO-ELEMENTS (BACKFACE & SHADOW)
    ===================================================== */
-.page::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(to bottom, #00000077 0%, #00000032 100%);
-  z-index: 1;
-  pointer-events: none;
-  backface-visibility: visible;
-  -webkit-backface-visibility: visible;
-  will-change: auto;
-  opacity: var(--backdrop-opacity, 1);
-  transition: opacity 0.3s cubic-bezier(0.4,0,0.2,1);
-  transform: translateZ(-1px) rotateY(180deg);
-  transform-style: preserve-3d;
-}
-
+/* Inner shadow */
 .page::after {
   content: '';
   position: absolute;
@@ -171,72 +160,20 @@ main {
   left: 0;
   width: 100%;
   height: 100%;
-  background: var(--shadow-color, rgba(0, 0, 0, 0.2));
-  z-index: 10;
+  background: var(--shadow-color, linear-gradient(to bottom, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0.5)));
+  z-index: 300; /* above .page-content so inner shadow overlays content */
   pointer-events: none;
   backface-visibility: hidden;
   opacity: var(--shadow-overlay, 0);
   filter: blur(var(--shadow-blur, 0px));
+  transform: translateZ(1px);
+
 }
 
 /* Topmost page should have no inner shadow */
 .page:first-child {
   --shadow-overlay: 0;
 }
-
-/* =====================================================
-   PAGE BACKGROUND COLORS (DEBUG/FALLBACK)
-   ===================================================== */
-.page:nth-child(1) { background-color: hsl(0, 70%, 96%); }
-.page:nth-child(2) { background-color: hsl(7, 70%, 96%); }
-.page:nth-child(3) { background-color: hsl(15, 70%, 96%); }
-.page:nth-child(4) { background-color: hsl(22, 70%, 96%); }
-.page:nth-child(5) { background-color: hsl(29, 70%, 96%); }
-.page:nth-child(6) { background-color: hsl(37, 70%, 96%); }
-.page:nth-child(7) { background-color: hsl(44, 70%, 96%); }
-.page:nth-child(8) { background-color: hsl(51, 70%, 96%); }
-.page:nth-child(9) { background-color: hsl(59, 70%, 96%); }
-.page:nth-child(10) { background-color: hsl(66, 70%, 96%); }
-.page:nth-child(11) { background-color: hsl(73, 70%, 96%); }
-.page:nth-child(12) { background-color: hsl(81, 70%, 96%); }
-.page:nth-child(13) { background-color: hsl(88, 70%, 96%); }
-.page:nth-child(14) { background-color: hsl(95, 70%, 96%); }
-.page:nth-child(15) { background-color: hsl(103, 70%, 96%); }
-.page:nth-child(16) { background-color: hsl(110, 70%, 96%); }
-.page:nth-child(17) { background-color: hsl(117, 70%, 96%); }
-.page:nth-child(18) { background-color: hsl(125, 70%, 96%); }
-.page:nth-child(19) { background-color: hsl(132, 70%, 96%); }
-.page:nth-child(20) { background-color: hsl(139, 70%, 96%); }
-.page:nth-child(21) { background-color: hsl(147, 70%, 96%); }
-.page:nth-child(22) { background-color: hsl(154, 70%, 96%); }
-.page:nth-child(23) { background-color: hsl(161, 70%, 96%); }
-.page:nth-child(24) { background-color: hsl(169, 70%, 96%); }
-.page:nth-child(25) { background-color: hsl(176, 70%, 96%); }
-.page:nth-child(26) { background-color: hsl(183, 70%, 96%); }
-.page:nth-child(27) { background-color: hsl(191, 70%, 96%); }
-.page:nth-child(28) { background-color: hsl(198, 70%, 96%); }
-.page:nth-child(29) { background-color: hsl(205, 70%, 96%); }
-.page:nth-child(30) { background-color: hsl(213, 70%, 96%); }
-.page:nth-child(31) { background-color: hsl(220, 70%, 96%); }
-.page:nth-child(32) { background-color: hsl(227, 70%, 96%); }
-.page:nth-child(33) { background-color: hsl(235, 70%, 96%); }
-.page:nth-child(34) { background-color: hsl(242, 70%, 96%); }
-.page:nth-child(35) { background-color: hsl(249, 70%, 96%); }
-.page:nth-child(36) { background-color: hsl(257, 70%, 96%); }
-.page:nth-child(37) { background-color: hsl(264, 70%, 96%); }
-.page:nth-child(38) { background-color: hsl(271, 70%, 96%); }
-.page:nth-child(39) { background-color: hsl(279, 70%, 96%); }
-.page:nth-child(40) { background-color: hsl(286, 70%, 96%); }
-.page:nth-child(41) { background-color: hsl(293, 70%, 96%); }
-.page:nth-child(42) { background-color: hsl(301, 70%, 96%); }
-.page:nth-child(43) { background-color: hsl(308, 70%, 96%); }
-.page:nth-child(44) { background-color: hsl(315, 70%, 96%); }
-.page:nth-child(45) { background-color: hsl(323, 70%, 96%); }
-.page:nth-child(46) { background-color: hsl(330, 70%, 96%); }
-.page:nth-child(47) { background-color: hsl(337, 70%, 96%); }
-.page:nth-child(48) { background-color: hsl(345, 70%, 96%); }
-.page:nth-child(49) { background-color: hsl(352, 70%, 96%); }
-.page:nth-child(50) { background-color: hsl(360, 70%, 96%); }
 
 /* =====================================================
    CHAPTER TAB STYLES
@@ -463,4 +400,36 @@ h1, h2 {
 
 body, * {
   font-family: 'Uncut Sans', system-ui, sans-serif !important;
+}
+
+/* Zoomed-in state toggled by JS */
+#notepad.notepad--zoomed {
+  transform: scale(2);
+}
+
+/* Overlay zoom-out and blur effect when notebook is zoomed in */
+#homepage-overlay.overlay--zoomed-out {
+  transform: scale(1.38);
+  filter: blur(6px) brightness(0.95);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), filter 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+/* Ensure overlay transitions back smoothly */
+#homepage-overlay {
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), filter 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.notebook-spine {
+  position: absolute;
+  top: -8px;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  background: linear-gradient(180deg, #222 70%, #111 100%);
+  z-index: 20;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.18);
+  pointer-events: none;
+  /* Slight 3D effect for realism */
+  transform: translateZ(2px);
 }
