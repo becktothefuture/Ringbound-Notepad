@@ -24,7 +24,6 @@ import { PAGE_ANIMATION } from './config.js';            // Animation settings a
 // import { applyBeautifulShadow } from './utils.js';      // Mathematical utility functions  
 import { initScrollEngine, subscribe } from './scrollEngine.js'; // Scroll handling system
 import { renderStack } from './render.js';               // Visual rendering system
-import { debug, debugOverlay } from './debug.js';       // Debug system
 import { getInfiniteLoopDebugInfo, shouldUseInfiniteLoop } from './infiniteLoop.js'; // Infinite loop system
 import { initChapters } from './chapterManager.js';
 import { initMouseTracker } from './mouseTracker.js';
@@ -50,32 +49,12 @@ async function bootstrap() {
   const pages = createPagesFromManifest(notepadInner, manifest);
 
   /* ================= SCROLL ENGINE INITIALISATION ================= */
-  debug.log('Initializing scroll engine...');
-  debug.log(`Generated ${pages.length} pages from manifest`);
-  debug.log(`Infinite loop enabled: ${shouldUseInfiniteLoop(pages.length)}`);
-
   initScrollEngine(notepad, pages.length);
   initChapters(pages, notepad);
 
   /* ================= RENDER SYSTEM CONNECTION ================= */
   subscribe((state) => {
     renderStack(pages, state);
-
-    // Update debug overlay with current state and infinite loop info
-    const debugInfo = {
-      scroll: state.scroll,
-      page: state.page,
-      progress: state.progress,
-      rotation: state.rotation,
-    };
-
-    if (shouldUseInfiniteLoop(pages.length)) {
-      const loopInfo = getInfiniteLoopDebugInfo(state.scroll, pages.length);
-      debugInfo.cycle = loopInfo.cycle;
-      debugInfo.cyclePosition = loopInfo.cyclePosition;
-    }
-
-    debugOverlay.update(debugInfo);
   });
 
   /* ======= Mouse parallax & other existing logic remains unchanged ======= */
@@ -177,21 +156,6 @@ function setupNotebookParallax(notepad, notepadInner) {
     requestAnimationFrame(animateNotebook);
   }
   requestAnimationFrame(animateNotebook);
-
-  // === Debug overlay: show mouse position and rotation config ===
-  debugOverlay.update = (function (orig) {
-    return function (info) {
-      orig.call(this, {
-        ...info,
-        mouseX: lastMouse.x.toFixed(3),
-        mouseY: lastMouse.y.toFixed(3),
-        maxRotationY,
-        maxRotationX,
-        maxRotationZ,
-        currentRotZ: (lastMouse.x * maxRotationZ).toFixed(1) + '°',
-      });
-    };
-  })(debugOverlay.update);
 }
 
 bootstrap();
@@ -201,6 +165,4 @@ bootstrap();
 // setupScrollEngine();        // Advanced scroll configurations
 // renderStack();              // Alternative rendering modes  
 // domManager.init();          // Dynamic content management
-// videoController.init();     // Video playback synchronization
-
-// (General debug logs are now handled in bootstrap where pages are defined) 
+// videoController.init();     // Video playback synchronization 

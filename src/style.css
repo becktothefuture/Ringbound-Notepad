@@ -23,6 +23,12 @@
   /* Page rotation origin */
   --page-rotation-origin-x: 50%;
   --page-rotation-origin-y: 5%;
+
+  /* Browser colors */
+  --browser-color: #ffffff;
+  --browser-accent: #e2e3e1;
+  --browser-text: #202124;
+  transition: background-color 0.3s ease;
 }
 
 /* =====================================================
@@ -33,11 +39,14 @@ body, html {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  /* background: var(--page-bg); */
+  background-color: var(--browser-color);
+  color: var(--browser-text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease;
 }
 
 body {
-  font-family: var(--font-family);
   font-size: 14px;
   min-height: 100svh;
   width: 100vw;
@@ -361,16 +370,9 @@ h1, h2 {
   color: #1e1e1e;
 }
 
+/* Remove video background styles */
 #video-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  object-fit: cover;
-  z-index: 0;
-  pointer-events: none;
-  background: #eee;
+  display: none;
 }
 
 

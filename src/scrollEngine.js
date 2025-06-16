@@ -15,7 +15,6 @@
 
 import { PAGE_ANIMATION } from './config.js';
 import { clamp } from './utils.js';
-import { debug } from './debug.js';
 import { normalizeScrollPosition, shouldUseInfiniteLoop } from './infiniteLoop.js';
 
 // Device-specific optimizations
@@ -167,7 +166,6 @@ function onWheel(e) {
   const oldScroll = scroll;
   scroll += e.deltaY * scrollSensitivity / 100;
   scroll = applyScrollBounds(scroll);
-  debug.log(`Wheel event: deltaY=${e.deltaY}, scroll: ${oldScroll.toFixed(3)} → ${scroll.toFixed(3)}`);
   notify();
   scheduleSnapIfNeeded();
 }
@@ -181,7 +179,6 @@ function onWheel(e) {
 function onTouchStart(e) {
   if (e.touches.length === 1) {
     lastY = e.touches[0].clientY; // Remember starting Y position
-    debug.log(`Touch start at Y=${lastY}`);
   }
 }
 
@@ -199,7 +196,6 @@ function onTouchMove(e) {
     const oldScroll = scroll;
     scroll += dy * scrollSensitivity / 100;
     scroll = applyScrollBounds(scroll);
-    debug.log(`Touch move: dy=${dy}, scroll: ${oldScroll.toFixed(3)} → ${scroll.toFixed(3)}`);
     notify();
     scheduleSnapIfNeeded();
   }
@@ -231,7 +227,6 @@ function onTouchEnd(e) {
     const currentPage = Math.round(scroll);
     let target = currentPage + direction;
     target = applyScrollBounds(target);
-    debug.log(`Swipe event: direction=${direction}, snapping from ${scroll.toFixed(2)} to ${target}`);
     animateScrollTo(target);
   }
 
@@ -285,7 +280,6 @@ function animateScrollTo(target) {
       notify();
       isAnimating = false; // Unlock for next input
       animationFrameId = null;
-      debug.log(`Animation complete. Scroll is now ${scroll}. Input unlocked.`);
     }
   }
   
@@ -342,8 +336,6 @@ function animateSnapTo(target) {
       notify();
       isSnapAnimating = false;
       snapAnimationFrameId = null;
-      debug.log('Snap animation complete.');
-      return;
     }
   }
   snapAnimationCancel = () => {
@@ -358,7 +350,6 @@ function animateSnapTo(target) {
 function interruptSnapAnimation() {
   if (isSnapAnimating && snapAnimationCancel) {
     snapAnimationCancel();
-    debug.log('Snap animation interrupted by user input.');
   }
 }
 
@@ -417,8 +408,6 @@ function onPageClick(e) {
   e.preventDefault();
   e.stopPropagation();
   
-  debug.log('Page click detected, advancing page...');
-  
   // Get current scroll state
   const state = getState();
   const { page, progress } = state;
@@ -429,11 +418,9 @@ function onPageClick(e) {
   if (progress > 0.01) {
     // Page is currently flipping - complete the flip
     targetPage = page + 1;
-    debug.log(`Completing flip from page ${page} to ${page + 1}`);
   } else {
     // Page is stable - advance to next page
     targetPage = page + 1;
-    debug.log(`Advancing from page ${page} to ${page + 1}`);
   }
   
   // Apply bounds and animate to target
@@ -461,8 +448,6 @@ function onPageClick(e) {
  * @param {number} pageCount - Total number of pages for bounds calculation
  */
 export function initScrollEngine(container, pageCount = 0) {
-  debug.log('Initializing scroll engine with container:', container);
-  debug.log(`Total pages: ${pageCount}, Infinite loop: ${shouldUseInfiniteLoop(pageCount)}`);
   // Store page count for scroll bounds
   totalPages = pageCount;
   // Mouse wheel events
@@ -472,12 +457,6 @@ export function initScrollEngine(container, pageCount = 0) {
   document.addEventListener('touchmove', onTouchMove, { passive: true });
   document.addEventListener('touchend', onTouchEnd, { passive: true });
   document.addEventListener('touchcancel', onTouchCancel, { passive: true });
-  
-  // Click-to-turn functionality removed; click now reserved for notebook zoom handled in app.js
-  
-  debug.log('Scroll engine event listeners attached to document');
-  // Note: { passive: true } allows us to preventDefault() if needed
-  // This prevents the page from scrolling normally while using the notepad
 }
 
 /**
@@ -486,7 +465,6 @@ export function initScrollEngine(container, pageCount = 0) {
  */
 export function updatePageCount(newPageCount) {
   totalPages = newPageCount;
-  debug.log(`Page count updated to ${newPageCount}`);
   
   // Reapply bounds with new page count
   scroll = applyScrollBounds(scroll);
