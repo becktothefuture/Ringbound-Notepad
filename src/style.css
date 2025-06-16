@@ -2,33 +2,118 @@
    ROOT THEME VARIABLES
    ===================================================== */
 :root {
-  /* Notepad dimensions and spacing */
-  --notepad-bg: rgb(240, 240, 240);              /* Light grey background color of the page body */
-  --page-bg: #bbbbbb;                            /* Default page background (dark gray) */
-  --page-radius: .5rem;                          /* Page corner radius */
+  /* Browser Theme Variables */
+  --browser-color: #ffffff; /* Will be set by JS to match browser */
+  --browser-text: #202124;
+  --browser-text-secondary: #5f6368;
+  --browser-button-fill: #ffffff;
+  --browser-button-outline: #dadce0;
+  --browser-button-text: #202124;
+  --browser-spine: #f1f3f4;
+  --browser-commentary-bg: rgba(255, 255, 255, 0.95);
+  --browser-commentary-text: rgba(32, 33, 36, 0.8);
 
-  
+  /* Theme Transitions */
+  --theme-transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+
+  /* Notepad dimensions and spacing */
+  --notepad-bg: var(--browser-color);
+  --page-bg: var(--browser-color);
+  --page-radius: .5rem;
+
   /* Typography */
-  --font-family: 'Uncut Sans', system-ui, sans-serif; /* Clean, modern font stack */
+  --font-family: 'Uncut Sans', system-ui, sans-serif;
   
   /* Shadow System Variables */
-  --shadow-layers: 3;                            /* Number of shadow layers */
-  --shadow-color: rgba(0, 0, 0, 0.2);            /* Base shadow color and opacity */
-  --shadow-blur: 15px;                           /* Base shadow blur amount */
-  --shadow-spread: 0px;                          /* Base shadow spread amount */
-  --shadow-x-offset: 0px;                        /* Dynamic x-offset controlled by JS */
-  --shadow-y-offset: 2px;                        /* Base y-offset */
-  --shadow-transition: transform 0.2s ease-out;  /* Shadow movement transition */
+  --shadow-layers: 3;
+  --shadow-color: rgba(0, 0, 0, 0.2);
+  --shadow-blur: 15px;
+  --shadow-spread: 0px;
+  --shadow-x-offset: 0px;
+  --shadow-y-offset: 2px;
+  --shadow-transition: transform 0.2s ease-out;
   
   /* Page rotation origin */
   --page-rotation-origin-x: 50%;
   --page-rotation-origin-y: 5%;
+}
 
-  /* Browser colors */
-  --browser-color: #ffffff;
-  --browser-accent: #e2e3e1;
-  --browser-text: #202124;
-  transition: background-color 0.3s ease;
+/* Theme Transition Class */
+:root.theme-transitioning * {
+  transition: var(--theme-transition);
+}
+
+/* Base Theme Styles */
+body {
+  background-color: var(--browser-color);
+  color: var(--browser-text);
+  transition: var(--theme-transition);
+}
+
+/* Theme-aware UI Elements */
+.homepage-btn {
+  background-color: var(--browser-button-fill);
+  border-color: var(--browser-button-outline);
+  color: var(--browser-button-text);
+  transition: var(--theme-transition);
+}
+
+.homepage-btn:hover, .homepage-btn:focus {
+  background-color: var(--browser-button-outline);
+  border-color: var(--browser-button-outline);
+  color: var(--browser-text);
+}
+
+.notebook-spine {
+  background: linear-gradient(180deg, var(--browser-spine) 70%, var(--browser-button-outline) 100%);
+  transition: var(--theme-transition);
+}
+
+.commentary-overlay {
+  background: var(--browser-commentary-bg);
+  color: var(--browser-commentary-text);
+  transition: var(--theme-transition);
+}
+
+h1, h2 {
+  color: var(--browser-text);
+  transition: var(--theme-transition);
+}
+
+.page-tab {
+  position: absolute;
+  z-index: 1001;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-family);
+  font-weight: 600;
+  color: transparent !important;
+  text-align: center;
+  transition: transform 0.2s ease-out;
+  background: #fff;
+  pointer-events: auto;
+  /* Prevent shadow effects */
+  --shadow-overlay: 0 !important;
+  --shadow-blur: 0 !important;
+  --shadow-color: transparent !important;
+  filter: none !important;
+  opacity: 1 !important;
+  /* Ensure tab is not affected by page shadow */
+  isolation: isolate;
+}
+
+/* Ensure tab content is not affected by shadows */
+.page-tab svg {
+  filter: none !important;
+  opacity: 1 !important;
+  isolation: isolate;
+}
+
+/* Prevent page shadow from affecting tabs */
+.page-tab::after {
+  display: none !important;
 }
 
 /* =====================================================
@@ -138,9 +223,9 @@ main {
   text-align: center;
   font-style: italic;
   pointer-events: none;
-  color: rgba(0, 0, 0, 0.7);
+  color: var(--browser-text-secondary);
   font-size: 0.9rem;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+  text-shadow: 0 1px 2px var(--browser-button-outline);
   z-index: 101;
   transform: translateZ(0.2px);
 }
@@ -160,14 +245,14 @@ main {
   padding: 1vh;
   box-sizing: border-box;
   border-radius: 0.5rem;
-  background: #fff !important;
+  background: var(--browser-color) !important;
 }
 
 .page-content__inner{
-  outline:1px solid #c2c2c21f;
+  outline:1px solid var(--browser-button-outline);
   outline-offset:-2px; /* keeps border inside */
   box-sizing:border-box;
-  background: #fff !important;
+  background: var(--browser-color) !important;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
@@ -215,6 +300,12 @@ main {
   transition: transform 0.2s ease-out;
   background: #fff;
   pointer-events: auto;
+  /* Prevent shadow effects */
+  --shadow-overlay: 0 !important;
+  --shadow-blur: 0 !important;
+  --shadow-color: transparent !important;
+  filter: none !important;
+  opacity: 1 !important;
 }
 
 /*
@@ -348,11 +439,11 @@ h1, h2 {
   align-items: center;
   justify-content: center;
   border-radius: 1000px;
-  border: 1px solid #bbbbbb;
+  border: 1px solid var(--browser-button-outline);
   font-family: var(--font-family);
   font-size: 0.75em;
   font-weight: 600;
-  color: #414b66;
+  color: var(--browser-button-text);
   text-transform: uppercase;
   text-wrap: nowrap;
   letter-spacing: 0.04em;
@@ -361,13 +452,13 @@ h1, h2 {
   cursor: pointer;
   pointer-events: auto;
   padding: 0.75rem 2.5rem;
+  background-color: var(--browser-button-fill);
 }
 
 .homepage-btn:hover, .homepage-btn:focus {
-  background: #ffffff;
-  border: 1px solid #ffffff;
-
-  color: #1e1e1e;
+  background: var(--browser-button-outline);
+  border: 1px solid var(--browser-button-outline);
+  color: var(--browser-text);
 }
 
 /* Remove video background styles */
@@ -442,7 +533,7 @@ body, * {
   left: 0;
   width: 100%;
   height: 8px;
-  background: linear-gradient(180deg, #222 70%, #111 100%);
+  background: linear-gradient(180deg, var(--browser-spine) 70%, var(--browser-button-outline) 100%);
   z-index: 20;
   box-shadow: 0 2px 8px 0 rgba(0,0,0,0.18);
   pointer-events: none;
@@ -464,9 +555,9 @@ body, * {
   font-family: var(--font-family);
   font-size: 1.1rem;
   line-height: 1.5;
-  color: rgba(0, 0, 0, 0.8);
+  color: var(--browser-commentary-text);
   padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--browser-commentary-bg);
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(8px);

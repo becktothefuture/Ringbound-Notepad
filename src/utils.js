@@ -277,3 +277,37 @@ export function applyLayeredShadow(element, config, tiltX = 0, tiltY = 0) {
   lastTiltX = tiltX;
   lastTiltY = tiltY;
 }
+
+/**
+ * Creates a debounced resize handler that prevents ResizeObserver loop issues
+ * @param {Function} callback - Function to call after resize
+ * @param {number} delay - Delay in milliseconds (default: 100)
+ * @returns {Function} Debounced resize handler
+ */
+export function createDebouncedResizeHandler(callback, delay = 100) {
+  let timeoutId = null;
+  let frameId = null;
+  let lastWidth = window.innerWidth;
+  let lastHeight = window.innerHeight;
+
+  return function handleResize() {
+    // Cancel any pending timeout and animation frame
+    if (timeoutId) clearTimeout(timeoutId);
+    if (frameId) cancelAnimationFrame(frameId);
+
+    // Schedule the resize handling
+    timeoutId = setTimeout(() => {
+      frameId = requestAnimationFrame(() => {
+        const currentWidth = window.innerWidth;
+        const currentHeight = window.innerHeight;
+
+        // Only trigger callback if size actually changed
+        if (currentWidth !== lastWidth || currentHeight !== lastHeight) {
+          lastWidth = currentWidth;
+          lastHeight = currentHeight;
+          callback();
+        }
+      });
+    }, delay);
+  };
+}

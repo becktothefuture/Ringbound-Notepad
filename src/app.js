@@ -27,6 +27,7 @@ import { renderStack } from './render.js';               // Visual rendering sys
 import { getInfiniteLoopDebugInfo, shouldUseInfiniteLoop } from './infiniteLoop.js'; // Infinite loop system
 import { initChapters } from './chapterManager.js';
 import { initMouseTracker } from './mouseTracker.js';
+import { createDebouncedResizeHandler } from './utils.js';
 
 // Dynamic page & chapter generation
 import manifest from './portfolioManifest.js';
@@ -156,6 +157,21 @@ function setupNotebookParallax(notepad, notepadInner) {
     requestAnimationFrame(animateNotebook);
   }
   requestAnimationFrame(animateNotebook);
+
+  // Handle resize with debouncing
+  const handleResize = createDebouncedResizeHandler(() => {
+    // Update max translate values based on new viewport size
+    const maxTranslateX = window.innerWidth * translateFactor;
+    const maxTranslateY = window.innerHeight * translateFactor;
+    
+    // Reset current position to prevent jumps
+    curX = 0;
+    curY = 0;
+    targetX = 0;
+    targetY = 0;
+  });
+
+  window.addEventListener('resize', handleResize, { passive: true });
 }
 
 bootstrap();
