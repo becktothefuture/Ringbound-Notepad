@@ -473,11 +473,7 @@ export function initScrollEngine(container, pageCount = 0) {
   document.addEventListener('touchend', onTouchEnd, { passive: true });
   document.addEventListener('touchcancel', onTouchCancel, { passive: true });
   
-  // Click-to-turn functionality - add to container only
-  if (container) {
-    container.addEventListener('click', onPageClick, { passive: false });
-    debug.log('Click-to-turn listener added to notepad container');
-  }
+  // Click-to-turn functionality removed; click now reserved for notebook zoom handled in app.js
   
   debug.log('Scroll engine event listeners attached to document');
   // Note: { passive: true } allows us to preventDefault() if needed

@@ -80,6 +80,30 @@ async function bootstrap() {
 
   /* ======= Mouse parallax & other existing logic remains unchanged ======= */
   setupNotebookParallax(notepad, notepadInner);
+
+  /* ================= CLICK-TO-ZOOM ================= */
+  (function setupClickToZoom() {
+    let zoomed = false;
+
+    // Ensure GPU acceleration and smooth transition via CSS class
+    notepad.style.willChange = 'transform';
+
+    const overlay = document.getElementById('homepage-overlay');
+
+    notepad.addEventListener('click', (e) => {
+      // Prevent any propagation that might interfere with other handlers
+      e.stopPropagation();
+
+      zoomed = !zoomed;
+      if (zoomed) {
+        notepad.classList.add('notepad--zoomed');
+        if (overlay) overlay.classList.add('overlay--zoomed-out');
+      } else {
+        notepad.classList.remove('notepad--zoomed');
+        if (overlay) overlay.classList.remove('overlay--zoomed-out');
+      }
+    });
+  })();
 }
 
 function setupNotebookParallax(notepad, notepadInner) {
