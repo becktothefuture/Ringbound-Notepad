@@ -17,52 +17,33 @@ export const PAGE_ANIMATION = {
   stack: {
     visibleDepth: 15,         // Number of visible trailing pages
     depthUnit: 10,            // Z-depth separation per page (px)
-    startZ: 0,              // Z pos for back of stack (px)
-    startY: 20,                // Y pos for back of stack (px)
+    startZ: 0,                // Z pos for back of stack (px)
+    startY: 20,               // Y pos for back of stack (px)
     opacityFade: [15, 5],     // [start, end] stack fade range
-    stickPixels: 1,         // Dead zone in pixels before rotation begins
+    stickPixels: 1,           // Dead zone in pixels before rotation begins
   },
   flip: {
-    readyZ: 0,              // Z pos before flip (px)
-    readyY: 0,               // Y pos before flip (px)
-    startRotationX: -24,     // Initial X rotation in stack (deg)
-    readyRotationX: 4,       // X rotation ready to flip (deg)
-    maxAngle: 210,           // Max flip angle (deg)
-    fadeStart: 90,          // Angle to start fading out (deg)
-    fadeEnd: 210,            // Angle fully invisible (deg)
-    blurMax: 5,              // Max blur during flip (px)
-    rotationOriginX: '50%',  // Rotation origin X (center for top-hinged flip)
-    rotationOriginY: '-1%',  // Rotation origin Y (top edge of binding bar, above page)
-    easing: easeInOutExpo,          // Easing function
-    speed: 400,              // Flip duration (ms)
+    readyZ: 0,                // Z pos before flip (px)
+    readyY: 0,                // Y pos before flip (px)
+    startRotationX: -24,      // Initial X rotation in stack (deg)
+    readyRotationX: 4,        // X rotation ready to flip (deg)
+    maxAngle: 210,            // Max flip angle (deg)
+    fadeStart: 90,            // Angle to start fading out (deg)
+    fadeEnd: 210,             // Angle fully invisible (deg)
+    blurMax: 5,               // Max blur during flip (px)
+    rotationOriginX: '50%',   // Rotation origin X (center for top-hinged flip)
+    rotationOriginY: '-1%',   // Rotation origin Y (top edge of binding bar, above page)
+    easing: easeInOutExpo,    // Easing function
+    speed: 400,               // Flip duration (ms)
   },
   loop: {
-    infinite: true,          // Infinite page looping
-    buffer: 15,              // Preload buffer size
+    infinite: true,           // Infinite page looping
+    buffer: 15,               // Preload buffer size for infinite loop
   },
   misc: {
-    debug: false,  // Disable debug mode
-    maxVisiblePages: 15,
-    pageBuffer: 15,
-    showPageNumbers: false,
-    showDebugInfo: false,
-    showPerformance: false,
-    showMemory: false,
-    showTiming: false,
-    showEvents: false,
-    showState: false,
-    showConfig: false,
-    showErrors: false,
-    showWarnings: false,
-    showInfo: false,
-    showDebug: false,
-    showTrace: false,
-    showAll: false,
-    rotationEasing: easeInOutExpo,  // Easing for rotation
-    videoPreloadDeg: 270,    // Video preload trigger angle
-    scrollSensitivity: 0.3, // Scroll sensitivity
-    // Performance optimizations
-    enableGPUAcceleration: true, // Enable GPU acceleration hints
+    // Performance settings
+    enableGPUAcceleration: true,  // Enable GPU acceleration hints
+    scrollSensitivity: 0.3,      // Scroll sensitivity multiplier
   },
   snap: {
     delay: 0, // ms, time after scroll stops before snapping
@@ -142,61 +123,8 @@ export const PAGE_ANIMATION = {
   },
 };
 
-// Debug mode
-export const DEBUG = {
-  enabled: false,  // Set to false by default
-  showFPS: false,
-  showScroll: false,
-  showPageNumbers: false,
-  showPageInfo: false,
-  showStackInfo: false,
-  showPerformance: false,
-  showMemory: false,
-  showTiming: false,
-  showEvents: false,
-  showState: false,
-  showConfig: false,
-  showErrors: false,
-  showWarnings: false,
-  showInfo: false,
-  showDebug: false,
-  showTrace: false,
-  showAll: false,
-  showDebugWindow: false  // Explicitly disable debug window
-};
-
-// Debug window configuration
-export const DEBUG_WINDOW = {
-  enabled: false,  // Disable debug window by default
-  position: 'top-right',
-  width: 300,
-  height: 400,
-  opacity: 0.9,
-  backgroundColor: 'rgba(0, 0, 0, 0.8)',
-  textColor: '#fff',
-  fontSize: '12px',
-  fontFamily: 'monospace',
-  padding: '10px',
-  borderRadius: '5px',
-  zIndex: 9999,
-  showTimestamp: false,
-  showMemory: false,
-  showFPS: false,
-  showScroll: false,
-  showPageInfo: false,
-  showStackInfo: false,
-  showPerformance: false,
-  showTiming: false,
-  showEvents: false,
-  showState: false,
-  showConfig: false,
-  showErrors: false,
-  showWarnings: false,
-  showInfo: false,
-  showDebug: false,
-  showTrace: false,
-  showAll: false
-};
+// Remove redundant DEBUG object since it's now consolidated in PAGE_ANIMATION.misc.debug
+// export const DEBUG = PAGE_ANIMATION.misc.debug;
 
 // Mouse movement settings
 export const MOUSE_MOVEMENT = {

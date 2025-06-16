@@ -13,7 +13,6 @@
  */
 
 import { PAGE_ANIMATION } from './config.js';
-import { debug } from './debug.js';
 
 /**
  * Calculate the virtual page index for infinite looping
@@ -132,9 +131,7 @@ export function normalizeScrollPosition(scroll, totalPages) {
   
   if (Math.abs(scroll) > maxRange) {
     // Normalize to equivalent position within reasonable range
-    const normalized = ((scroll % totalPages) + totalPages) % totalPages;
-    debug.log(`Normalizing scroll position from ${scroll.toFixed(3)} to ${normalized.toFixed(3)}`);
-    return normalized;
+    return ((scroll % totalPages) + totalPages) % totalPages;
   }
   
   return scroll;
@@ -162,11 +159,7 @@ export function calculateInfiniteRelativePosition(actualPageIndex, totalPages, s
     PAGE_ANIMATION.stack.visibleDepth
   );
   
-  const rel = optimalVirtualPos - scrollPosition;
-  
-  debug.log(`Page ${actualPageIndex}: virtual=${optimalVirtualPos}, rel=${rel.toFixed(3)}`);
-  
-  return rel;
+  return optimalVirtualPos - scrollPosition;
 }
 
 /**
