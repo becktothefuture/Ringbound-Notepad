@@ -5,14 +5,16 @@
   "main": "src/index.html",
   "type": "module",
   "scripts": {
-    "start": "serve dist",
+    "start": "serve dist -l 3000",
     "build": "node scripts/generatePortfolioJson.js && node scripts/generatePages.js && node build.cjs",
     "build:watch": "concurrently \"node scripts/generatePortfolioJson.js --watch\" \"node scripts/generatePages.js --watch\" \"node build.cjs --watch\"",
     "dev": "concurrently \"npm:build:watch\" \"npm:start\"",
     "lint": "eslint src/js/**/*.js",
     "format": "prettier --write \"src/**/*.{js,css,html}\"",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "generate-portfolio": "node scripts/generatePortfolioJson.js"
+    "generate-portfolio": "node scripts/generatePortfolioJson.js",
+    "validate": "node scripts/validate-specification.js",
+    "validate:verbose": "node scripts/validate-specification.js --verbose"
   },
   "keywords": [
     "3d",
