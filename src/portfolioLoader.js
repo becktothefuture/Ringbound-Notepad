@@ -232,6 +232,13 @@ function createCoverPage(type, commentary, globalIndex) {
     coverEl.className = 'page cover cover--front gpu-accelerated';
     coverEl.dataset.deckNumber = 'front';
     
+    // Add centered logo image
+    const logoImg = document.createElement('img');
+    logoImg.src = 'assets/folio-title.png';
+    logoImg.alt = 'Portfolio Title';
+    logoImg.className = 'cover-logo';
+    coverEl.appendChild(logoImg);
+    
     // NO CONTENT - covers should have no text as requested
   } else {
     coverEl.className = 'page cover cover--back gpu-accelerated';

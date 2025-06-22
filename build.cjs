@@ -315,15 +315,18 @@ log.js();
      * 2) Watch other static assets (html, css, non-JS assets excluding portfolio-pages)
      */
     const staticWatcher = chokidar.watch([
-      'src/**/*',
-      'data/portfolio.json',
-      '!src/**/*.js',
-      '!src/**/*.ts',
-      '!src/**/*.tsx',
-      '!src/assets/portfolio-pages/**',
-      '!src/**/.*',
+      path.resolve(ROOT, 'index.html'),
+      path.resolve(ROOT, 'style.css'),
+      path.resolve(ROOT, 'assets'),
+      path.resolve(DATA_DIR, 'portfolio.json'),
     ], {
       ignoreInitial: true,
+      ignored: [
+        path.resolve(ROOT, 'assets/portfolio-pages/**'),
+        '**/*.js',
+        '**/*.ts',
+        '**/*.tsx'
+      ]
     });
 
     function handleStaticChange(absPath, event) {
@@ -338,9 +341,16 @@ log.js();
         destPath = path.join(DIST_DIR, relFromSrc);
       }
 
+      // Priority handling for CSS changes
+      const isCSSFile = relFromSrc.endsWith('.css');
+      
       if (event === 'add' || event === 'change') {
         fs.mkdirSync(path.dirname(destPath), { recursive: true });
         fs.copyFileSync(absPath, destPath);
+        
+        if (isCSSFile) {
+          console.log('🎨 CSS change detected', destPath);
+        }
         log.copy(relFromSrc);
       } else if (event === 'unlink') {
         fs.rmSync(destPath, { force: true });

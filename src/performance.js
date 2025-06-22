@@ -184,26 +184,26 @@ class PerformanceManager {
     const currentScale = this.metrics.qualityScale;
     
     // Performance assessment flags
-    const lowFPS = avgFps < this.targetFPS * 0.9; // Below 54fps
+    const lowFPS = avgFps < this.targetFPS * 0.7; // Below 42fps (less aggressive)
     const highMemory = memoryUsage > this.memoryLimit * 0.8; // Above 80MB
-    const criticalFPS = avgFps < this.targetFPS * 0.7; // Below 42fps
+    const criticalFPS = avgFps < this.targetFPS * 0.5; // Below 30fps (less aggressive)
     const criticalMemory = memoryUsage > this.memoryLimit; // Above 100MB
     
     let newScale = currentScale;
     
     // Critical performance issues - aggressive scaling
     if (criticalFPS || criticalMemory) {
-      newScale = Math.max(GLOBAL_CONFIG.PERFORMANCE.qualityScaleMin, currentScale - 0.2);
+      newScale = Math.max(GLOBAL_CONFIG.PERFORMANCE.qualityScaleMin, currentScale - 0.1);
       console.warn('🔴 Critical performance detected, reducing quality to', newScale);
     }
     // Minor performance issues - gradual scaling
     else if (lowFPS || highMemory) {
-      newScale = Math.max(GLOBAL_CONFIG.PERFORMANCE.qualityScaleMin, currentScale - 0.1);
+      newScale = Math.max(GLOBAL_CONFIG.PERFORMANCE.qualityScaleMin, currentScale - 0.05);
       console.log('🟡 Performance issues detected, reducing quality to', newScale);
     }
     // Good performance - try to improve quality
-    else if (avgFps >= this.targetFPS && memoryUsage < this.memoryLimit * 0.6) {
-      newScale = Math.min(GLOBAL_CONFIG.PERFORMANCE.qualityScaleMax, currentScale + 0.1);
+    else if (avgFps >= this.targetFPS * 0.9 && memoryUsage < this.memoryLimit * 0.6) {
+      newScale = Math.min(GLOBAL_CONFIG.PERFORMANCE.qualityScaleMax, currentScale + 0.05);
       if (newScale > currentScale) {
         console.log('🟢 Good performance, increasing quality to', newScale);
       }

@@ -29,12 +29,14 @@
   --safe-zone-height: 50px;
   --cover-size-multiplier: 1.01;
   
-  /* 3D Settings */
-  --perspective-distance: 2500px;
+  /* 3D Settings - Sync with config.js */
+  --perspective-distance: 10000px;
   --perspective-origin-x: 50%;
-  --perspective-origin-y: 80%;
+  --perspective-origin-y: 200%;
   --page-rotation-origin-x: 50%;
   --page-rotation-origin-y: -1%;
+  --transform-origin-x: 50%;
+  --transform-origin-y: 0%;
   
   /* Z-Index System */
   --ring-z-index: 0;
@@ -106,8 +108,8 @@ body, html {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
-  transform-style: preserve-3d;
+  overflow: hidden; /* Prevent unwanted scrollbars */
+  /* Removed transform-style: preserve-3d to avoid clipping in some browsers */
 }
 
 body {
@@ -120,7 +122,7 @@ body {
   align-items: center;
   justify-content: center;
   transition: var(--theme-transition);
-  transform-style: preserve-3d;
+  /* Removed transform-style: preserve-3d */
 }
 
 body, * {
@@ -134,7 +136,7 @@ body, * {
   font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
   font-size: 12px;
   line-height: 20px;
-  transform-style: preserve-3d;
+  /* Removed transform-style: preserve-3d */
 }
 
 body:not(.body) {
@@ -163,16 +165,12 @@ body:not(.body) {
   display: flex;
   position: static;
   overflow: visible;
-  perspective: var(--perspective-distance);
-  perspective-origin: var(--perspective-origin-x) var(--perspective-origin-y);
 }
 
 main.page-wrapper {
   position: relative;
   box-sizing: border-box;
   overflow: visible;
-  perspective: var(--perspective-distance);
-  perspective-origin: var(--perspective-origin-x) var(--perspective-origin-y);
   transform-style: preserve-3d;
   will-change: transform;
 }
@@ -187,8 +185,6 @@ main:not(.page-wrapper) {
   padding-bottom: 5vh;
   box-sizing: border-box;
   overflow: visible;
-  perspective: var(--perspective-distance);
-  perspective-origin: var(--perspective-origin-x) var(--perspective-origin-y);
   transform-style: preserve-3d;
 }
 
@@ -201,17 +197,20 @@ main:not(.page-wrapper) {
    ===================================================== */
 .notebook {
   aspect-ratio: 3 / 2;
-  perspective: 5000px;
+  perspective: var(--perspective-distance);
+  perspective-origin: var(--perspective-origin-x) var(--perspective-origin-y);
   flex-flow: column;
   justify-content: center;
   align-items: center;
   width: 100%;
-  max-width: 1300px;
+  max-width: 1000px;
   display: flex;
   position: relative;
   transform-style: preserve-3d;
-  perspective-origin: var(--perspective-origin-x) var(--perspective-origin-y);
   overflow: visible;
+  /* Optimize 3D rendering at larger viewports */
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 .notebook-inner {
@@ -224,11 +223,10 @@ main:not(.page-wrapper) {
   height: 100%;
   display: flex;
   position: absolute;
-  perspective: inherit;
-  perspective-origin: inherit;
-  transform: rotateX(20deg);
-
   overflow: visible;
+  /* Optimize 3D rendering */
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 #notebook.notebook-inner {
@@ -243,8 +241,6 @@ main:not(.page-wrapper) {
   transform-origin: center center;
   z-index: 100;
   transform-style: preserve-3d;
-  perspective: inherit;
-  perspective-origin: inherit;
 }
 
 #notebook:not(.notebook-inner) {
@@ -255,7 +251,6 @@ main:not(.page-wrapper) {
   align-items: flex-start;
   justify-content: center;
   z-index: 1000;
-  perspective-origin: var(--perspective-origin-x) var(--perspective-origin-y);
   transform-style: preserve-3d;
   overflow: visible;
   margin: auto;
@@ -269,7 +264,6 @@ main:not(.page-wrapper) {
   --shadow-anim-duration: 0.3s;
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   transform-origin: center center;
-  perspective: var(--perspective-distance);
 }
 
 #notebook.notebook--zoomed {
@@ -285,6 +279,9 @@ main:not(.page-wrapper) {
   height: 100%;
   transform-style: preserve-3d;
   overflow: visible;
+  transform: rotateX(0deg);
+  /* Ensure 3D context is established */
+  perspective: inherit;
 }
 
 .page {
@@ -297,7 +294,7 @@ main:not(.page-wrapper) {
   flex-direction: row;
   align-items: end;
   aspect-ratio: var(--page-aspect-ratio);
-  transform-origin: 50% 0 0;
+  transform-origin: var(--transform-origin-x, 50%) var(--transform-origin-y, 0%) 0;
   transform-style: preserve-3d;
   backface-visibility: hidden;
   border-radius: .5em .5em var(--cover-radius) var(--cover-radius);
@@ -305,11 +302,20 @@ main:not(.page-wrapper) {
   background-image: url('./assets/background-assets/paper-holes.webp'), linear-gradient(231deg, #aca9a3a1, #0000);
   background-position: 50% -14%, 0 0;
   background-repeat: no-repeat, repeat;
-  background-size: 99%, auto;
+  background-size: 100% auto, auto;
   box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.03),
     0 4px 8px rgba(0, 0, 0, 0.02),
-    0 8px 16px rgba(0, 0, 0, 0.01);
+    0 8px 16px rgba(0, 0, 0, 0.01),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+  /* Improve blur rendering performance */
+  will-change: transform, filter;
+  /* Initial 3D positioning - will be overridden by JS */
+  transform: translateZ(5px);
+  /* Aggressive performance optimizations */
+  isolation: isolate;
+  /* Prevent flashing during transforms */
+  opacity: 1;
+  transition: opacity 0.1s ease-out;
 }
 
 .page::after {
@@ -368,10 +374,12 @@ main:not(.page-wrapper) {
 .page-content {
   position: relative;
   width: 100%;
-  overflow: hidden;
+  overflow: visible; /* Allow tabs to extend beyond page boundaries */
   backface-visibility: hidden;
   padding: 2%;
   box-sizing: border-box;
+  /* Ensure content fades appropriately during flip */
+  transition: opacity 0.1s ease-out;
 }
 
 .page-content *,
@@ -381,6 +389,8 @@ main:not(.page-wrapper) {
 .page-content__media,
 .page-content__media--video {
   backface-visibility: hidden !important;
+  /* Ensure smooth blurring on all content */
+  will-change: filter;
 }
 
 /* Allow tabs to extend beyond page boundaries */
@@ -405,7 +415,7 @@ main:not(.page-wrapper) {
   background-image: url('./assets/background-assets/paper-holes.webp');
   background-repeat: no-repeat;
   background-position: center top;
-  background-size: contain;
+  background-size: 100% auto;
   z-index: 10;
   pointer-events: none;
 }
@@ -438,6 +448,25 @@ main:not(.page-wrapper) {
     inset 0 3px 2px #c29154, inset 0 -2px 3px 2px #664620,
     0 0 #0000, -.2px .4px #0000000e, -.4px .9px .1px #0001, -.7px 1.6px .5px #00000013, -1.2px 2.8px 1.3px #00000014, -2.1px 5px 2.9px #00000015, -3.8px 8.9px 6.2px #00000015, -7.1px 16.7px 13px #00000016, -14.9px 35.1px 29.5px #00000018,
     0 2px 4px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.05), 0 8px 16px rgba(0, 0, 0, 0.03);
+  position: relative;
+}
+
+/* Add paper holes to covers - positioned on top of cardboard texture */
+.cover.cover--back::before,
+.cover.cover--front::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--safe-zone-height);
+  background-image: url('./assets/background-assets/paper-holes.webp');
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: 100% auto;
+  z-index: 10;
+  pointer-events: none;
+  transform: translateZ(1px);
 }
 
 .cover.cover--front {
@@ -473,15 +502,23 @@ main:not(.page-wrapper) {
   height: 100%;
   pointer-events: none;
   transform-style: preserve-3d;
+  transform: translateY(var(--rings-offset-y, -8.5%));
 }
 
 .rings {
   position: absolute;
-  width: 100%;
+  width: 100% !important;
+  min-width: 100%;
+  max-width: 100%;
   height: auto;
   top: 0;
   left: 0;
+  right: 0;
+  transform-origin: center center;
+  transform-style: preserve-3d;
   will-change: transform;
+  transition: transform 0.1s ease-out;
+  box-sizing: border-box;
 }
 
 .rings--front {
@@ -489,6 +526,7 @@ main:not(.page-wrapper) {
   opacity: 1.0;
   transform: translateZ(var(--rings-front-position));
   transform-style: preserve-3d;
+  width: 100% !important;
 }
 
 .rings--back {
@@ -496,6 +534,7 @@ main:not(.page-wrapper) {
   opacity: 0.8;
   transform: translateZ(-10px);
   transform-style: preserve-3d;
+  width: 100% !important;
 }
 
 /* =====================================================
@@ -512,15 +551,11 @@ main:not(.page-wrapper) {
   box-shadow: 
     0px 10px 15px -3px hsla(0, 5%, 0%, 0.1),
     0px 30px 30px -10px hsla(0, 5%, 0%, 0.15),
-    0px 60px 50px -15px hsla(0, 5%, 0%, 0.2),
-    0px 100px 80px -20px hsla(0, 5%, 0%, 0.25),
-    0px 150px 120px -30px hsla(0, 5%, 0%, 0.3);
+    0px 60px 50px -15px hsla(0, 5%, 0%, 0.2);
   box-shadow:
     0px 10px 15px -3px color(display-p3 0.013 0.013 0.013 / 0.1),
-    0px 30px 30px -10px color(display-p3 0.013 0.013 0.013 / 0.15), 
-    0px 60px 50px -15px color(display-p3 0.013 0.013 0.013 / 0.2),
-    0px 100px 80px -20px color(display-p3 0.013 0.013 0.013 / 0.25),
-    0px 150px 120px -30px color(display-p3 0.013 0.013 0.013 / 0.3);
+    0px 30px 30px -10px color(display-p3 0.013 0.013 0.013 / 0.15),
+    0px 60px 50px -15px color(display-p3 0.013 0.013 0.013 / 0.2);
 }
 
 .notebook__layered-shadow {
@@ -543,7 +578,7 @@ main:not(.page-wrapper) {
   z-index: -200;
   aspect-ratio: 1;
   background-image: url('./assets/background-assets/images/portfolio-background.jpg');
-  background-position: 50%;
+  background-position: 50% 50%;
   background-repeat: no-repeat;
   background-size: cover;
   justify-content: center;
@@ -551,7 +586,7 @@ main:not(.page-wrapper) {
   width: 232%;
   display: block;
   position: absolute;
-  transform: translate(0, 5vh) translateZ(-10px);
+  transform: translate3d(0, 4vh, -1px);
 }
 
 .pixel-screen {
@@ -674,31 +709,6 @@ h2 {
   transform: translateZ(0.2px);
 }
 
-.commentary-overlay {
-  background: var(--browser-commentary-bg);
-  color: var(--browser-commentary-text);
-  transition: var(--theme-transition);
-  z-index: 1000;
-  position: fixed;
-  bottom: 20rem;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80%;
-  max-width: 800px;
-  text-align: center;
-  font-family: var(--font-family);
-  font-size: 1.1rem;
-  line-height: 1.5;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  pointer-events: none;
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  opacity: 0;
-  transform: translate(-50%, 20px);
-}
 
 .commentary-overlay.visible {
   opacity: 1;
@@ -707,7 +717,7 @@ h2 {
 
 .page-tab {
   position: absolute;
-  z-index: 1001;
+  z-index: 10000;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -724,6 +734,7 @@ h2 {
   overflow: hidden;
   border-radius: 4px;
   box-sizing: border-box;
+  transform-style: flat;
 }
 
 .tab-with-image {
@@ -731,9 +742,8 @@ h2 {
   background-repeat: no-repeat;
   background-position: center;
   padding: 8px;
+  backface-visibility: hidden;
 }
-
-
 
 .overlay--rotate {
   z-index: 999;
@@ -845,8 +855,7 @@ h2 {
 .cover-title h1 {
   font-size: 2.5em;
   font-weight: 700;
-  margin: 0 0 0.5em 0;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+
 }
 
 .cover-title p {
@@ -894,4 +903,36 @@ h2 {
 
 .page-content--hidden {
   display: none !important;
+}
+
+/* Hide content completely when page is showing its backside */
+.page--showing-backface .page-content {
+  opacity: 0;
+  backface-visibility: hidden;
+  transition: opacity 0.1s ease-out;
+}
+
+.page--showing-backface .page-content *,
+.page--showing-backface .page-content img,
+.page--showing-backface .page-content video {
+  opacity: 0;
+  backface-visibility: hidden;
+  pointer-events: none;
+}
+
+/* Test change Sun Jun 22 19:23:23 BST 2025 */
+/* Another test change Sun Jun 22 19:24:22 BST 2025 */
+/* Fixed watcher test Sun Jun 22 19:25:38 BST 2025 */
+
+/* Centered logo image on front cover */
+.cover-logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 30%;
+  height: auto;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.9;
 }
