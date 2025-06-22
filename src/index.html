@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ring-Bound Notepad</title>
+    <title>Ring-Bound Notebook</title>
     <!-- External CSS file containing all the visual styling and 3D transforms -->
     <link rel="stylesheet" href="style.css" />
     <!-- Google Fonts for clean typography -->
@@ -32,7 +32,7 @@
       <!-- Commentary Overlay -->
       <!-- <div id="commentary-overlay" class="commentary-overlay"> </div> -->
 
-      <!-- Main notepad container with Webflow structure -->
+      <!-- Main notebook container with Webflow structure -->
       <div class="notebook">
         <!-- Header from Webflow -->
         <div class="heading-wrapper">
@@ -43,40 +43,27 @@
           <div class="divider"></div>
         </div>
 
-        <!-- Notepad container -->
-        <div id="notepad" class="notebook-inner">
-        <!-- Layered shadow system -->
-      
-        <div id="notepad-inner">
+        <!-- Notebook container -->
+        <div id="notebook" class="notebook-inner">
         
-        <!-- 
-          NOTEPAD PAGES: Each div represents a single page in the notepad.
-          The pages are stacked on top of each other in 3D space.
+        <!-- 3D NOTEBOOK PAGE SYSTEM - USER SPECIFICATION -->
+        <div class="page-stack" id="page-stack">
+          <!-- 
+            All pages stay in this single container.
+            No z-index manipulation - depth controlled by translateZ only.
+            Transform origin: 50% 0 0 (hinge exactly on top edge).
+            Backface-visibility: visible with grey ::after pseudo-element.
+          -->
           
-          KEY CONCEPTS:
-          1. All pages start at the same position (absolutely positioned)
-          2. JavaScript calculates each page's 3D position based on scroll
-          3. Each page has a gradient background color (HSL values create rainbow effect)
-          4. Pages can be rotated, translated, and have various effects applied
-          5. Each page contains a .content div for future text/media content
+          <!-- Pages are generated dynamically by portfolioLoader.js -->
+          <!-- This includes front cover, portfolio pages, and back cover -->
           
-          COLOR SYSTEM:
-          - Uses HSL color model for smooth color transitions
-          - Hue rotates from 0° (red) to 360° (red again) across all pages
-          - Saturation: 70% (vibrant but not overwhelming)
-          - Lightness: 96% (very light, almost white with subtle tint)
-        -->
-        
-        <!-- Pages are generated dynamically by portfolioLoader.js -->
-        <!-- This includes front cover, portfolio pages, and back cover -->
-        
-        <!-- Generated content will be inserted here -->
-        <!-- GENERATED_PAGES -->
-        <!-- END_GENERATED_PAGES -->
+          <!-- Generated content will be inserted here -->
+          <!-- GENERATED_PAGES -->
+          <!-- END_GENERATED_PAGES -->
+        </div>
         
         <div class="notebook__shadow" aria-hidden="true"></div>
-
-          </div>
 
           <!-- Ring binding system from Webflow - positioned above all pages -->
           <div class="rings-wrapper">
@@ -85,7 +72,7 @@
           </div>
 
           <!-- Background scene from Webflow -->
-          <div class="background">
+          <div class="notebook-background">
             <div class="phone-screen">
               <img src="assets/background-assets/images/phone-cover.png" loading="lazy" alt="" class="phone-screen__cover">
               <div data-poster-url="assets/videos/shutterstock_1092679953---01---02-poster-00001.jpg" 

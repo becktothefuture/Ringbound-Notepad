@@ -1,41 +1,262 @@
-# Ring-Bound Notepad: Technical Specification
+# 3D Ring-Bound Notebook Portfolio
 
-## 1. Overview
+## 🎯 What This Is
 
-This specification defines a hyper-realistic 3D ring-bound portfolio notepad with physically accurate page-flipping animations. The system uses a virtual scroll engine and state-driven rendering to achieve 60fps performance while maintaining complete fidelity to real-world notebook physics.
+This is a **3D notebook simulation** that looks and behaves like a real reporter's notebook. When you scroll, pages flip over the top edge and land on a growing pile that moves toward the camera. Each page flip follows realistic physics with a lift-and-drop motion.
 
-**Core Requirements:**
-- Physics-based page flipping with arc motion
-- JSON-driven content management
-- 60fps performance with adaptive quality scaling
-- Realistic visual effects (shadows, ring holes, covers)
-- Cross-platform compatibility (desktop, mobile, touch)
+**Live Demo:** [Your Portfolio URL Here]
 
-## 2. Architecture Principles
+## 🚀 Quick Start
 
-- **State-Driven Rendering**: All visual properties calculated as pure functions of scroll position
-- **Content-Code Separation**: JSON contains only content; layout/physics are globally defined  
-- **Performance-First**: GPU acceleration, visibility culling, and memory management
-- **Realistic Physics**: Based on real notebook mechanics and constraints
+```bash
+# Install dependencies
+npm install
 
-## 3. Data Schema
+# Start development server
+npm run dev
 
-### 3.1 Portfolio JSON Structure
+# Open http://localhost:3000
+```
+
+The notebook loads portfolio content from `data/portfolio.json` and creates 3D pages that you can flip through by scrolling, using arrow keys, or swiping on mobile.
+
+---
+
+## 🎮 How It Works (For Junior Developers)
+
+### The Big Picture
+
+Think of this like a real notebook:
+- **Unread pages** start in a stack (bottom page at Z=5px, each page 4px higher)
+- When you **scroll**, the top page flips over the top edge
+- **Flipped pages** land on a growing pile that gets closer to the camera
+- Each flip takes 600ms and follows realistic physics
+
+### Key Concept: Z-Depth Stacking
+
+Instead of using CSS `z-index`, we use `translateZ()` to create real 3D depth:
+
+```javascript
+// Bottom unread page
+translateZ(5px)    // Farthest from camera
+
+// Next unread page  
+translateZ(9px)    // 4px closer
+
+// Top unread page
+translateZ(801px)  // Closest unread (for 200 pages)
+
+// First flipped page lands at
+translateZ(805px)  // Even closer to camera!
+```
+
+---
+
+## 🔧 System Architecture
+
+### 1. **Page Container** (`src/index.html`)
+
+All pages live in a single `.page-stack` container within the notebook:
+
+```html
+<div id="notebook" class="notebook-inner">
+  <div class="page-stack" id="page-stack">
+    <div class="page">Page 1</div>
+    <div class="page">Page 2</div>
+    <!-- ... all pages ... -->
+  </div>
+</div>
+```
+
+**Why this structure?** The `#notebook` container provides the 3D perspective context, while the `page-stack` keeps all pages in the same 3D space so depth calculations work correctly.
+
+### 2. **Depth System** (`src/pageTransforms.js`)
+
+This is the heart of the 3D effect:
+
+```javascript
+// Every unread page gets a Z position
+function getUnreadDepth(pageIndex, totalPages) {
+  const indexFromBottom = totalPages - 1 - pageIndex;
+  return 5 + indexFromBottom * 4;  // 5px base + 4px per page
+}
+
+// Track where the next flipped page should land
+let nextLandingZ = 805; // Starts above highest unread page
+
+// When a page flips, it lands here, then nextLandingZ += 4
+```
+
+### 3. **Scroll Engine** (`src/scrollEngine.js`)
+
+Converts scroll wheel/touch into fractional page positions:
+
+```javascript
+// Scroll position can be fractional
+scrollPosition = 1.5  // Halfway through flipping page 1
+
+// Each integer step = one complete page flip
+scrollPosition = 2.0  // Page 1 fully flipped, page 2 starting
+```
+
+### 4. **Flip Animation** (`src/pageTransforms.js`)
+
+Each page flip has 2 phases:
+
+```javascript
+if (progress <= 0.5) {
+  // Phase 1: Lift & hinge (0% → 50%)
+  const z = restingZ + (30 * progress * 2);     // Lift 30px
+  const rotX = 90 * progress * 2;               // Rotate 0° → 90°
+  return `translateZ(${z}px) rotateX(${rotX}deg)`;
+  
+} else {
+  // Phase 2: Drop & settle (50% → 100%)  
+  const z = liftedZ + (targetZ - liftedZ) * progressInPhase;
+  const rotX = 90 + (90 * progressInPhase);     // Rotate 90° → 180°
+  return `translateZ(${z}px) rotateX(${rotX}deg)`;
+}
+```
+
+### 5. **Page Styling** (`src/style.css`)
+
+Pages have two sides:
+
+```css
+.page {
+  /* Front side: light grey paper */
+  background-color: #f5f5f5;
+  transform-origin: 50% 0 0;  /* Hinge on top edge */
+  backface-visibility: visible;
+}
+
+.page::after {
+  /* Back side: darker grey, only visible when flipped */
+  background: #888888;
+  transform: rotateY(180deg) translateZ(-1px);
+}
+```
+
+---
+
+## 📁 File Structure & What Each Does
+
+```
+src/
+├── config.js              # 🎛️  All settings (depths, timing, etc.)
+├── app.js                 # 🎬  Main app orchestrator  
+├── pageTransforms.js      # 🎯  3D math & flip calculations
+├── scrollEngine.js        # 🎮  Handle scroll/touch input
+├── render.js              # 🎨  Apply transforms to DOM
+├── portfolioLoader.js     # 📄  Generate pages from JSON
+├── style.css              # 💄  3D styling & page appearance
+└── index.html             # 🏠  Page structure
+
+data/
+└── portfolio.json         # 📋  Content source of truth
+```
+
+### Key Files Explained
+
+#### `config.js` - The Control Panel
+```javascript
+export const GLOBAL_CONFIG = {
+  DEPTH: {
+    bottomUnreadZ: 5,     // Bottom page starts here
+    spacingZ: 4,          // Each page 4px higher  
+    liftHeight: 30,       // How high pages lift during flip
+  },
+  ANIMATION: {
+    duration: 600,        // 600ms per flip
+    easing: {
+      liftHinge: 'cubic-bezier(.55,.05,.67,.19)',   // 0→50% easing
+      dropSettle: 'cubic-bezier(.25,.46,.45,.94)'   // 50→100% easing
+    }
+  }
+};
+```
+
+#### `pageTransforms.js` - The 3D Math
+```javascript
+// Main function: given a page index and scroll position, 
+// return the 3D transform string
+export function computeTransform(pageIndex, scrollPosition, totalPages) {
+  const rel = scrollPosition - pageIndex;
+  
+  if (rel >= 0 && rel <= 1) {
+    // This page is currently flipping
+    return computeFlipTransform(pageIndex, rel, totalPages);
+  } else if (rel < 0) {
+    // Page not reached yet - in unread stack
+    const z = getUnreadDepth(pageIndex, totalPages);
+    return `translateZ(${z}px) rotateX(0deg)`;
+  } else {
+    // Page already flipped - in read stack  
+    const z = calculateFlippedDepth(rel);
+    return `translateZ(${z}px) rotateX(180deg)`;
+  }
+}
+```
+
+#### `scrollEngine.js` - Input Handler
+```javascript
+class VirtualScrollEngine {
+  updateScrollPosition(delta) {
+    // Convert mouse wheel/touch into scroll position
+    this.scrollPosition += delta * this.scrollSensitivity;
+    
+    // Keep in bounds [0, maxPages-1]
+    this.scrollPosition = Math.max(0, Math.min(this.maxPages - 1, this.scrollPosition));
+    
+    // Tell everyone about the change
+    this.notifyObservers(this.scrollPosition);
+  }
+}
+```
+
+#### `render.js` - Apply to DOM
+```javascript
+export function render(pages, scrollState) {
+  const { scroll, totalPages } = scrollState;
+  
+  pages.forEach((page, i) => {
+    // Calculate 3D transform for this page
+    const transform = computeTransform(i, scroll, totalPages);
+    
+    // Apply to DOM
+    page.style.transform = transform;
+  });
+}
+```
+
+---
+
+## 🎮 User Controls
+
+| Input | Action |
+|-------|--------|
+| **Mouse wheel** | Scroll through pages |
+| **Touch drag** | Swipe to flip pages (mobile) |
+| **Arrow keys** ← → | Flip one page |
+| **Shift + Arrow** | Flip 10 pages |
+| **Home / End** | Jump to first/last page |
+
+---
+
+## 📋 Content Management
+
+### Portfolio JSON Structure
 ```json
 {
-  "metadata": {
-    "title": "Portfolio Title",
-    "description": "Optional description"
-  },
   "projects": [
     {
       "id": "chapter-1",
-      "title": "Chapter Title", 
+      "title": "Project Name",
       "pages": [
         {
           "asset": "chapter-1-1.jpg",
           "type": "image",
-          "commentary": "Page commentary text"
+          "commentary": "Description of this page"
         }
       ]
     }
@@ -43,219 +264,291 @@ This specification defines a hyper-realistic 3D ring-bound portfolio notepad wit
 }
 ```
 
-### 3.2 Schema Requirements
-- **Root**: `projects` array (required)
-- **Chapter**: `id`, `title`, `pages` (all required)
-- **Page**: `asset`, `type`, `commentary` (all required)
-- **Asset Types**: `"image"` or `"video"`
-- **Asset Path**: Resolved to `assets/portfolio-pages/{chapter-id}/{asset}`
-
-### 3.3 Validation Rules
-- Chapter ID: `/^chapter-\d+$/`
-- Asset Naming: `/^chapter-\d+-\d+\.(jpg|jpeg|png|webp|mp4|webm)$/`
-- Commentary: Maximum 500 characters
-- Image Formats: jpg, jpeg, png, webp
-- Video Formats: mp4, webm
-
-## 4. Global Configuration
-
-All layout, performance, and visual parameters are globally defined (NOT in JSON):
-
-```javascript
-const GLOBAL_CONFIG = {
-  LAYOUT: {
-    pageWidth: 600,                  // px
-    pageHeight: 450,                 // px (4:3 ratio)
-    pageAspectRatio: 4/3,            // Enforced globally
-    contentAspectRatio: 16/9,        // Enforced globally
-    contentAlignment: 'bottom',      // Enforced globally
-    safeZoneHeight: 50,              // px - ring hole area
-    coverSizeMultiplier: 1.01        // Covers 1% larger
-  },
-  
-  PERFORMANCE: {
-    targetFPS: 60,
-    frameTimeTarget: 16.67,          // ms
-    maxVisiblePages: 15,
-    memoryLimit: 100,                // MB
-    qualityScaleMin: 0.5,
-    qualityScaleMax: 1.0
-  },
-  
-  ANIMATION: {
-    snapThreshold: 110,              // Degrees (61% progress)
-    snapDuration: 120,               // ms
-    liftHeight: 50,                  // px arc maximum
-    gravityFactor: 0.3,              // Y-offset multiplier
-    scrollSensitivity: 0.1,
-    scrollSensitivityMobile: 0.05
-  },
-  
-  SCENE: {
-    perspective: 2500,               // px
-    perspectiveOriginX: '50%',
-    perspectiveOriginY: '80%',       // Bottom bias
-    transformOriginX: '50%',
-    transformOriginY: '-1%',         // Above page top
-    ringZIndex: 5000,                // Always on top
-    activePageZIndex: 1000
-  }
-};
+### Asset Organization
+```
+src/assets/portfolio-pages/
+├── chapter-1/
+│   ├── chapter-1-1.jpg
+│   ├── chapter-1-2.jpg
+│   └── chapter-1-3.mp4
+├── chapter-2/
+│   └── chapter-2-1.jpg
 ```
 
-## 5. Core Systems
+### Adding New Content
 
-### 5.1 Virtual Scroll Engine
+1. **Add images/videos** to `src/assets/portfolio-pages/chapter-X/`
+2. **Update JSON** in `data/portfolio.json`:
+   ```json
+   {
+     "asset": "chapter-1-4.jpg",
+     "type": "image",
+     "commentary": "New page description"
+   }
+   ```
+3. **Restart dev server** - pages auto-generate from JSON
+
+---
+
+## 🎯 The Physics Explained
+
+### Why This Feels Real
+
+1. **Top-edge hinge**: `transform-origin: 50% 0 0` makes pages flip over the top
+2. **Arc motion**: Pages lift 30px during flip (like real paper flexibility)  
+3. **Two-phase animation**: 
+   - Phase 1: Lift & hinge (fast start, slow middle)
+   - Phase 2: Drop & settle (slow start, fast end)
+4. **Growing pile**: Each flip moves pages closer to camera
+5. **No z-index**: Real 3D depth using `translateZ()` only
+
+### How the Two Stacks Work Now
+
+The notebook always has **two stacks** sharing the same depth ruler:
+
+• **Unread stack (bottom)** – pages that haven't flipped yet. They start at
+  `translateZ(5px)` for the very last page and rise by `4px` per sheet until the
+  top-most unread page is reached.
+
+• **Read stack (top)** – every page that *has* flipped.  Its first member (the
+  very first page you flip) lands **exactly on the depth of the bottom unread
+  page** – so visually it appears to slide under the notebook.  Each
+  subsequent flip lands one sheet (`4px`) closer to the camera, building a
+  tidy pile that grows toward you while the unread stack shrinks.
+
+This symmetric depth model keeps the total height of the notebook constant –
+pages are never "lost" in space; they simply migrate from one end of the depth
+ruler to the other.
+
+### Depth Calculation Example (10 pages)
+
+Unread stack before flipping:
+```
+Index 0 (bottom): Z = 5 + (10-1-0) × 4 = 41px
+Index 1        : Z = 37px
+…
+Index 9 (top)  : Z = 5px
+```
+
+Flipping index **9** (the first visible page):
+```
+Start  : translateZ(5px)   rotateX(0deg)
+50%    : translateZ(35px)  rotateX(90deg)  (lifted)
+Finish : translateZ(41px)  rotateX(180deg) (lands on depth of bottom sheet)
+```
+
+Flipping index **8** next:
+```
+Lands at translateZ(37px) – one sheet (4 px) closer to camera than the
+previously-flipped page.
+```
+
+And so on until the unread stack is empty and all pages have migrated to the
+read stack.
+
+---
+
+## 🧹 Recent Improvements (v1.1)
+
+### Simplified HTML Structure
+We recently streamlined the DOM structure for better maintainability:
+
+**Before:**
+```html
+<div id="notepad" class="notebook-inner">
+  <div id="notepad-inner">  <!-- ← Unnecessary wrapper -->
+    <div class="page-stack" id="page-stack">
+      <!-- pages -->
+    </div>
+  </div>
+</div>
+```
+
+**After:**
+```html
+<div id="notebook" class="notebook-inner">
+  <div class="page-stack" id="page-stack">
+    <!-- pages directly here -->
+  </div>
+</div>
+```
+
+### Consistent Naming
+- **Standardized terminology**: All "notepad" references updated to "notebook" 
+- **Simplified CSS**: Removed redundant `#notepad-inner` rules
+- **Cleaner JavaScript**: Updated all DOM queries to use `#notebook`
+
+**Benefits:**
+- ✅ One less unnecessary wrapper div
+- ✅ Consistent naming throughout codebase  
+- ✅ Better maintainability
+- ✅ Same functionality, cleaner code
+
+---
+
+## 🔧 Development Tips
+
+### Debugging
+- Add `?debug=true` to URL for performance overlay
+- Add `?preview=true` to load JSON at runtime
+- Check browser console for initialization logs
+
+### Common Issues
+
+**Pages not flipping?**
 ```javascript
-class VirtualScrollEngine {
-  constructor() {
-    this.scrollPosition = 0.0;       // Fractional (1.5 = 50% through page 1)
-    this.snapThreshold = 110;        // Auto-flip at 110° (61% progress)
-    this.isSnapping = false;         // Prevent conflicts
-  }
-  
-  updateScrollPosition(delta) {
-    if (this.isSnapping) return;
-    this.scrollPosition += delta * CONFIG.scrollSensitivity;
-    this.scrollPosition = Math.max(0, Math.min(this.maxPages - 1, this.scrollPosition));
-    this.notifyObservers(this.scrollPosition);
-  }
+// Check if page-stack container exists
+const pageStack = document.getElementById('page-stack');
+console.log('Page stack:', pageStack);
+```
+
+**Wrong flip direction?**
+```javascript
+// Check transform origin in CSS
+.page {
+  transform-origin: 50% 0 0; /* Must be top edge */
 }
 ```
 
-### 5.2 Physics Calculations
+**Performance issues?**
 ```javascript
-function calculatePageTransform(pageIndex, scrollPosition) {
-  const relativePos = scrollPosition - pageIndex;
-  const rotation = Math.max(0, Math.min(180, relativePos * 180));
-  const flipProgress = rotation / 180;
-  const liftHeight = Math.sin(flipProgress * Math.PI) * CONFIG.liftHeight;
-  
-  return {
-    transform: `translateZ(${liftHeight}px) translateY(${-liftHeight * CONFIG.gravityFactor}px) rotateX(${rotation}deg)`,
-    zIndex: calculateZIndex(pageIndex, scrollPosition, rotation)
-  };
+// Reduce visible pages in config.js
+PERFORMANCE: {
+  maxVisiblePages: 10  // Default is 15
 }
 ```
 
-### 5.3 Performance Management
-- **Visibility Culling**: Only 15 pages rendered simultaneously
-- **Frame Monitoring**: Track frame times, auto-adjust quality if < 60fps
-- **Memory Management**: Object pooling, garbage collection optimization
-- **GPU Acceleration**: `translate3d`, `rotateX`, `will-change: transform`
+### Customization
 
-## 6. Visual Requirements
+**Change flip speed:**
+```javascript
+// In config.js
+ANIMATION: {
+  duration: 800  // Slower (was 600)
+}
+```
 
-### 6.1 Page Layout
-- **Dimensions**: 600×450px (4:3 aspect ratio)
-- **Content Area**: 16:9 aspect ratio, bottom-aligned
-- **Safe Zone**: Top 50px reserved for ring holes
-- **Transform Origin**: `50% -1%` for top-hinged flipping
+**Adjust depth spacing:**
+```javascript
+// In config.js  
+DEPTH: {
+  spacingZ: 6  // More space between pages (was 4)
+}
+```
 
-### 6.2 Ring System
-- **Ring Holes**: Visible on both front and back of pages
-- **Safe Zone**: Content cannot overlap top 50px
-- **Z-Index**: Rings always visible above all pages
-- **Opacity**: Front 1.0, back 0.8
-
-### 6.3 Shadow System
+**Modify page colors:**
 ```css
-.page::before {
-  background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, transparent 10%, transparent 90%, rgba(0,0,0,0.05) 100%);
+/* In style.css */
+.page {
+  background-color: #f0f0f0;  /* Lighter grey */
 }
 
-.page.flipped::before {
-  background: linear-gradient(0deg, rgba(0,0,0,0.15) 0%, transparent 15%);
-}
-```
-
-## 7. Implementation Requirements
-
-### 7.1 Required Components
-- `VirtualScrollEngine`: Fractional scroll state management
-- `RenderPipeline`: State-driven page transformations
-- `PerformanceManager`: FPS monitoring and quality scaling
-- `PortfolioLoader`: JSON-driven content generation
-- `CommentarySystem`: Real-time commentary updates
-
-### 7.2 Animation States
-- **Stacked**: Pages at `rotateX(0deg)` with 1px depth separation
-- **Flipping**: Current page rotating 0° to 180° with arc motion
-- **Flipped**: Completed pages at `rotateX(180deg)` building upward
-
-### 7.3 Z-Index Management
-```javascript
-function calculateZIndex(pageIndex, scrollPosition, rotation) {
-  const currentPage = Math.floor(scrollPosition);
-  if (pageIndex === currentPage && rotation > 0) return 1000;  // Active flip
-  if (pageIndex < currentPage) return 100 + pageIndex;        // Flipped stack
-  return 200 - pageIndex;                                     // Unflipped stack
+.page::after {
+  background: #666666;  /* Darker back */
 }
 ```
 
-## 8. Performance Targets
+---
 
-- **Frame Rate**: 60fps sustained during continuous scrolling
-- **Memory Usage**: < 100MB heap for 80-page portfolio
-- **Load Time**: < 2s to first interactive frame
-- **Quality Scaling**: Auto-reduce effects if performance drops
-- **Browser Support**: Chrome 94+, Safari 15+, Firefox 94+
+## 🚀 Performance
 
-## 9. Testing & Validation
+The system targets **60fps** during scrolling:
 
-### 9.1 Performance Tests
+- **Visibility culling**: Only 15 pages rendered at once
+- **GPU acceleration**: All transforms use `translate3d`
+- **RAF rendering**: One frame per scroll update
+- **Memory management**: Pages outside view are hidden
+
+### Performance Monitoring
 ```javascript
-// Frame time validation (must average < 16.67ms)
-// Memory usage validation (must stay < 100MB)
-// Snap threshold accuracy (61% progress = auto-complete)
+// Check FPS in console
+ApplicationState.performanceManager.getPerformanceReport();
 ```
 
-### 9.2 Visual Tests
+---
+
+## 📱 Mobile Support
+
+- **Touch gestures**: Swipe to flip pages
+- **Responsive design**: Scales to mobile screens  
+- **Performance optimized**: Lower scroll sensitivity on mobile
+- **Orientation support**: Works in landscape mode
+
+---
+
+## 🎨 Customization Guide
+
+### Changing Colors
+```css
+/* Page front (light grey) */
+.page {
+  background-color: #f5f5f5;
+}
+
+/* Page back (darker grey) */  
+.page::after {
+  background: #888888;
+}
+
+/* Covers (cardboard texture) */
+.cover {
+  background-image: url('./assets/background-assets/images/cardboard.jpg');
+}
+```
+
+### Adjusting Physics
 ```javascript
-// Ring holes visible on both page sides
-// Content respects 50px safe zone
-// Page aspect ratio maintains 4:3
-// Content aspect ratio maintains 16:9
+// In config.js
+DEPTH: {
+  liftHeight: 40,    // Higher lift (was 30)
+  spacingZ: 6,       // More page spacing (was 4)
+}
+
+ANIMATION: {
+  duration: 800,     // Slower flips (was 600)
+}
 ```
 
-### 9.3 QA Checklist
-- [ ] 60fps during continuous scrolling
-- [ ] Memory below 100MB after 10 minutes
-- [ ] Ring holes visible on all pages
-- [ ] No content overlaps safe zone
-- [ ] Smooth arc motion physics
-- [ ] Touch input works on mobile
-- [ ] Keyboard navigation support
+### Adding New Page Types
+1. **Define in JSON schema** (portfolioLoader.js)
+2. **Add creation logic** (createPageElement function)  
+3. **Style the new type** (style.css)
 
-## 10. Development Workflow
+---
 
-```bash
-npm run dev                    # Development server
-npm run build                  # Production build
-npm start                      # Serve production
-npm run validate-json          # Validate portfolio.json
-```
+## 🤝 Contributing
 
-**Development Modes:**
-- `?preview=true`: Runtime JSON loading
-- `?debug=true`: Performance overlay
+1. **Fork the repo**
+2. **Make changes**
+3. **Test thoroughly** - check flips work in both directions
+4. **Update this README** if you change core behavior
+5. **Submit PR** with clear description
 
-## 11. File Structure
+### Testing Checklist
+- [ ] Pages flip in correct direction (over top edge)
+- [ ] Growing pile moves toward camera  
+- [ ] Smooth 60fps performance
+- [ ] Works on mobile touch
+- [ ] All page types render correctly
 
-```
-src/
-├── config.js                 # Global configuration
-├── app.js                    # Application orchestrator
-├── scrollEngine.js           # Virtual scroll management
-├── render.js                 # 3D transformation pipeline
-├── performance.js            # FPS monitoring & optimization
-├── portfolioLoader.js        # JSON content management
-├── style.css                 # 3D styling & pseudo-elements
-└── assets/
-    ├── background-assets/    # Rings, holes, textures
-    └── portfolio-pages/      # Content organized by chapter
-data/
-└── portfolio.json           # Content source of truth
-```
+---
 
-This specification ensures consistent implementation of a performant, realistic ring-bound notebook with clear separation between content (JSON) and behavior (global configuration). 
+## 📞 Support
+
+**Common Questions:**
+
+**Q: Pages look flat/not 3D?**  
+A: Check that `perspective: 2500px` is applied to container
+
+**Q: Flips are jerky?**  
+A: Reduce `maxVisiblePages` in config.js for better performance
+
+**Q: Wrong flip direction?**  
+A: Ensure `transform-origin: 50% 0 0` (top edge hinge)
+
+**Q: Pages don't load?**  
+A: Check portfolio.json format and asset paths
+
+---
+
+This 3D notebook system creates a realistic page-flipping experience that feels like using a real reporter's notebook. The key is in the physics: pages flip over the top edge, lift during transition, and land on a growing pile that moves toward the viewer. 🎯 

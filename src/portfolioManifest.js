@@ -105,5 +105,16 @@ export default [
       "assets/portfolio-pages/chapter-6/chapter-6-6.jpg",
       "assets/portfolio-pages/chapter-6/chapter-6-7.jpg"
     ]
+  },
+  {
+    "title": "Chapter tabs",
+    "pages": [
+      "assets/portfolio-pages/chapter-tabs/aboutme.png",
+      "assets/portfolio-pages/chapter-tabs/bentley.png",
+      "assets/portfolio-pages/chapter-tabs/sandp.png",
+      "assets/portfolio-pages/chapter-tabs/spacialweb.png",
+      "assets/portfolio-pages/chapter-tabs/sunexpress.png",
+      "assets/portfolio-pages/chapter-tabs/yoti.png"
+    ]
   }
 ];

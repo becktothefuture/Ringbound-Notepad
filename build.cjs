@@ -1,7 +1,7 @@
 /**
  * RINGBOUND NOTEPAD - BUILD SYSTEM
  * 
- * This Node.js script serves as the complete build pipeline for the Ringbound Notepad
+ * This Node.js script serves as the complete build pipeline for the Ringbound Notebook
  * portfolio application. It handles both static asset generation and JavaScript bundling
  * to create an optimized distribution ready for deployment.
  * 
@@ -233,6 +233,9 @@ async function bundle({ watch = false } = {}) {
   // copy html and css
   fs.copyFileSync(path.join(ROOT, 'index.html'), path.join(DIST_DIR, 'index.html'));
   fs.copyFileSync(path.join(ROOT, 'style.css'), path.join(DIST_DIR, 'style.css'));
+  // copy portfolio.json from data directory to maintain path structure
+  fs.mkdirSync(path.join(DIST_DIR, 'data'), { recursive: true });
+  fs.copyFileSync(path.join(DATA_DIR, 'portfolio.json'), path.join(DIST_DIR, 'data', 'portfolio.json'));
 
   // Shared esbuild options
   const esOpts = {
@@ -313,6 +316,7 @@ log.js();
      */
     const staticWatcher = chokidar.watch([
       'src/**/*',
+      'data/portfolio.json',
       '!src/**/*.js',
       '!src/**/*.ts',
       '!src/**/*.tsx',
@@ -323,8 +327,16 @@ log.js();
     });
 
     function handleStaticChange(absPath, event) {
-      const relFromSrc = path.relative(ROOT, absPath);
-      const destPath = path.join(DIST_DIR, relFromSrc);
+      let relFromSrc, destPath;
+      
+      // Handle portfolio.json from data directory specially
+      if (absPath.includes('data/portfolio.json')) {
+        relFromSrc = 'data/portfolio.json';
+        destPath = path.join(DIST_DIR, 'data', 'portfolio.json');
+      } else {
+        relFromSrc = path.relative(ROOT, absPath);
+        destPath = path.join(DIST_DIR, relFromSrc);
+      }
 
       if (event === 'add' || event === 'change') {
         fs.mkdirSync(path.dirname(destPath), { recursive: true });

@@ -256,12 +256,22 @@ function createCoverContent() {
 
 /**
  * Generate pages from portfolio data with full validation
- * @param {HTMLElement} container - Container element
+ * @param {HTMLElement} container - Container element (should be page-stack)
  * @param {Object} portfolioData - Validated portfolio data
  * @returns {HTMLElement[]} Array of created page elements
  */
 export function createPagesFromPortfolioData(container, portfolioData) {
   if (!container) throw new Error('Container element is required');
+  
+  // Ensure we're working with the page-stack container
+  let pageStack = container;
+  if (!container.classList.contains('page-stack')) {
+    pageStack = container.querySelector('.page-stack') || container.querySelector('#page-stack');
+    if (!pageStack) {
+      console.warn('⚠️ No page-stack container found, using provided container');
+      pageStack = container;
+    }
+  }
   
   // Validate portfolio data
   const validation = validatePortfolioSchema(portfolioData);
@@ -276,8 +286,8 @@ export function createPagesFromPortfolioData(container, portfolioData) {
   const pages = [];
   let globalPageIndex = 0;
   
-  // Clear existing content
-  const existingElements = container.querySelectorAll('.page, .cover');
+  // Clear existing content from page stack
+  const existingElements = pageStack.querySelectorAll('.page, .cover');
   existingElements.forEach(el => el.remove());
   
   // Create front cover
@@ -285,7 +295,7 @@ export function createPagesFromPortfolioData(container, portfolioData) {
     'Welcome to my portfolio. Scroll to begin exploring my work as a UX/UI Designer and Creative Technologist.',
     globalPageIndex
   );
-  container.appendChild(frontCover);
+  pageStack.appendChild(frontCover);
   pages.push(frontCover);
   globalPageIndex++;
   
@@ -297,14 +307,15 @@ export function createPagesFromPortfolioData(container, portfolioData) {
     CHAPTERS.push({
       title: project.title,
       page: chapterStartPage,
-      color: `hsl(${(projectIndex * 47) % 360}, 70%, 85%)`
+      color: `hsl(${(projectIndex * 47) % 360}, 70%, 85%)`,
+      tabImage: project.tabImage // Add tab image reference
     });
     
     // Create pages for this project
     project.pages.forEach((pageData, pageIndex) => {
       try {
         const pageEl = createPageElement(pageData, project.id, pageIndex, globalPageIndex);
-        container.appendChild(pageEl);
+        pageStack.appendChild(pageEl);
         pages.push(pageEl);
         globalPageIndex++;
       } catch (error) {
@@ -318,7 +329,7 @@ export function createPagesFromPortfolioData(container, portfolioData) {
     'Thank you for exploring my portfolio. I hope you enjoyed the journey through my creative work.',
     globalPageIndex
   );
-  container.appendChild(backCover);
+  pageStack.appendChild(backCover);
   pages.push(backCover);
   globalPageIndex++;
   

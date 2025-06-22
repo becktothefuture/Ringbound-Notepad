@@ -29,7 +29,7 @@
 // === CORE SYSTEM IMPORTS ===
 import { GLOBAL_CONFIG } from './config.js';
 import { VirtualScrollEngine } from './scrollEngine.js';
-import { render, initializeRenderingContext, createRenderPipeline } from './render.js';
+import { render, initializeRenderingContext, createRenderPipeline, updateRingsPosition } from './render.js';
 import { PerformanceManager } from './performance.js';
 import { createPagesFromPortfolioData, PortfolioLoader, validatePortfolioSchema } from './portfolioLoader.js';
 import { initBrowserTheme } from './browserTheme.js';
@@ -142,12 +142,12 @@ function initializePerformanceSystem() {
 }
 
 /**
- * Initialize rendering context with specification settings
+ * Initialize 3D notebook rendering system with user specification
  */
-function initializeRenderingSystem() {
+function initializeRenderingSystem(totalPages = 0) {
   try {
-    initializeRenderingContext();
-    console.log('🎭 Rendering system initialized with specification settings');
+    initializeRenderingContext(totalPages);
+    console.log('🎯 3D Notebook rendering system initialized');
     
     // Apply global CSS variables
     const root = document.documentElement;
@@ -155,7 +155,7 @@ function initializeRenderingSystem() {
     root.style.setProperty('--active-page-z-index', GLOBAL_CONFIG.SCENE.activePageZIndex);
     
   } catch (error) {
-    handleApplicationError(error, 'Rendering System Initialization');
+    handleApplicationError(error, '3D Notebook Rendering System Initialization');
   }
 }
 
@@ -178,11 +178,10 @@ function initializeBrowserTheme() {
  */
 async function loadPortfolioContent() {
   try {
-    const notepad = document.getElementById('notepad');
-    const notepadInner = document.getElementById('notepad-inner');
-    
-    if (!notepad || !notepadInner) {
-      throw new Error('Required DOM elements #notepad or #notepad-inner not found');
+        const notebook = document.getElementById('notebook');
+
+    if (!notebook) {
+      throw new Error('Required DOM element #notebook not found');
     }
     
     // Load portfolio data (supports both static and preview modes)
@@ -204,15 +203,20 @@ async function loadPortfolioContent() {
     
     console.log('✅ Portfolio schema validation passed');
     
-    // Generate pages from validated data
-    console.log('📄 Generating portfolio pages...');
-    const pages = createPagesFromPortfolioData(notepadInner, portfolioDataToUse);
+    // Generate pages from validated data in the page-stack container
+    console.log('🎯 Generating 3D notebook pages...');
+    const pageStack = document.getElementById('page-stack') || notebook;
+    if (!pageStack) {
+      throw new Error('Page stack container not found. Expected #page-stack.');
+    }
+    
+    const pages = createPagesFromPortfolioData(pageStack, portfolioDataToUse);
     
     // Update application state
     ApplicationState.pages = pages;
     ApplicationState.pageCount = pages.length;
     
-    console.log(`📊 Portfolio loaded: ${pages.length} pages generated`);
+    console.log(`🎯 3D Notebook loaded: ${pages.length} pages generated in page-stack`);
     
     return pages;
     
@@ -248,19 +252,19 @@ function initializeScrollEngine(container, pageCount) {
  */
 function initializeChapterSystem(pages) {
   try {
-    const notepad = document.getElementById('notepad-inner');
-    if (!notepad) {
-      throw new Error('Notepad container not found');
+    const notebook = document.getElementById('notebook');
+    if (!notebook) {
+      throw new Error('Notebook container not found');
     }
     
     // Get actual page elements from the DOM
-    const pageElements = Array.from(notepad.querySelectorAll('.page'));
+    const pageElements = Array.from(notebook.querySelectorAll('.page'));
     
     if (pageElements.length === 0) {
-      throw new Error('No page elements found in notepad');
+      throw new Error('No page elements found in notebook');
     }
     
-    initChapters(pageElements, notepad);
+    initChapters(pageElements, notebook);
     console.log('📑 Chapter navigation system initialized');
   } catch (error) {
     console.warn('⚠️ Chapter system initialization failed:', error);
@@ -344,22 +348,27 @@ function finalizeApplication() {
  */
 async function bootstrap() {
   try {
-    console.log('🔄 Initializing Ring-Bound Notepad Application...');
+    console.log('🔄 Initializing Ring-Bound Notebook Application...');
     console.log('📋 Following technical specification v2.0.0');
     
     // Phase 1: Initialize core systems
     console.log('📊 Phase 1: Initializing core systems...');
     initializePerformanceSystem();
-    initializeRenderingSystem();
     initializeBrowserTheme();
     
     // Phase 2: Load and validate content
-    console.log('📄 Phase 2: Loading and validating content...');
+    console.log('🎯 Phase 2: Loading and validating 3D notebook content...');
     const pages = await loadPortfolioContent();
+    
+    // Initialize rendering system with page count for depth model
+    initializeRenderingSystem(ApplicationState.pageCount);
+    
+    // Ensure rings position is calculated with actual page count
+    updateRingsPosition(ApplicationState.pageCount);
     
     // Phase 3: Initialize interaction systems
     console.log('🎮 Phase 3: Initializing interaction systems...');
-    const container = document.getElementById('notepad-inner');
+    const container = document.getElementById('notebook');
     if (!container) throw new Error('Container element not found');
     
     ApplicationState.scrollEngine = initializeScrollEngine(container, ApplicationState.pageCount);
