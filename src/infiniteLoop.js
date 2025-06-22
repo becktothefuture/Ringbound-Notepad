@@ -3,7 +3,7 @@
  * 
  * This module handles the complex logic for creating seamless infinite page loops.
  * It manages virtual page positioning, scroll wrapping, and ensures smooth transitions
- * when cycling through the notepad pages.
+ * when cycling through the notebook pages.
  * 
  * KEY CONCEPTS:
  * - Virtual Positioning: Pages can appear at multiple virtual positions simultaneously

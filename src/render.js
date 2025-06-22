@@ -1,21 +1,25 @@
 /**
- * STATE-DRIVEN RENDERING SYSTEM
+ * 3D NOTEBOOK RENDERING SYSTEM - USER SPECIFICATION
  * 
- * This module implements the specification-compliant 3D transformation pipeline.
- * It converts scroll state into visual 3D transformations based on realistic
- * notebook physics and state-driven rendering principles.
- * 
- * RENDERING PHILOSOPHY:
- * - State-driven: All visual properties calculated as pure functions of scroll position
- * - Realistic Physics: Based on real notebook mechanics and arc motion
- * - Performance-First: GPU acceleration and visibility culling
- * - Z-Index Management: Proper stacking for realistic visual depth
+ * Implements the exact 3D notebook specification:
+ * - Pages flip over the top edge and land on a growing pile toward camera
+ * - Depth model: Bottom unread Z=5px, each sheet adds 4px
+ * - Flip sequence: Lift & hinge (0→50%), drop & settle (50→100%)
+ * - All pages in single .page-stack container, no z-index usage
+ * - Transform origin: 50% 0 0 (top edge hinge)
+ * - Backface visible with grey ::after pseudo-element
+ * - 60fps animation at 600ms duration
  */
 
 import { GLOBAL_CONFIG } from './config.js';
 import { mapRange, clamp, lerp } from './utils.js';
 import { perf } from './performance.js';
-import { computeTransform } from './pageTransforms.js';
+import { 
+  computeTransform, 
+  initializeDepthSystem, 
+  createFlipAnimation,
+  calculateRingsFrontPosition
+} from './pageTransforms.js';
 
 // Cache for performance optimization
 let commentaryOverlay = null;
@@ -57,19 +61,7 @@ function updateCommentary(currentPage) {
  * @returns {boolean} Whether page should be visible
  */
 function shouldRenderPage(page, pageIndex, scrollPosition) {
-  const relativePos = scrollPosition - pageIndex;
-  const maxVisible = GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages;
-  
-  // Hide pages that are too far in the past or future
-  const isPast = relativePos < -maxVisible - 1;
-  const isFuture = relativePos > maxVisible + 1;
-  
-  if (isPast || isFuture) {
-    page.classList.remove('page--visible');
-    page.classList.add('page--hidden');
-    return false;
-  }
-  
+  // Always render all pages; visibility controlled at content level
   page.classList.remove('page--hidden');
   page.classList.add('page--visible');
   return true;
@@ -112,11 +104,55 @@ export function render(pages, scrollState) {
     // Calculate transform using specification physics
     const transformString = computeTransform(i, scroll, pageCount);
     
+    // Apply dynamic shadow classes based on page above
+    applyDynamicShadow(page, i, scroll);
+    
+    // Buffer page contents to optimize performance while all pages are visible
+    updatePageContentVisibility(page, i, scroll);
+    
     // Apply transforms with clean CSS approach
     applyPageTransform(page, transformString);
   }
   
   perf.endRender();
+}
+
+/**
+ * Apply dynamic shadow classes based on the status of the page above
+ * @param {HTMLElement} page - Page element
+ * @param {number} pageIndex - Index of this page
+ * @param {number} scrollPosition - Current scroll position
+ */
+function applyDynamicShadow(page, pageIndex, scrollPosition) {
+  // Don't apply shadows to covers
+  if (page.classList.contains('cover')) {
+    return;
+  }
+  
+  // Check if there's a page above this one that affects its shadow
+  const pageAboveIndex = pageIndex - 1;
+  
+  if (pageAboveIndex < 0) {
+    // This is the top page, no shadow reduction needed
+    page.classList.remove('shadow-reduced', 'shadow-hidden');
+    return;
+  }
+  
+  // Calculate how much the page above has flipped
+  const pageAboveProgress = scrollPosition - pageAboveIndex;
+  
+  if (pageAboveProgress <= 0) {
+    // Page above hasn't started flipping yet, full shadow
+    page.classList.remove('shadow-reduced', 'shadow-hidden');
+  } else if (pageAboveProgress < 1) {
+    // Page above is currently flipping, reduce shadow
+    page.classList.add('shadow-reduced');
+    page.classList.remove('shadow-hidden');
+  } else {
+    // Page above has been fully flipped, hide shadow almost completely
+    page.classList.remove('shadow-reduced');
+    page.classList.add('shadow-hidden');
+  }
 }
 
 /**
@@ -137,10 +173,10 @@ function applyPageTransform(page, transformString) {
 }
 
 /**
- * Initialize CSS custom properties from configuration
- * Sets up 3D perspective and responsive layout settings
+ * Initialize the 3D notebook system
+ * Sets up depth model, 3D perspective, and page container
  */
-export function initializeRenderingContext() {
+export function initializeRenderingContext(totalPages = 0) {
   const root = document.documentElement;
   
   // Apply 3D perspective settings
@@ -152,11 +188,22 @@ export function initializeRenderingContext() {
   root.style.setProperty('--page-aspect-ratio', GLOBAL_CONFIG.LAYOUT.pageAspectRatio);
   root.style.setProperty('--safe-zone-height', `${GLOBAL_CONFIG.LAYOUT.safeZoneHeight}px`);
   
-  // Apply transform origin settings
-  root.style.setProperty('--page-rotation-origin-x', GLOBAL_CONFIG.SCENE.transformOriginX);
-  root.style.setProperty('--page-rotation-origin-y', GLOBAL_CONFIG.SCENE.transformOriginY);
+  // Initialize the 3D notebook depth system
+  if (totalPages > 0) {
+    initializeDepthSystem(totalPages);
+    
+    // Calculate and set dynamic rings front position
+    const ringsFrontZ = calculateRingsFrontPosition(totalPages);
+    root.style.setProperty('--rings-front-position', `${ringsFrontZ}px`);
+  }
   
-  console.log('🎭 Rendering context initialized with 4:3 aspect ratio and responsive design');
+  console.log('🎯 3D Notebook system initialized:', {
+    totalPages,
+    bottomUnreadZ: GLOBAL_CONFIG.DEPTH.bottomUnreadZ,
+    spacingZ: GLOBAL_CONFIG.DEPTH.spacingZ,
+    liftHeight: GLOBAL_CONFIG.DEPTH.liftHeight,
+    duration: GLOBAL_CONFIG.ANIMATION.duration
+  });
 }
 
 /**
@@ -166,4 +213,58 @@ export function initializeRenderingContext() {
  */
 export function createRenderPipeline(pages) {
   return (scrollState) => render(pages, scrollState);
+}
+
+/**
+ * Update rings position based on current page count
+ * @param {number} totalPages - Total number of pages
+ */
+export function updateRingsPosition(totalPages) {
+  console.log(`🔗 updateRingsPosition called with totalPages: ${totalPages}`);
+  
+  if (totalPages > 0) {
+    const root = document.documentElement;
+    const ringsFrontZ = calculateRingsFrontPosition(totalPages);
+    
+    // Set the CSS variable
+    root.style.setProperty('--rings-front-position', `${ringsFrontZ}px`);
+    
+    // Verify the variable was set
+    const computedValue = getComputedStyle(root).getPropertyValue('--rings-front-position');
+    
+    console.log(`🔗 Rings position updated for ${totalPages} pages:`);
+    console.log(`  - Calculated: ${ringsFrontZ}px`);
+    console.log(`  - CSS Variable Set: ${computedValue}`);
+    
+    // Force a style recalculation on rings elements
+    const ringsElements = document.querySelectorAll('.rings--front');
+    ringsElements.forEach(ring => {
+      ring.style.transform = `translateZ(var(--rings-front-position))`;
+    });
+    
+  } else {
+    console.warn(`🔗 Cannot update rings position: totalPages is ${totalPages}`);
+  }
+}
+
+/**
+ * Show/hide heavy page-content elements (images/videos) based on scroll proximity
+ * while keeping page shells visible at all times.
+ * @param {HTMLElement} page - Page element
+ * @param {number} pageIndex - Index of the page
+ * @param {number} scrollPosition - Current scroll position
+ */
+function updatePageContentVisibility(page, pageIndex, scrollPosition) {
+  const contentEl = page.querySelector('.page-content');
+  if (!contentEl) return;
+
+  const relativePos = scrollPosition - pageIndex;
+  const maxBuffer = GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages;
+
+  if (relativePos < -maxBuffer || relativePos > maxBuffer) {
+    // Too far from viewport – hide heavy content
+    contentEl.classList.add('page-content--hidden');
+  } else {
+    contentEl.classList.remove('page-content--hidden');
+  }
 }

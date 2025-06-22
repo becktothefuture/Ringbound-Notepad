@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scroll Test - Ring-Bound Notepad</title>
+    <title>Scroll Test - Ring-Bound Notebook</title>
     <style>
         body {
             margin: 0;
@@ -39,7 +39,7 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
         
-        #notepad-container {
+        #notebook-container {
             width: 800px;
             height: 600px;
             margin: 50px auto;
@@ -68,13 +68,11 @@
         <p>Flipped pages should remain visible as a stack on top.</p>
     </div>
     
-    <div id="notepad-container">
-        <div id="notepad" class="notebook-inner">
-            <div id="notepad-inner">
-                <!-- Pages will be dynamically generated -->
-            </div>
-        </div>
-    </div>
+        <div id="notebook-container">
+      <div id="notebook" class="notebook-inner">
+                                 <!-- Pages will be dynamically generated -->
+         </div>
+     </div>
 
     <script type="module">
         import { VirtualScrollEngine } from './src/scrollEngine.js';
@@ -83,7 +81,7 @@
         
         // Create test pages
         function createTestPages(count = 10) {
-            const container = document.getElementById('notepad-inner');
+            const container = document.getElementById('notebook');
             const pages = [];
             
             for (let i = 0; i < count; i++) {
@@ -112,7 +110,7 @@
         scrollEngine.setMaxPages(pages.length);
         
         // Bind to entire document (this is the key fix)
-        scrollEngine.initializeEventListeners(document.getElementById('notepad-inner'));
+        scrollEngine.initializeEventListeners(document.getElementById('notebook'));
         
         // Update UI with scroll state
         scrollEngine.addObserver((scrollState) => {

@@ -3,7 +3,7 @@
  * 
  * This file centralizes all layout, performance, and visual parameters.
  * All configuration values are globally defined (NOT in JSON).
- * Based on the Ring-Bound Notepad Technical Specification.
+ * Based on the Ring-Bound Notebook Technical Specification.
  * 
  * COORDINATE SYSTEM:
  * - X: Left/Right (positive = right)
@@ -18,11 +18,8 @@ export const GLOBAL_CONFIG = {
   LAYOUT: {
     // Pages use 4:3 aspect ratio within responsive container
     pageAspectRatio: 4/3,            // Enforced globally
-    pageThickness: 4,                // px between pages to match physical spacing
-    stackCompression: 0.8,           // Y-axis compression for stacked pages
     contentAlignment: 'bottom',      // Enforced globally
     safeZoneHeight: 50,              // px - ring hole area
-    coverSizeMultiplier: 1.01        // Covers 1% larger
   },
   
   PERFORMANCE: {
@@ -34,13 +31,27 @@ export const GLOBAL_CONFIG = {
     qualityScaleMax: 1.0
   },
   
+  // 3D Notebook Depth Model - User Specifications
+  DEPTH: {
+    bottomUnreadZ: 5,                // Bottom unread sheet starts at 5px
+    spacingZ: 2,                     // Every sheet above adds 4px
+    liftHeight: 30,                  // px clearance during flip
+  },
+  
+  // Flip Animation - User Specifications  
   ANIMATION: {
+    duration: 600,                   // ms for flip animation (60fps)
     snapThreshold: 110,              // Degrees (61% progress)
     snapDuration: 120,               // ms
-    liftHeight: 50,                  // px arc maximum
-    gravityFactor: 0.3,              // Y-offset multiplier
+    liftHeight: 30,                  // px arc maximum (matches DEPTH.liftHeight)
     scrollSensitivity: 0.1,
-    scrollSensitivityMobile: 0.05
+    scrollSensitivityMobile: 0.05,
+    
+    // User-specified easing curves
+    easing: {
+      liftHinge: 'cubic-bezier(.55,.05,.67,.19)',    // 0 → 50%: lift & hinge
+      dropSettle: 'cubic-bezier(.25,.46,.45,.94)'    // 50 → 100%: drop & settle
+    }
   },
   
   SCENE: {
@@ -48,7 +59,7 @@ export const GLOBAL_CONFIG = {
     perspectiveOriginX: '50%',
     perspectiveOriginY: '30%',       // Bottom bias
     transformOriginX: '50%',
-    transformOriginY: '-1%',         // Slightly above page top for natural hinge
+    transformOriginY: '0%',          // Top edge hinge (user specification)
     ringZIndex: 5000,                // Always on top
     activePageZIndex: 1000
   }
@@ -57,27 +68,7 @@ export const GLOBAL_CONFIG = {
 // Legacy compatibility - map old PAGE_ANIMATION to new GLOBAL_CONFIG
 export const PAGE_ANIMATION = {
   stack: {
-    bottomStack: {
-      visibleDepth: GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages,
-      depthUnit: 1,
-      startZ: 1,
-      startY: 0,
-      opacityFade: [GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages, GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages],
-    },
-    topStack: {
-      visibleDepth: GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages,
-      depthUnit: 1,
-      startZ: 1,
-      startY: 2,
-      opacityFade: [GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages, GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages],
-    },
     visibleDepth: GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages,
-    depthUnit: 1,
-    startZ: 1,
-    startY: 0,
-    opacityFade: [GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages, GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages],
-    stickPixels: 1,
-    minZIndex: 10,
   },
   flip: {
     maxAngle: 180,
@@ -91,7 +82,6 @@ export const PAGE_ANIMATION = {
     buffer: GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages,
   },
   misc: {
-    enableGPUAcceleration: true,
     scrollSensitivity: GLOBAL_CONFIG.ANIMATION.scrollSensitivity,
   },
   snap: {

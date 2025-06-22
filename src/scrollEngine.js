@@ -1,17 +1,14 @@
 /**
- * VIRTUAL SCROLL ENGINE SYSTEM
+ * 3D NOTEBOOK SCROLL ENGINE - USER SPECIFICATION
  * 
- * Implements the VirtualScrollEngine class as specified in the technical specification.
- * This module handles all user input (mouse wheel, touch) and converts it into
- * a virtual scroll state that drives the page animations.
+ * Handles scroll input for the 3D notebook system where each integer step triggers one flip.
  * 
  * KEY CONCEPTS:
- * - Virtual Scroll: Instead of using real page scrolling, we maintain our own scroll value
- * - Continuous Scroll: Scroll values can be fractional (e.g., 1.5 = halfway through page 1)
- * - Input Normalization: Different input types (wheel, touch) are converted to the same format
- * - Animation Timing: Smooth animations when snapping to page boundaries
- * - Observer Pattern: Other systems subscribe to scroll changes
- * - Physics-based Motion: Arc motion with gravity factor for realistic page flipping
+ * - Virtual Scroll: Fractional scroll values (e.g., 1.5 = halfway through page 1 flip)
+ * - Integer Steps: Each whole number represents a complete page flip
+ * - Input Sources: Wheel, swipe, arrow keys trigger page flips
+ * - 60fps Animation: Smooth 600ms flip animations
+ * - Growing Pile: Each flip moves pages toward the camera in a growing stack
  */
 
 import { GLOBAL_CONFIG } from './config.js';
@@ -331,6 +328,16 @@ export function jumpToPage(targetPage) {
 export function updatePageCount(newPageCount) {
   if (!engineInstance) throw new Error('ScrollEngine not initialized');
   engineInstance.setMaxPages(newPageCount);
+  
+  // Update rings position when page count changes
+  // Note: Dynamic import to avoid circular dependency
+  if (typeof window !== 'undefined') {
+    import('./render.js').then(module => {
+      module.updateRingsPosition(newPageCount);
+    }).catch(err => {
+      console.warn('Could not update rings position:', err);
+    });
+  }
 }
 
 // Export the class for direct instantiation

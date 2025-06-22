@@ -1,5 +1,5 @@
 /* =====================================================
-   ROOT THEME VARIABLES & SPECIFICATION COMPLIANCE
+   1. ROOT VARIABLES & CONFIGURATION
    ===================================================== */
 :root {
   /* Browser Theme Variables */
@@ -24,32 +24,31 @@
   --font-family: 'Uncut Sans', system-ui, sans-serif;
   --webflow-font-tiny: 'Tiny5', sans-serif;
   
-  /* SPECIFICATION-COMPLIANT LAYOUT SETTINGS */
-  /* Pages maintain 4:3 aspect ratio within responsive container */
+  /* Layout Settings */
   --page-aspect-ratio: calc(4 / 3);
   --safe-zone-height: 50px;
   --cover-size-multiplier: 1.01;
   
-  /* SPECIFICATION-COMPLIANT 3D SETTINGS */
+  /* 3D Settings */
   --perspective-distance: 2500px;
   --perspective-origin-x: 50%;
   --perspective-origin-y: 80%;
   --page-rotation-origin-x: 50%;
   --page-rotation-origin-y: -1%;
   
-  /* SPECIFICATION-COMPLIANT Z-INDEX SYSTEM */
-  --ring-z-index: 5000;
+  /* Z-Index System */
+  --ring-z-index: 0;
   --active-page-z-index: 1000;
   --front-cover-z-index: 300;
   --back-cover-z-index: 1;
   
-  /* SPECIFICATION-COMPLIANT PERFORMANCE SETTINGS */
+  /* Performance Settings */
   --quality-scale: 1.0;
   --max-visible-pages: 15;
   --shadow-quality: normal;
   --blur-quality: 2px;
   
-  /* SPECIFICATION-COMPLIANT SHADOW SYSTEM */
+  /* Shadow System */
   --shadow-layers: 3;
   --shadow-color: rgba(0, 0, 0, 0.2);
   --shadow-blur: 15px;
@@ -57,324 +56,13 @@
   --shadow-x-offset: 0px;
   --shadow-y-offset: 2px;
   --shadow-transition: transform 0.2s ease-out;
+  
+  /* Dynamic Positioning */
+  --rings-front-position: 175px;
 }
 
 /* =====================================================
-   SPECIFICATION-COMPLIANT PAGE LAYOUT
-   ===================================================== */
-
-.page {
-  position: absolute;
-  top: 0;
-  left: 0;
-  
-  /* Pages maintain aspect ratio within notebook container */
-  width: 100%;
-  height: 100%;
-  aspect-ratio: var(--page-aspect-ratio);
-  
-  /* 3D Transform settings per specification */
-  transform-origin: var(--page-rotation-origin-x) var(--page-rotation-origin-y);
-  transform-style: preserve-3d;
-  
-  /* IMPORTANT: Keep both front and back visible */
-  backface-visibility: visible;
-  
-  /* Webflow paper styling */
-  border-radius: .5em .5em var(--cover-radius) var(--cover-radius);
-  background-color: #dfdcd8;
-  background-image: url('./assets/background-assets/paper-holes.webp'), linear-gradient(231deg, #aca9a3a1, #0000);
-  background-position: 50% -14%, 0 0;
-  background-repeat: no-repeat, repeat;
-  background-size: 99%, auto;
-  
-  /* Individual page shadow */
-  box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.08),
-    0 4px 8px rgba(0, 0, 0, 0.05),
-    0 8px 16px rgba(0, 0, 0, 0.03);
-  
-  /* Performance optimizations */
-  contain: layout style paint;
-}
-
-/* Page back side - visible when flipped */
-.page::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  
-  /* Same paper styling as front but mirrored */
-  background-color: #dfdcd8;
-  background-image: url('./assets/background-assets/paper-holes.webp'), linear-gradient(231deg, #aca9a3a1, #0000);
-  background-position: 50% -14%, 0 0;
-  background-repeat: no-repeat, repeat;
-  background-size: 99%, auto;
-  border-radius: .5em .5em var(--cover-radius) var(--cover-radius);
-  
-  /* Flip the back to face the opposite direction */
-  transform: rotateY(180deg);
-  
-  /* IMPORTANT: Make back visible */
-  backface-visibility: visible;
-  
-  /* Position behind front content */
-  z-index: -1;
-}
-
-/* Page content container with specification compliance */
-.page-content {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 95%; /* Use most of available space while maintaining margins */
-  
-  /* Respect safe zone - content starts below ring holes */
-  max-height: calc(100% - var(--safe-zone-height));
-  
-  /* Content alignment per specification */
-  align-self: var(--content-alignment, bottom);
-  
-  overflow: hidden;
-  border-radius: 4px;
-  
-  /* IMPORTANT: Hide content backface - only show paper back */
-  backface-visibility: hidden;
-}
-
-.page-content__inner {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: inherit;
-  
-  /* IMPORTANT: Hide media backface - only show paper back */
-  backface-visibility: hidden;
-}
-
-/* Ring holes safe zone implementation */
-.page-holes {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--safe-zone-height);
-  
-  /* Visual ring holes */
-  background-image: url('./assets/background-assets/paper-holes.webp');
-  background-repeat: no-repeat;
-  background-position: center top;
-  background-size: contain;
-  
-  /* Ensure holes are visible above content */
-  z-index: 10;
-  pointer-events: none;
-}
-
-/* =====================================================
-   SPECIFICATION-COMPLIANT COVER SYSTEM
-   ===================================================== */
-
-.cover {
-  /* Covers are 1% larger per specification */
-  width: 101%;
-  height: 101%;
-  
-  /* Center positioning for larger covers */
-  left: -0.5%;
-  top: -0.5%;
-  
-  /* Webflow cover styling */
-  border-radius: var(--cover-radius);
-  transform-origin: 50% -1%;
-  
-  /* Ensure 3D context for cover flipping */
-  transform-style: preserve-3d;
-}
-
-.cover--front {
-  /* Front cover stacking now handled by translateZ in JS - remove z-index */
-  z-index: auto !important;
-  
-  /* Webflow front cover cardboard texture with gradient overlay - exactly from webflow export */
-  background-image: linear-gradient(38deg, rgba(0,0,0,0.1), transparent), url('./assets/background-assets/images/cardboard.jpg');
-  background-position: 0 0, 0 0;
-  background-size: auto, auto;
-  border-top-left-radius: .5em;
-  border-top-right-radius: .5em;
-  
-  /* Webflow inset shadows for cardboard texture - exactly from webflow export */
-  box-shadow: 
-    inset 0 3px 2px #c29154, 
-    inset 0 -2px 3px 2px #664620, 
-    0 0 transparent,
-    -.2px .4px rgba(0,0,0,0.055),
-    -.4px .9px .1px rgba(0,0,0,0.065),
-    -.7px 1.6px .5px rgba(0,0,0,0.075),
-    -1.2px 2.8px 1.3px rgba(0,0,0,0.08),
-    -2.1px 5px 2.9px rgba(0,0,0,0.085),
-    -3.8px 8.9px 6.2px rgba(0,0,0,0.085),
-    -7.1px 16.7px 13px rgba(0,0,0,0.09),
-    -14.9px 35.1px 29.5px rgba(0,0,0,0.095);
-}
-
-.cover--back {
-  /* Back cover stacking now handled by translateZ in JS - remove z-index */
-  z-index: auto !important;
-  
-  /* Webflow back cover cardboard texture with gradient overlay - exactly from webflow export */
-  background-image: linear-gradient(38deg, rgba(0,0,0,0.1), transparent), url('./assets/background-assets/images/cardboard.jpg');
-  background-position: 0 0, 0 0;
-  background-size: auto, auto;
-  border-top-left-radius: .5em;
-  border-top-right-radius: .5em;
-  
-  /* Webflow inset shadows for cardboard texture - exactly from webflow export */
-  box-shadow: 
-    inset 0 3px 2px #c29154, 
-    inset 0 -2px 3px 2px #664620, 
-    0 0 transparent,
-    -.2px .4px rgba(0,0,0,0.055),
-    -.4px .9px .1px rgba(0,0,0,0.065),
-    -.7px 1.6px .5px rgba(0,0,0,0.075),
-    -1.2px 2.8px 1.3px rgba(0,0,0,0.08),
-    -2.1px 5px 2.9px rgba(0,0,0,0.085),
-    -3.8px 8.9px 6.2px rgba(0,0,0,0.085),
-    -7.1px 16.7px 13px rgba(0,0,0,0.09),
-    -14.9px 35.1px 29.5px rgba(0,0,0,0.095);
-}
-
-/* =====================================================
-   SPECIFICATION-COMPLIANT RING SYSTEM
-   ===================================================== */
-
-.rings-wrapper {
-  position: absolute;
-  top: -10%;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  /* Always on top per specification */
-  z-index: var(--ring-z-index) !important;
-  pointer-events: none;
-  /* Ensure 3D context for any ring animations */
-  transform-style: preserve-3d;
-  transform-style: preserve-3d;
-}
-
-.rings {
-  position: absolute;
-  width: 100%;
-  height: auto;
-  
-  /* Performance optimization */
-  will-change: auto;
-  contain: layout style paint;
-}
-
-.rings--front {
-  top: 0;
-  z-index: calc(var(--ring-z-index) + 1);
-  opacity: 1.0; /* Front rings full opacity */
-}
-
-.rings--back {
-  top: 0;
-  z-index: var(--ring-z-index);
-  opacity: 0.8; /* Back rings reduced opacity per specification */
-}
-
-/* =====================================================
-   SPECIFICATION-COMPLIANT SHADOW SYSTEM
-   ===================================================== */
-
-.page::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  
-  /* Default page shadows */
-  background: linear-gradient(
-    180deg, 
-    rgba(0,0,0,0.1) 0%, 
-    transparent 10%, 
-    transparent 90%, 
-    rgba(0,0,0,0.05) 100%
-  );
-  
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.page.flipped::before {
-  /* Flipped page shadows */
-  background: linear-gradient(
-    0deg, 
-    rgba(0,0,0,0.15) 0%, 
-    transparent 15%
-  );
-}
-
-/* =====================================================
-   PERFORMANCE-AWARE QUALITY SCALING
-   ===================================================== */
-
-/* Reduce effects when quality scale is low */
-@media (--quality-scale < 0.8) {
-  .page {
-    box-shadow: var(--shadow-quality, none);
-  }
-  
-  .page::before {
-    display: var(--shadow-quality, none);
-  }
-}
-
-/* Disable blur effects for low-end devices */
-@media (--quality-scale < 0.7) {
-  .page-content {
-    filter: blur(var(--blur-quality, 0px));
-  }
-}
-
-/* =====================================================
-   3D PERSPECTIVE CONTEXT
-   ===================================================== */
-
-main.page-wrapper {
-  /* 3D context per specification */
-  perspective: var(--perspective-distance);
-  perspective-origin: var(--perspective-origin-x) var(--perspective-origin-y);
-  
-  /* Enable hardware acceleration */
-  transform-style: preserve-3d;
-  will-change: transform;
-}
-
-#notepad.notebook-inner {
-  /* Notebook container 3D settings */
-  transform-style: preserve-3d;
-  position: relative;
-}
-
-#notepad-inner {
-  /* Page container 3D settings */
-  position: relative;
-  transform-style: preserve-3d;
-  
-  /* Ensure proper stacking context */
-  isolation: isolate;
-}
-
-/* =====================================================
-   FONT FACES
+   2. FONT FACES
    ===================================================== */
 @font-face {
   font-family: 'Uncut Sans';
@@ -385,6 +73,7 @@ main.page-wrapper {
   font-style: normal;
   font-display: swap;
 }
+
 @font-face {
   font-family: 'Uncut Sans';
   src: url('./assets/fonts/UncutSans-Medium.woff2') format('woff2'),
@@ -393,6 +82,7 @@ main.page-wrapper {
   font-style: normal;
   font-display: swap;
 }
+
 @font-face {
   font-family: 'Uncut Sans';
   src: url('./assets/fonts/UncutSans-Light.otf') format('opentype');
@@ -400,6 +90,7 @@ main.page-wrapper {
   font-style: normal;
   font-display: swap;
 }
+
 @font-face {
   font-family: 'Uncut Sans';
   src: url('./assets/fonts/UncutSans-LightItalic.otf') format('opentype');
@@ -409,60 +100,51 @@ main.page-wrapper {
 }
 
 /* =====================================================
-   GLOBAL RESET AND BASE STYLES
+   3. GLOBAL RESET & BASE STYLES
    ===================================================== */
 body, html {
   height: 100%;
   margin: 0;
   padding: 0;
   overflow: hidden;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  overflow-x: hidden;
-  transition: background-color 0.3s ease;
-  /* Ensure 3D context from root */
   transform-style: preserve-3d;
 }
 
-/* Webflow Body Styles */
-.body {
-  background-color: var(--webflow-gray);
-  color: #333;
-  font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
-  font-size: 12px;
-  line-height: 20px;
-  /* Ensure 3D context propagation */
-  transform-style: preserve-3d;
-}
-
-/* Base Theme Styles */
 body {
   background-color: var(--browser-color);
   color: var(--browser-text);
-  transition: var(--theme-transition);
   font-size: 14px;
   min-height: 100svh;
   width: 100vw;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Ensure 3D context from body level */
+  transition: var(--theme-transition);
   transform-style: preserve-3d;
-}
-
-/* Override Webflow body styles when needed */
-body:not(.body) {
-  background-color: var(--browser-color);
-  color: var(--browser-text);
 }
 
 body, * {
   font-family: 'Uncut Sans', system-ui, sans-serif !important;
 }
 
-/* =====================================================
-   WEBFLOW LAYOUT SYSTEM
-   ===================================================== */
+/* Webflow Body Override */
+.body {
+  background-color: var(--webflow-gray);
+  color: #333;
+  font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
+  font-size: 12px;
+  line-height: 20px;
+  transform-style: preserve-3d;
+}
 
+body:not(.body) {
+  background-color: var(--browser-color);
+  color: var(--browser-text);
+}
+
+/* =====================================================
+   4. LAYOUT SYSTEM
+   ===================================================== */
 .w-layout-hflex {
   flex-direction: row;
   align-items: flex-start;
@@ -480,25 +162,21 @@ body, * {
   padding-right: 10vw;
   display: flex;
   position: static;
-  overflow: hidden;
-  /* Ensure perspective is applied at this level too */
+  overflow: visible;
   perspective: var(--perspective-distance);
   perspective-origin: var(--perspective-origin-x) var(--perspective-origin-y);
 }
 
-/* Main layout adjustments for Webflow integration */
 main.page-wrapper {
-  /* Webflow page-wrapper styles take precedence */
   position: relative;
   box-sizing: border-box;
-  overflow: hidden;
-  perspective: var(--perspective-distance); /* enable 3D context for children */
+  overflow: visible;
+  perspective: var(--perspective-distance);
   perspective-origin: var(--perspective-origin-x) var(--perspective-origin-y);
-  /* Critical: preserve 3D context */
   transform-style: preserve-3d;
+  will-change: transform;
 }
 
-/* Fallback for non-Webflow main */
 main:not(.page-wrapper) {
   position: relative;
   width: 100vw;
@@ -508,34 +186,32 @@ main:not(.page-wrapper) {
   justify-content: center;
   padding-bottom: 5vh;
   box-sizing: border-box;
-  overflow: hidden;
-  perspective: var(--perspective-distance); /* enable 3D context for children */
+  overflow: visible;
+  perspective: var(--perspective-distance);
   perspective-origin: var(--perspective-origin-x) var(--perspective-origin-y);
-  /* Critical: preserve 3D context */
   transform-style: preserve-3d;
 }
 
 /* =====================================================
-   NOTEBOOK STRUCTURE
+   5. 3D CONTEXT & PERSPECTIVE (merged with main.page-wrapper above)
    ===================================================== */
 
+/* =====================================================
+   6. NOTEBOOK STRUCTURE
+   ===================================================== */
 .notebook {
-  /* Restore 3D perspective and aspect ratio for proper flipping */
   aspect-ratio: 3 / 2;
-  perspective: 3000px;
+  perspective: 5000px;
   flex-flow: column;
   justify-content: center;
   align-items: center;
   width: 100%;
-  /* Keep responsive while maintaining proper proportions */
   max-width: 1300px;
   display: flex;
   position: relative;
-  /* Scale can be adjusted but keep it for proper sizing */
-  /* Add 2-degree tilt to make stacking more visible */
   transform-style: preserve-3d;
-  /* Ensure perspective origin is properly set */
   perspective-origin: var(--perspective-origin-x) var(--perspective-origin-y);
+  overflow: visible;
 }
 
 .notebook-inner {
@@ -548,41 +224,33 @@ main:not(.page-wrapper) {
   height: 100%;
   display: flex;
   position: absolute;
-  /* Maintain 3D context inheritance */
   perspective: inherit;
   perspective-origin: inherit;
+  transform: rotateX(20deg);
+
+  overflow: visible;
 }
 
-/* =====================================================
-   MAIN NOTEPAD CONTAINER
-   ===================================================== */
-/* Notepad styling - integrate with Webflow notebook-inner */
-#notepad.notebook-inner {
-  /* Use Webflow notebook-inner styles as base */
-  /* Shadow system configuration for existing functionality */
-  --shadow-layers: 5;           /* Number of shadow layers */
-  --shadow-color: 0, 0, 0;     /* Shadow RGB color */
-  --shadow-opacity: 0.35;      /* Base opacity for shadows */
-  --shadow-spread: 12px;       /* Base spread distance */
-  --shadow-blur: 28px;         /* Base blur amount */
-  --shadow-offset-y: 60px;     /* Vertical offset */
-  --shadow-anim-duration: 0.3s; /* Shadow movement animation duration */
+#notebook.notebook-inner {
+  --shadow-layers: 5;
+  --shadow-color: 0, 0, 0;
+  --shadow-opacity: 0.35;
+  --shadow-spread: 12px;
+  --shadow-blur: 28px;
+  --shadow-offset-y: 60px;
+  --shadow-anim-duration: 0.3s;
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   transform-origin: center center;
   z-index: 100;
-  /* Critical: preserve 3D context for pages */
   transform-style: preserve-3d;
   perspective: inherit;
   perspective-origin: inherit;
 }
 
-/* Fallback for non-Webflow notepad */
-#notepad:not(.notebook-inner) {
+#notebook:not(.notebook-inner) {
   position: relative;
   width: 100%;
-  /* Remove max-width to allow full container usage */
   height: auto;
-  /* Remove aspect-ratio constraint */
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -592,168 +260,158 @@ main:not(.page-wrapper) {
   overflow: visible;
   margin: auto;
   top: 0; left: 0; bottom: 0; right: 0;
-  
-  /* Shadow system configuration */
-  --shadow-layers: 5;           /* Number of shadow layers */
-  --shadow-color: 0, 0, 0;     /* Shadow RGB color */
-  --shadow-opacity: 0.35;      /* Base opacity for shadows */
-  --shadow-spread: 12px;       /* Base spread distance */
-  --shadow-blur: 28px;         /* Base blur amount */
-  --shadow-offset-y: 60px;     /* Vertical offset */
-  --shadow-anim-duration: 0.3s; /* Shadow movement animation duration */
+  --shadow-layers: 5;
+  --shadow-color: 0, 0, 0;
+  --shadow-opacity: 0.35;
+  --shadow-spread: 12px;
+  --shadow-blur: 28px;
+  --shadow-offset-y: 60px;
+  --shadow-anim-duration: 0.3s;
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   transform-origin: center center;
-  /* Ensure perspective for direct children */
   perspective: var(--perspective-distance);
 }
 
-#notepad-inner {
-  width: 100%;
-  height: 100%;
-  transform-style: preserve-3d;
-  /* Ensure pages inherit perspective */
-  perspective: inherit;
-  perspective-origin: inherit;
-}
-
-/* Zoomed-in state toggled by JS */
-#notepad.notepad--zoomed {
+#notebook.notebook--zoomed {
   transform: scale(2);
 }
 
 /* =====================================================
-   HEADER SYSTEM
+   7. PAGE SYSTEM
    ===================================================== */
-
-.heading-wrapper {
-  z-index: 100;
-  grid-column-gap: 3em;
-  grid-row-gap: 3em;
-  text-align: center;
-  flex-flow: column;
-  justify-content: center;
-  align-items: center;
-  margin-left: auto;
-  margin-right: auto;
-  display: flex;
-  position: absolute;
-  top: -18vh;
-}
-
-.flex-block {
-  flex-flow: column;
-  justify-content: flex-start;
-  align-items: center;
-}
-
-.divider {
-  background-color: var(--dark-1);
-  width: 50%;
-  height: 1px;
-}
-
-h1 {
-  margin-top: 0;
-  margin-bottom: 0;
-  font-size: 2.4em;
-  font-weight: 700;
-}
-
-h2 {
-  margin-top: 0;
-  margin-bottom: 0;
-  font-size: 2.2em;
-  font-weight: 400;
-  line-height: 36px;
-}
-
-/* =====================================================
-   INDIVIDUAL PAGE STYLING
-   ===================================================== */
-
-/* Commentary layer */
-.commentary {
-  position: absolute;
-  bottom: 3rem;
+.page-stack {
+  position: relative;
   width: 100%;
-  text-align: center;
-  font-style: italic;
-  pointer-events: none;
-  color: var(--browser-text-secondary);
-  font-size: 0.9rem;
-  text-shadow: 0 1px 2px var(--browser-button-outline);
-  z-index: 101;
-  transform: translateZ(0.2px);
+  height: 100%;
+  transform-style: preserve-3d;
+  overflow: visible;
 }
 
-/* =====================================================
-   PAGE CONTENT
-   ===================================================== */
-.page-content {
+.page {
   position: absolute;
-  bottom: 0;
+  top: 0;
   left: 0;
-  width: 100%; /* Use most of available space while maintaining margins */
-  
-  /* Respect safe zone - content starts below ring holes */
-  max-height: calc(100% - var(--safe-zone-height));
-  
-  /* Content alignment per specification */
-  align-self: var(--content-alignment, bottom);
-  
-  overflow: hidden;
-  border-radius: 4px;
-  z-index: 100;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: end;
+  aspect-ratio: var(--page-aspect-ratio);
+  transform-origin: 50% 0 0;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  border-radius: .5em .5em var(--cover-radius) var(--cover-radius);
+  background-color: #f5f5f5;
+  background-image: url('./assets/background-assets/paper-holes.webp'), linear-gradient(231deg, #aca9a3a1, #0000);
+  background-position: 50% -14%, 0 0;
+  background-repeat: no-repeat, repeat;
+  background-size: 99%, auto;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.03),
+    0 4px 8px rgba(0, 0, 0, 0.02),
+    0 8px 16px rgba(0, 0, 0, 0.01);
 }
 
-.page-content__inner{
+.page::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #a5a5a5;
+  border-radius: .5em .5em var(--cover-radius) var(--cover-radius);
+  transform: rotateX(180deg) translateZ(-1px);
+  backface-visibility: hidden;
+}
+
+.page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    180deg, 
+    rgba(0,0,0,0.15) 0%, 
+    rgba(0,0,0,0.08) 20%, 
+    rgba(0,0,0,0.02) 50%, 
+    transparent 70%
+  );
+  border-radius: inherit;
+  pointer-events: none;
+  transform: translateZ(1px);
+  opacity: 1;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.page.flipped::before {
+  background: linear-gradient(
+    0deg, 
+    rgba(0,0,0,0.15) 0%, 
+    transparent 15%
+  );
+  transform: translateZ(1px) rotateY(180deg);
+}
+
+.page.shadow-reduced::before {
+  opacity: 0.3;
+  transform: translateZ(1px) translateY(-10px);
+}
+
+.page.shadow-hidden::before {
+  opacity: 0;
+  transform: translateZ(1px) translateY(-20px);
+}
+
+.page-content {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  backface-visibility: hidden;
+  padding: 2%;
+  box-sizing: border-box;
+}
+
+.page-content *,
+.page-content img,
+.page-content video,
+.page-content__inner,
+.page-content__media,
+.page-content__media--video {
+  backface-visibility: hidden !important;
+}
+
+/* Allow tabs to extend beyond page boundaries */
+.page {
+  overflow: visible;
+}
+
+.page-content__inner {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: inherit;
+  backface-visibility: hidden;
 }
 
-/* =====================================================
-   CHAPTER TAB STYLES
-   ===================================================== */
-.page-tab {
+.page-holes {
   position: absolute;
-  z-index: 1001;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-family);
-  font-weight: 600;
-  color: transparent !important;
-  text-align: center;
-  transition: transform 0.2s ease-out;
-  background: #fff;
-  pointer-events: auto;
-  /* Prevent shadow effects */
-  --shadow-overlay: 0 !important;
-  --shadow-blur: 0 !important;
-  --shadow-color: transparent !important;
-  filter: none !important;
-  opacity: 1 !important;
-  /* Ensure tab is not affected by page shadow */
-  isolation: isolate;
-}
-
-/* Ensure tab content is not affected by shadows */
-.page-tab svg {
-  filter: none !important;
-  opacity: 1 !important;
-  isolation: isolate;
-}
-
-/* Prevent page shadow from affecting tabs */
-.page-tab::after {
-  display: none !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--safe-zone-height);
+  background-image: url('./assets/background-assets/paper-holes.webp');
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: contain;
+  z-index: 10;
+  pointer-events: none;
 }
 
 /* =====================================================
-   COVER SYSTEM - EXACT WEBFLOW RECREATION
+   8. COVER SYSTEM
    ===================================================== */
 .cover {
   border-radius: var(--cover-radius);
@@ -761,79 +419,95 @@ h2 {
   background-image: url('./assets/background-assets/images/cardboard.jpg');
   background-position: 0 0;
   background-size: auto;
-  width: 101%; /* 1% larger than regular pages */
-  height: 101%; /* 1% larger than regular pages */
+  width: 101%;
+  height: 101%;
   position: absolute;
-  /* Center the larger cover */
   top: -0.5%;
   left: -0.5%;
 }
 
-.cover.cover--back {
-  /* Back cover always at bottom of stack */
+.cover.cover--back,
+.cover.cover--front {
   z-index: auto !important;
   background-image: linear-gradient(38deg, #0000001a, #0000), url('./assets/background-assets/images/cardboard.jpg');
   background-position: 0 0, 0 0;
   background-size: auto, auto;
   border-top-left-radius: .5em;
   border-top-right-radius: .5em;
-  /* Combine Webflow shadow with page shadow */
   box-shadow: 
-    /* Webflow inset shadows for cardboard texture */
     inset 0 3px 2px #c29154, inset 0 -2px 3px 2px #664620,
-    /* Webflow drop shadows */
     0 0 #0000, -.2px .4px #0000000e, -.4px .9px .1px #0001, -.7px 1.6px .5px #00000013, -1.2px 2.8px 1.3px #00000014, -2.1px 5px 2.9px #00000015, -3.8px 8.9px 6.2px #00000015, -7.1px 16.7px 13px #00000016, -14.9px 35.1px 29.5px #00000018,
-    /* Individual page shadow - subtle additional depth */
     0 2px 4px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.05), 0 8px 16px rgba(0, 0, 0, 0.03);
 }
 
 .cover.cover--front {
-  /* Front cover starts above first page, then goes to z:1 when flipped */
-  z-index: auto !important;
   transform-style: preserve-3d;
-  background-image: linear-gradient(38deg, #0000001a, #0000), url('./assets/background-assets/images/cardboard.jpg');
-  background-position: 0 0, 0 0;
-  background-size: auto, auto;
-  border-top-left-radius: .5em;
-  border-top-right-radius: .5em;
   position: absolute;
-  /* Remove static transform - let render system handle it */
-  /* Combine Webflow shadow with page shadow */
-  box-shadow: 
-    /* Webflow inset shadows for cardboard texture */
-    inset 0 3px 2px #c29154, inset 0 -2px 3px 2px #664620,
-    /* Webflow drop shadows */
-    0 0 #0000, -.2px .4px #0000000e, -.4px .9px .1px #0001, -.7px 1.6px .5px #00000013, -1.2px 2.8px 1.3px #00000014, -2.1px 5px 2.9px #00000015, -3.8px 8.9px 6.2px #00000015, -7.1px 16.7px 13px #00000016, -14.9px 35.1px 29.5px #00000018,
-    /* Individual page shadow - subtle additional depth */
-    0 2px 4px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.05), 0 8px 16px rgba(0, 0, 0, 0.03);
 }
 
-/* Remove cover text content styling - covers should have no text */
 .cover-content {
-  display: none; /* Hide any text content on covers */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #664620;
+  z-index: 10;
+  display: none;
 }
 
 .cover-title h1,
 .cover-title p,
 .cover-title span {
-  display: none; /* Ensure no text appears on covers */
+  display: none;
 }
 
 /* =====================================================
-   SHADOW SYSTEMS
+   9. RING SYSTEM
    ===================================================== */
-
-/*
-  SHADOW LAYER: Simple, flat, always behind the notebook
-  Absolutely centered, no 3D transforms, matches notebook size
-*/
-.notebook__shadow {
+.rings-wrapper {
   position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
+  pointer-events: none;
+  transform-style: preserve-3d;
+}
+
+.rings {
+  position: absolute;
+  width: 100%;
+  height: auto;
+  top: 0;
+  left: 0;
+  will-change: transform;
+}
+
+.rings--front {
+  top: 0;
+  opacity: 1.0;
+  transform: translateZ(var(--rings-front-position));
+  transform-style: preserve-3d;
+}
+
+.rings--back {
+  top: 0;
+  opacity: 0.8;
+  transform: translateZ(-10px);
+  transform-style: preserve-3d;
+}
+
+/* =====================================================
+   10. SHADOW SYSTEMS
+   ===================================================== */
+.notebook__shadow {
+  position: absolute;
+  width: 90%;
+  height: 90%;
   aspect-ratio: 16/11;
   pointer-events: none;
-  z-index: 0; /* below notebook, above body */
+  z-index: 0;
   box-sizing: border-box;
   box-shadow: 
     0px 10px 15px -3px hsla(0, 5%, 0%, 0.1),
@@ -841,7 +515,6 @@ h2 {
     0px 60px 50px -15px hsla(0, 5%, 0%, 0.2),
     0px 100px 80px -20px hsla(0, 5%, 0%, 0.25),
     0px 150px 120px -30px hsla(0, 5%, 0%, 0.3);
-  /* Softer shadow with display-p3 color space for wider gamut displays */
   box-shadow:
     0px 10px 15px -3px color(display-p3 0.013 0.013 0.013 / 0.1),
     0px 30px 30px -10px color(display-p3 0.013 0.013 0.013 / 0.15), 
@@ -852,26 +525,22 @@ h2 {
 
 .notebook__layered-shadow {
   position: absolute;
-  inset: -20px;  /* Expand beyond notebook edges */
-  pointer-events: none;  /* Don't interfere with interaction */
+  inset: -20px;
+  pointer-events: none;
   transform-style: preserve-3d;
-  /* First shadow layer (closest) */
   box-shadow:
     calc(var(--shadow-x-offset)) var(--shadow-y-offset) var(--shadow-blur) var(--shadow-spread) var(--shadow-color),
-    /* Second shadow layer (middle distance) */
     calc(var(--shadow-x-offset) * 1.5) calc(var(--shadow-y-offset) * 2) calc(var(--shadow-blur) * 2) calc(var(--shadow-spread) * 2) var(--shadow-color),
-    /* Third shadow layer (furthest) */
     calc(var(--shadow-x-offset) * 2) calc(var(--shadow-y-offset) * 3) calc(var(--shadow-blur) * 3) calc(var(--shadow-spread) * 3) var(--shadow-color);
   transition: var(--shadow-transition);
-  will-change: transform;  /* Hint for browser optimization */
+  will-change: transform;
 }
 
 /* =====================================================
-   BACKGROUND SCENE
+   11. BACKGROUND & SCENE
    ===================================================== */
-
-.background {
-  z-index: -100;
+.notebook-background {
+  z-index: -200;
   aspect-ratio: 1;
   background-image: url('./assets/background-assets/images/portfolio-background.jpg');
   background-position: 50%;
@@ -882,7 +551,7 @@ h2 {
   width: 232%;
   display: block;
   position: absolute;
-  transform: translate(0, 1vh);
+  transform: translate(0, 5vh) translateZ(-10px);
 }
 
 .pixel-screen {
@@ -934,14 +603,12 @@ h2 {
   inset: 0%;
 }
 
-/* Background layering */
-.background,
+.notebook-background,
 .notebook,
 .notebook-inner {
-  z-index: -100 !important; /* Ensure background stays at the very bottom */
+  z-index: -100 !important;
 }
 
-/* Webflow background elements */
 .w-background-video,
 .background-video-wrap,
 .section {
@@ -949,8 +616,64 @@ h2 {
 }
 
 /* =====================================================
-   COMMENTARY OVERLAY
+   12. COMMENTARY & UI ELEMENTS
    ===================================================== */
+.heading-wrapper {
+  z-index: 100;
+  grid-column-gap: 3em;
+  grid-row-gap: 3em;
+  text-align: center;
+  flex-flow: column;
+  justify-content: center;
+  align-items: center;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  position: absolute;
+  top: -18vh;
+}
+
+.flex-block {
+  flex-flow: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.divider {
+  background-color: var(--dark-1);
+  width: 50%;
+  height: 1px;
+}
+
+h1 {
+  margin-top: 0;
+  margin-bottom: 0;
+  font-size: 2.4em;
+  font-weight: 700;
+}
+
+h2 {
+  margin-top: 0;
+  margin-bottom: 0;
+  font-size: 2.2em;
+  font-weight: 400;
+  line-height: 36px;
+}
+
+.commentary {
+  position: absolute;
+  bottom: 3rem;
+  width: 100%;
+  text-align: center;
+  font-style: italic;
+  pointer-events: none;
+  color: var(--browser-text-secondary);
+  font-size: 0.9rem;
+  text-shadow: 0 1px 2px var(--browser-button-outline);
+  z-index: 101;
+  transform: translateZ(0.2px);
+}
+
 .commentary-overlay {
   background: var(--browser-commentary-bg);
   color: var(--browser-commentary-text);
@@ -966,9 +689,7 @@ h2 {
   font-family: var(--font-family);
   font-size: 1.1rem;
   line-height: 1.5;
-  color: var(--browser-commentary-text);
   padding: 1.5rem;
-  background: var(--browser-commentary-bg);
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(8px);
@@ -984,9 +705,35 @@ h2 {
   transform: translate(-50%, 0);
 }
 
-/* =====================================================
-   MOBILE ROTATION OVERLAY
-   ===================================================== */
+.page-tab {
+  position: absolute;
+  z-index: 1001;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-family);
+  font-weight: 600;
+  color: transparent !important;
+  text-align: center;
+  transition: transform 0.2s ease-out;
+  background: #fff;
+  pointer-events: auto;
+  filter: none !important;
+  opacity: 1 !important;
+  overflow: hidden;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.tab-with-image {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  padding: 8px;
+}
+
+
 
 .overlay--rotate {
   z-index: 999;
@@ -1013,10 +760,8 @@ h2 {
 }
 
 /* =====================================================
-   RESPONSIVE BEHAVIOR
+   13. RESPONSIVE & MEDIA QUERIES
    ===================================================== */
-
-/* Ensure the overlay is visible on all devices */
 @media (max-width: 768px) {
   .commentary-overlay {
     width: 90%;
@@ -1052,38 +797,50 @@ h2 {
   }
 }
 
-/* =====================================================
-   CSS CLASSES TO REPLACE INLINE STYLES
-   ===================================================== */
-
-/* Page safe zone styling */
-.page-holes--styled {
-  height: 50px; /* Default safe zone height */
+/* Performance Media Queries */
+@media (--quality-scale < 0.8) {
+  .page {
+    box-shadow: var(--shadow-quality, none);
+  }
+  
+  .page::before {
+    display: var(--shadow-quality, none);
+  }
 }
 
-/* Media content styling */
+@media (--quality-scale < 0.7) {
+  .page-content {
+    filter: blur(var(--blur-quality, 0px));
+  }
+}
+
+/* =====================================================
+   14. UTILITY CLASSES
+   ===================================================== */
+.page-holes--styled {
+  height: 50px;
+}
+
 .page-content__media {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  backface-visibility: hidden !important;
 }
 
-.page-content__media--video {
+.page-content__media--video,
+.page-content video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  backface-visibility: hidden !important;
+  display: block;
+  box-sizing: border-box;
 }
 
-/* Cover content styling */
-.cover-content {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  color: #664620;
-  z-index: 10;
-}
+/* Cover content styles moved to utility section */
 
 .cover-title h1 {
   font-size: 2.5em;
@@ -1106,21 +863,18 @@ h2 {
   font-style: italic;
 }
 
-/* Page layout styles */
 .page--positioned {
-  /* Transform origin for flip animation */
   transform-origin: 50% -1%;
 }
 
 .page--visible {
-  display: block;
+  display: flex;
 }
 
 .page--hidden {
   display: none;
 }
 
-/* Content alignment styles */
 .page-content--bottom {
   align-self: bottom;
 }
@@ -1133,13 +887,11 @@ h2 {
   align-self: top;
 }
 
-/* GPU acceleration helper */
 .gpu-accelerated {
   will-change: transform;
   backface-visibility: visible;
-  transform: translate3d(0,0,0);
 }
 
-/* =====================================================
-   RING SYSTEM UPDATES
-   ===================================================== */
+.page-content--hidden {
+  display: none !important;
+}

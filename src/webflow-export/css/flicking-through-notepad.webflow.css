@@ -56,7 +56,7 @@ h2 {
   align-items: center;
 }
 
-.background {
+.notebook-background {
   z-index: 0;
   aspect-ratio: 1;
   background-image: url('../images/portfolio-background.jpg');
@@ -244,7 +244,7 @@ h2 {
   height: 20%;
   position: absolute;
   inset: -10% 0% auto;
-  z-index: 2147483646;
+  /* No z-index on wrapper - let individual rings control their layering */
 }
 
 .rings {
@@ -252,13 +252,19 @@ h2 {
 }
 
 .rings.rings--front {
-  z-index: 2147483645;
+  /* Removed z-index to avoid conflicts with translateZ positioning */
   transform-style: preserve-3d;
-  transform: translate3d(0, 0, 34px);
+  /* Position rings 10px above highest possible page - dynamically calculated */
+  transform: translateZ(var(--rings-front-position, 375px));
+  opacity: 1.0;
 }
 
 .rings.rings--back {
-  z-index: 2147483644;
+  /* Removed z-index to avoid conflicts with translateZ positioning */
+  transform-style: preserve-3d;
+  /* Position rings behind all pages in 3D space - consistent with main CSS */
+  transform: translateZ(-10px);
+  opacity: 0.8;
 }
 
 .pixel-screen__text {

@@ -2,7 +2,7 @@
  * PERFORMANCE MANAGEMENT SYSTEM
  * 
  * Implements specification-compliant performance monitoring and optimization
- * for the ringbound notepad application. Provides FPS monitoring, memory tracking,
+ * for the ringbound notebook application. Provides FPS monitoring, memory tracking,
  * and automatic quality scaling to maintain 60fps performance.
  * 
  * PERFORMANCE TARGETS:
