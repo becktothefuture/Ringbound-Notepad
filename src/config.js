@@ -1,10 +1,9 @@
-import { easeInCubic, easeInOutCubic, easeInOutExpo, easeOutCubic, easeOutDampedSpring, easeOutSingleSpring } from './utils.js';
-
 /**
- * CONFIGURATION SYSTEM
+ * GLOBAL CONFIGURATION SYSTEM
  * 
- * This file centralizes all animation parameters and visual settings.
- * Modifying these values changes how the notepad behaves and appears.
+ * This file centralizes all layout, performance, and visual parameters.
+ * All configuration values are globally defined (NOT in JSON).
+ * Based on the Ring-Bound Notepad Technical Specification.
  * 
  * COORDINATE SYSTEM:
  * - X: Left/Right (positive = right)
@@ -13,126 +12,104 @@ import { easeInCubic, easeInOutCubic, easeInOutExpo, easeOutCubic, easeOutDamped
  * - Rotations in degrees (0° = flat, 90° = vertical, 180° = upside down)
  */
 
+import { easeInCubic, easeInOutCubic, easeInOutExpo, easeOutCubic, easeOutDampedSpring, easeOutSingleSpring } from './utils.js';
+
+export const GLOBAL_CONFIG = {
+  LAYOUT: {
+    // Pages use 4:3 aspect ratio within responsive container
+    pageAspectRatio: 4/3,            // Enforced globally
+    pageThickness: 4,                // px between pages to match physical spacing
+    stackCompression: 0.8,           // Y-axis compression for stacked pages
+    contentAlignment: 'bottom',      // Enforced globally
+    safeZoneHeight: 50,              // px - ring hole area
+    coverSizeMultiplier: 1.01        // Covers 1% larger
+  },
+  
+  PERFORMANCE: {
+    targetFPS: 60,
+    frameTimeTarget: 16.67,          // ms
+    maxVisiblePages: 15,
+    memoryLimit: 100,                // MB
+    qualityScaleMin: 0.5,
+    qualityScaleMax: 1.0
+  },
+  
+  ANIMATION: {
+    snapThreshold: 110,              // Degrees (61% progress)
+    snapDuration: 120,               // ms
+    liftHeight: 50,                  // px arc maximum
+    gravityFactor: 0.3,              // Y-offset multiplier
+    scrollSensitivity: 0.1,
+    scrollSensitivityMobile: 0.05
+  },
+  
+  SCENE: {
+    perspective: 2500,               // px
+    perspectiveOriginX: '50%',
+    perspectiveOriginY: '30%',       // Bottom bias
+    transformOriginX: '50%',
+    transformOriginY: '-1%',         // Slightly above page top for natural hinge
+    ringZIndex: 5000,                // Always on top
+    activePageZIndex: 1000
+  }
+};
+
+// Legacy compatibility - map old PAGE_ANIMATION to new GLOBAL_CONFIG
 export const PAGE_ANIMATION = {
   stack: {
-    visibleDepth: 15,         // Number of visible trailing pages
-    depthUnit: 10,            // Z-depth separation per page (px)
-    startZ: 0,                // Z pos for back of stack (px)
-    startY: 20,               // Y pos for back of stack (px)
-    opacityFade: [15, 5],     // [start, end] stack fade range
-    stickPixels: 1,           // Dead zone in pixels before rotation begins
+    bottomStack: {
+      visibleDepth: GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages,
+      depthUnit: 1,
+      startZ: 1,
+      startY: 0,
+      opacityFade: [GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages, GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages],
+    },
+    topStack: {
+      visibleDepth: GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages,
+      depthUnit: 1,
+      startZ: 1,
+      startY: 2,
+      opacityFade: [GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages, GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages],
+    },
+    visibleDepth: GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages,
+    depthUnit: 1,
+    startZ: 1,
+    startY: 0,
+    opacityFade: [GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages, GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages],
+    stickPixels: 1,
+    minZIndex: 10,
   },
   flip: {
-    readyZ: 0,                // Z pos before flip (px)
-    readyY: 0,                // Y pos before flip (px)
-    startRotationX: -24,      // Initial X rotation in stack (deg)
-    readyRotationX: 4,        // X rotation ready to flip (deg)
-    maxAngle: 210,            // Max flip angle (deg)
-    fadeStart: 90,            // Angle to start fading out (deg)
-    fadeEnd: 210,             // Angle fully invisible (deg)
-    blurMax: 5,               // Max blur during flip (px)
-    rotationOriginX: '50%',   // Rotation origin X (center for top-hinged flip)
-    rotationOriginY: '-1%',   // Rotation origin Y (top edge of binding bar, above page)
-    easing: easeInOutExpo,    // Easing function
-    speed: 400,               // Flip duration (ms)
+    maxAngle: 180,
+    speed: 400,
+    easing: easeInOutExpo,
+    rotationOriginX: GLOBAL_CONFIG.SCENE.transformOriginX,
+    rotationOriginY: GLOBAL_CONFIG.SCENE.transformOriginY,
   },
   loop: {
-    infinite: true,           // Infinite page looping
-    buffer: 15,               // Preload buffer size for infinite loop
+    infinite: false,
+    buffer: GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages,
   },
   misc: {
-    // Performance settings
-    enableGPUAcceleration: true,  // Enable GPU acceleration hints
-    scrollSensitivity: 0.3,      // Scroll sensitivity multiplier
+    enableGPUAcceleration: true,
+    scrollSensitivity: GLOBAL_CONFIG.ANIMATION.scrollSensitivity,
   },
   snap: {
-    delay: 0, // ms, time after scroll stops before snapping
-    threshold: 110, // deg, angle at which to snap forward
-    duration: 120, // ms, duration of snap animation
-    easing: easeInOutCubic, // easing function for snap
+    delay: 0,
+    threshold: GLOBAL_CONFIG.ANIMATION.snapThreshold,
+    duration: GLOBAL_CONFIG.ANIMATION.snapDuration,
+    easing: easeInOutCubic,
   },
   jump: {
-    duration: 500, // ms, duration of jump animation
-    easing: easeInOutCubic, // easing function for jump
+    duration: 500,
+    easing: easeInOutCubic,
   },
-  global: {
-    /**
-     * Global notebook translation in 3D space (applied to the entire notepad, not pages)
-     * These are in pixels and do NOT interact with mouse or scroll transforms.
-     * Use to move the whole notebook in X (right), Y (down), or Z (toward viewer) directions.
-     */
-    offsetX: 0, // px, right (+) / left (-)
-    offsetY: 0, // px, down (+) / up (-)
-    offsetZ: 0, // px, forward (+) / back (-)
-  },
-  /**
-   * PARALLAX / TILT CONFIGURATION
-   * These settings control how the entire notebook responds to mouse or touch
-   * movement by rotating and translating in 3-D space. Tweak these values to
-   * adjust the "hand-held" feel of the notebook.
-   */
-  parallax: {
-    // Maximum rotation angles (degrees)
-    maxRotationX: 0, // Disable Up/Down tilt
-    maxRotationY: 0, // Disable Left/Right turn
-    maxRotationZ: 0, // Disable Roll / twist
-
-    // Maximum translation as fraction of viewport size (0–1)
-    translateFactor: 0, // Disable translation
-
-    // Damping factor for smooth follow (0–1, lower = slower)
-    damp: 0.5,
-
-    // Render throttling
-    fps: 60,             // Target frames per second for parallax loop
-    mouseUpdateRate: 60, // Mouse tracker sampling FPS
-  },
-  effects: {
-    backface: {
-      fadeStartAngle: 0,
-      fadeEndAngle: 0,
-      startOpacity: 1,
-      endOpacity: 1,
-      color: 'red',
-      blur: {
-        enabled: true,
-        maxBlur: 4
-      }
-    },
-    shadow: {
-      fadeStartAngle: 1,
-      fadeEndAngle: 150,
-      startOpacity: 1,
-      endOpacity: 0,
-      color: 'rgba(0, 0, 0, 0.2)',
-      blur: {
-        enabled: true,
-        maxBlur: 2
-      }
-    },
-    content: {
-      fadeStartAngle: 90,
-      fadeEndAngle: 270,
-      startOpacity: 1,
-      endOpacity: 0,
-      blur: {
-        enabled: true,
-        maxBlur: 20
-      }
-    }
+  perspective: {
+    distance: GLOBAL_CONFIG.SCENE.perspective,
+    originX: GLOBAL_CONFIG.SCENE.perspectiveOriginX,
+    originY: GLOBAL_CONFIG.SCENE.perspectiveOriginY,
   },
 };
 
-// Remove redundant DEBUG object since it's now consolidated in PAGE_ANIMATION.misc.debug
-// export const DEBUG = PAGE_ANIMATION.misc.debug;
 
-// Mouse movement settings
-export const MOUSE_MOVEMENT = {
-  enabled: false,  // Disable mouse movement
-  sensitivity: 0,  // Set sensitivity to 0
-  maxRotationX: 0, // Disable X rotation
-  maxRotationY: 0, // Disable Y rotation
-  maxRotationZ: 0, // Disable Z rotation
-  smoothing: 0.1,  // Keep smoothing for future use
-  deadzone: 0.1    // Keep deadzone for future use
-}; 
+

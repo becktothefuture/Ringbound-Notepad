@@ -1,54 +1,163 @@
-// build.cjs
-// Generates a portfolio manifest based on the folder structure in
-// src/assets/portfolio-pages and writes it to src/portfolioManifest.js.
-// It also copies all source files unchanged to the dist folder so they can be
-// served with `npm run start`.
+/**
+ * RINGBOUND NOTEPAD - BUILD SYSTEM
+ * 
+ * This Node.js script serves as the complete build pipeline for the Ringbound Notepad
+ * portfolio application. It handles both static asset generation and JavaScript bundling
+ * to create an optimized distribution ready for deployment.
+ * 
+ * KEY RESPONSIBILITIES:
+ * 1. 📂 Asset Manifest Generation - Scans portfolio folders and creates asset index
+ * 2. 📦 JavaScript Bundling - Uses esbuild for fast, optimized ES module bundling  
+ * 3. 📋 File Copying - Efficiently copies static assets (CSS, HTML, images, videos)
+ * 4. 👀 Watch Mode - Live rebuilding during development with intelligent change detection
+ * 5. 🚨 Error Handling - Comprehensive error reporting and recovery
+ * 
+ * BUILD PIPELINE FLOW:
+ * ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+ * │ Portfolio Assets│───▶│ Manifest Gen     │───▶│ esbuild Bundle  │
+ * │ (images/videos) │    │ (portfolioManifest.js)│ (JavaScript)    │
+ * └─────────────────┘    └──────────────────┘    └─────────────────┘
+ *          │                        │                        │
+ *          ▼                        ▼                        ▼
+ * ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+ * │ Static Assets   │    │ Development      │    │ Production      │
+ * │ Copy to dist/   │    │ Watch Mode       │    │ Optimized Build │
+ * └─────────────────┘    └──────────────────┘    └─────────────────┘
+ * 
+ * USAGE:
+ * - Production build: `node build.cjs`
+ * - Development with watch: `node build.cjs --watch`
+ * - Integrated with npm scripts: `npm run build`, `npm run dev`
+ * 
+ * @author Alexander Beck
+ * @version 1.0.0
+ * @since 2025-01-01
+ */
 
 const fs = require('fs');
 const path = require('path');
 const esbuild = require('esbuild');
+
+// === COMMAND LINE ARGUMENT PROCESSING ===
 const args = process.argv.slice(2);
 const isWatch = args.includes('--watch') || args.includes('-w');
+const isVerbose = args.includes('--verbose') || args.includes('-v');
+const isProduction = process.env.NODE_ENV === 'production' || args.includes('--production');
 
-// Chokidar is only required in watch mode to avoid needless dependency cost
+// === DEPENDENCY MANAGEMENT ===
+/**
+ * Chokidar is only required in watch mode to avoid needless dependency cost.
+ * This lazy loading approach keeps the production build lightweight.
+ */
 let chokidar;
 if (isWatch) {
   try {
     chokidar = require('chokidar');
   } catch (err) {
-    console.error('❌ chokidar is required for watch mode. Run `npm i -D chokidar`');
+    console.error('❌ chokidar is required for watch mode.');
+    console.error('📦 Install it with: npm install -D chokidar');
+    console.error('🔍 Or run without watch mode for single builds');
     process.exit(1);
   }
 }
 
+// === DIRECTORY PATHS AND CONFIGURATION ===
+/**
+ * @type {string} Source directory containing all application files
+ */
 const ROOT = path.resolve(__dirname, 'src');
+
+/**
+ * @type {string} Portfolio assets directory containing chapter-based content
+ */
 const ASSET_ROOT = path.join(ROOT, 'assets', 'portfolio-pages');
+
+/**
+ * @type {string} Generated manifest file path (auto-generated, do not edit)
+ */
 const OUT_MANIFEST = path.join(ROOT, 'portfolioManifest.js');
+
+/**
+ * @type {string} Distribution directory for built files
+ */
 const DIST_DIR = path.resolve(__dirname, 'dist');
 
-/** Simple logger helpers */
+/**
+ * @type {string} Data directory containing portfolio JSON
+ */
+const DATA_DIR = path.resolve(__dirname, 'data');
+
+// === LOGGING UTILITIES ===
+/**
+ * Structured logging utilities for build process feedback
+ * Provides consistent, informative output during build operations
+ */
 const log = {
-  js: () => console.log('🔄 JS rebuilt'),
-  manifest: () => console.log('📝 manifest updated'),
-  copy: (rel) => console.log(`📂 copied ${rel}`),
-  remove: (rel) => console.log(`🗑 removed ${rel}`),
+  // Core build operations
+  js: () => console.log('🔄 JavaScript bundle rebuilt'),
+  manifest: () => console.log('📝 Portfolio manifest updated'),
+  copy: (rel) => console.log(`📂 Copied: ${rel}`),
+  remove: (rel) => console.log(`🗑️  Removed: ${rel}`),
+  
+  // Progress and status
+  info: (msg) => console.log(`ℹ️  ${msg}`),
+  success: (msg) => console.log(`✅ ${msg}`),
+  warning: (msg) => console.warn(`⚠️  ${msg}`),
+  error: (msg) => console.error(`❌ ${msg}`),
+  
+  // Development mode
+  watch: (path) => console.log(`👀 Watching: ${path}`),
+  change: (path) => console.log(`🔄 Changed: ${path}`),
+  
+  // Verbose mode logging
+  verbose: (msg) => {
+    if (isVerbose) console.log(`🔍 ${msg}`);
+  }
 };
+
+// === UTILITY FUNCTIONS ===
 
 /**
  * Recursively walks a directory and returns a sorted list of files relative to the root.
+ * 
+ * This function is used to discover all portfolio assets and maintain consistent
+ * file ordering across different operating systems and file systems.
+ * 
+ * @param {string} dir - The directory to walk
+ * @param {string} relBase - The base directory for relative path calculation
+ * @returns {string[]} Array of relative file paths, sorted alphabetically
+ * @throws {Error} If directory cannot be read or accessed
  */
 function walkDir(dir, relBase = dir) {
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-  let files = [];
-  for (const entry of entries) {
-    const absPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files = files.concat(walkDir(absPath, relBase));
-    } else if (entry.isFile()) {
-      files.push(path.relative(relBase, absPath));
+  try {
+    log.verbose(`Walking directory: ${dir}`);
+    
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    let files = [];
+    
+    for (const entry of entries) {
+      const absPath = path.join(dir, entry.name);
+      
+      if (entry.isDirectory()) {
+        // Recursively walk subdirectories
+        const subFiles = walkDir(absPath, relBase);
+        files = files.concat(subFiles);
+        log.verbose(`Found ${subFiles.length} files in subdirectory: ${entry.name}`);
+      } else if (entry.isFile()) {
+        // Add regular files
+        const relativePath = path.relative(relBase, absPath);
+        files.push(relativePath);
+      }
     }
+    
+    // Sort files for consistent ordering across platforms
+    // Use locale-aware sorting with numeric handling for filenames like "page-1.jpg", "page-10.jpg"
+    return files.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    
+  } catch (error) {
+    log.error(`Failed to walk directory: ${dir}`);
+    throw new Error(`Directory walk failed: ${error.message}`);
   }
-  return files.sort();
 }
 
 /**
@@ -143,6 +252,7 @@ async function bundle({ watch = false } = {}) {
       '.mp4': 'file',
       '.webm': 'file',
       '.mov': 'file',
+      '.css': 'css',
     },
     assetNames: 'assets/[name]-[hash]',
   };
@@ -212,10 +322,24 @@ log.js();
       ignoreInitial: true,
     });
 
+    function handleStaticChange(absPath, event) {
+      const relFromSrc = path.relative(ROOT, absPath);
+      const destPath = path.join(DIST_DIR, relFromSrc);
+
+      if (event === 'add' || event === 'change') {
+        fs.mkdirSync(path.dirname(destPath), { recursive: true });
+        fs.copyFileSync(absPath, destPath);
+        log.copy(relFromSrc);
+      } else if (event === 'unlink') {
+        fs.rmSync(destPath, { force: true });
+        log.remove(relFromSrc);
+      }
+    }
+
     staticWatcher
-      .on('add', (abs) => handleAssetChange(abs, 'add'))
-      .on('change', (abs) => handleAssetChange(abs, 'change'))
-      .on('unlink', (abs) => handleAssetChange(abs, 'unlink'))
+      .on('add', (abs) => handleStaticChange(abs, 'add'))
+      .on('change', (abs) => handleStaticChange(abs, 'change'))
+      .on('unlink', (abs) => handleStaticChange(abs, 'unlink'))
       .on('error', (err) => {
         console.error('❌ static watcher error:', err);
         process.exit(1);

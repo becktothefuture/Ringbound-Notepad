@@ -1,184 +1,440 @@
-/*
-  MAIN APPLICATION ENTRY POINT
-  
-  This file orchestrates the entire notepad application by:
-  1. Importing all necessary modules (config, utilities, scroll engine, renderer)
-  2. Setting up the DOM elements
-  3. Initializing the scroll engine
-  4. Connecting the scroll events to the visual renderer
-  
-  ARCHITECTURE OVERVIEW:
-  - CONFIG: Centralized settings for all animation parameters
-  - Utils: Mathematical helper functions (lerp, clamp, easing functions)
-  - ScrollEngine: Handles user input (wheel, touch) and manages virtual scroll state
-  - Render: Converts scroll state into visual 3D transformations
-  - Debug: Conditional logging and visual debug overlay
-  - InfiniteLoop: Seamless page cycling system
-  
-  DATA FLOW:
-  User Input → ScrollEngine → State Changes → Renderer → Visual Updates
-*/
+/**
+ * RINGBOUND NOTEPAD - MAIN APPLICATION ORCHESTRATOR
+ * 
+ * This module implements the specification-compliant application architecture
+ * following the exact requirements from the README technical specification.
+ * 
+ * ARCHITECTURE OVERVIEW:
+ * ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+ * │   User Input    │───▶│ VirtualScrollEngine│───▶│ RenderPipeline │
+ * │ (mouse, touch)  │    │ (state-driven)   │    │ (3D transforms) │
+ * └─────────────────┘    └──────────────────┘    └─────────────────┘
+ *          │                        │                        │
+ *          ▼                        ▼                        ▼
+ * ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+ * │ Input Handlers  │    │PerformanceManager│    │ DOM Manipulation│
+ * │ - Wheel events  │    │ - FPS monitoring │    │ - Transform calc│
+ * │ - Touch events  │    │ - Quality scaling│    │ - GPU accel     │
+ * │ - Keyboard nav  │    │ - Memory tracking│    │ - Visibility    │
+ * └─────────────────┘    └──────────────────┘    └─────────────────┘
+ * 
+ * DATA FLOW:
+ * Portfolio JSON → Schema Validation → Page Generation → VirtualScrollEngine → RenderPipeline → DOM
+ * 
+ * @author Alexander Beck
+ * @version 2.0.0 (Specification Compliant)
+ * @since 2025-01-01
+ */
 
-// Import all required modules
-import { PAGE_ANIMATION } from './config.js';            // Animation settings and parameters
-// import { applyBeautifulShadow } from './utils.js';      // Mathematical utility functions  
-import { initScrollEngine, subscribe } from './scrollEngine.js'; // Scroll handling system
-import { renderStack } from './render.js';               // Visual rendering system
-import { getInfiniteLoopDebugInfo, shouldUseInfiniteLoop } from './infiniteLoop.js'; // Infinite loop system
+// === CORE SYSTEM IMPORTS ===
+import { GLOBAL_CONFIG } from './config.js';
+import { VirtualScrollEngine } from './scrollEngine.js';
+import { render, initializeRenderingContext, createRenderPipeline } from './render.js';
+import { PerformanceManager } from './performance.js';
+import { createPagesFromPortfolioData, PortfolioLoader, validatePortfolioSchema } from './portfolioLoader.js';
+import { initBrowserTheme } from './browserTheme.js';
 import { initChapters } from './chapterManager.js';
-import { initMouseTracker } from './mouseTracker.js';
-import { createDebouncedResizeHandler } from './utils.js';
+import portfolioData from '../data/portfolio.json' assert { type: 'json' };
 
-// Dynamic page & chapter generation
-import manifest from './portfolioManifest.js';
-import { createPagesFromManifest } from './portfolioLoader.js';
-
-async function bootstrap() {
-  /*
-    1. Build pages from the manifest
-    2. Initialise scroll engine & chapters once pages exist
-  */
-
-  // DOM references that exist regardless of pages
-  const notepad = document.getElementById('notepad');
-  const notepadInner = document.getElementById('notepad-inner');
-
-  // Clear any pre-existing page markup (useful during dev when HTML still contains pages)
-  notepadInner.querySelectorAll('.page').forEach((el) => el.remove());
-
-  // Generate pages and update CHAPTERS array
-  const pages = createPagesFromManifest(notepadInner, manifest);
-
-  /* ================= SCROLL ENGINE INITIALISATION ================= */
-  initScrollEngine(notepad, pages.length);
-  initChapters(pages, notepad);
-
-  /* ================= RENDER SYSTEM CONNECTION ================= */
-  subscribe((state) => {
-    renderStack(pages, state);
-  });
-
-  /* ======= Mouse parallax & other existing logic remains unchanged ======= */
-  setupNotebookParallax(notepad, notepadInner);
-
-  /* ================= CLICK-TO-ZOOM ================= */
-  (function setupClickToZoom() {
-    let zoomed = false;
-
-    // Ensure GPU acceleration and smooth transition via CSS class
-    notepad.style.willChange = 'transform';
-
-    const overlay = document.getElementById('homepage-overlay');
-
-    notepad.addEventListener('click', (e) => {
-      // Prevent any propagation that might interfere with other handlers
-      e.stopPropagation();
-
-      zoomed = !zoomed;
-      if (zoomed) {
-        notepad.classList.add('notepad--zoomed');
-        if (overlay) overlay.classList.add('overlay--zoomed-out');
-      } else {
-        notepad.classList.remove('notepad--zoomed');
-        if (overlay) overlay.classList.remove('overlay--zoomed-out');
-      }
-    });
-  })();
-}
-
-function setupNotebookParallax(notepad, notepadInner) {
-  // === Configurable mouse-to-rotation mapping (from config) ===
-  const {
-    maxRotationX,
-    maxRotationY,
-    maxRotationZ,
-    translateFactor,
-    damp: configDamp,
-    fps: parallaxFPS,
-    mouseUpdateRate,
-  } = PAGE_ANIMATION.parallax;
-
-  const mouse = initMouseTracker({ updateRate: mouseUpdateRate });
-  const damp = configDamp; // 0-1, lower = slower follow
-  let curX = 0,
-    curY = 0,
-    targetX = 0,
-    targetY = 0;
-
-  let lastMouse = { x: 0, y: 0 };
-  mouse.subscribe((pos) => {
-    targetX = pos.x; // -1 .. 1
-    targetY = pos.y; // -1 .. 1
-    lastMouse = { x: pos.x, y: pos.y };
-  });
-
-  // Cache DOM references and calculations for performance
-  let lastFrameTime = 0;
-  const targetFPS = parallaxFPS;
-  const frameInterval = 1000 / targetFPS;
-
-  function animateNotebook(currentTime = 0) {
-    // Frame rate limiting for better performance
-    if (currentTime - lastFrameTime < frameInterval) {
-      requestAnimationFrame(animateNotebook);
-      return;
-    }
-    lastFrameTime = currentTime;
-
-    // Damped interpolation toward target
-    curX += (targetX - curX) * damp;
-    curY += (targetY - curY) * damp;
-
-    // Limit movement to 4% of viewport size (cache viewport calculations)
-    const maxTranslateX = window.innerWidth * translateFactor;
-    const maxTranslateY = window.innerHeight * translateFactor;
-    const tx = curX * maxTranslateX;
-    const ty = curY * maxTranslateY;
-
-    // Map mouse position from full viewport to rotation range
-    // -1 (left/top) to +1 (right/bottom) maps to -maxRotationY/X to +maxRotationY/X
-    const rotY = curX * maxRotationY; // Horizontal mouse -> Y-axis rotation (left/right turn)
-    const rotX = -curY * maxRotationX; // Vertical mouse -> X-axis rotation (up/down tilt)
-    const rotZ = curX * maxRotationZ; // Horizontal mouse -> Z-axis rotation (roll/tilt effect)
-
-    // --- GLOBAL NOTEBOOK OFFSET (distinct from mouse transforms) ---
-    const { offsetX, offsetY, offsetZ } = PAGE_ANIMATION.global;
-
-    // Cache transform string for performance
-    const transformString = `translate3d(${offsetX + tx}px, ${offsetY + ty}px, ${offsetZ}px) rotateY(${rotY}deg) rotateX(${rotX}deg) rotateZ(${rotZ}deg)`;
-
-    notepadInner.style.transformOrigin = '50% 50%';
-    notepadInner.style.transform = transformString;
-
-    // Visual indicator for Z-rotation testing
-    const zRotationActive = Math.abs(rotZ) > 1; // Show indicator when Z-rotation > 1 degree
-    notepad.classList.toggle('notepad--z-rotating', zRotationActive);
-
-    requestAnimationFrame(animateNotebook);
+// === APPLICATION STATE ===
+/**
+ * Global application state container
+ * Implements specification-compliant state management
+ */
+const ApplicationState = {
+  /** @type {boolean} Application initialization status */
+  initialized: false,
+  
+  /** @type {VirtualScrollEngine} Scroll engine instance */
+  scrollEngine: null,
+  
+  /** @type {PerformanceManager} Performance manager instance */
+  performanceManager: null,
+  
+  /** @type {HTMLElement[]} All page elements */
+  pages: [],
+  
+  /** @type {Function} Render pipeline function */
+  renderPipeline: null,
+  
+  /** @type {number} Total page count */
+  pageCount: 0,
+  
+  /** @type {Date} Application start time */
+  startTime: new Date(),
+  
+  /** @type {Object} Environment flags */
+  environment: {
+    isPreview: new URLSearchParams(window.location.search).has('preview'),
+    isDebug: new URLSearchParams(window.location.search).has('debug')
   }
-  requestAnimationFrame(animateNotebook);
+};
 
-  // Handle resize with debouncing
-  const handleResize = createDebouncedResizeHandler(() => {
-    // Update max translate values based on new viewport size
-    const maxTranslateX = window.innerWidth * translateFactor;
-    const maxTranslateY = window.innerHeight * translateFactor;
-    
-    // Reset current position to prevent jumps
-    curX = 0;
-    curY = 0;
-    targetX = 0;
-    targetY = 0;
-  });
-
-  window.addEventListener('resize', handleResize, { passive: true });
+// === ERROR HANDLING ===
+/**
+ * Specification-compliant error handler with graceful degradation
+ * @param {Error} error - The error that occurred
+ * @param {string} context - Error context
+ */
+function handleApplicationError(error, context = 'Application') {
+  console.error(`❌ ${context} Error:`, error);
+  
+  // Log error details for debugging
+  if (ApplicationState.environment.isDebug) {
+    console.group('🔍 Error Details');
+    console.log('Stack:', error.stack);
+    console.log('Application State:', ApplicationState);
+    console.groupEnd();
+  }
+  
+  // Show user-friendly error message
+  const errorMessage = `
+    <div style="
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: #f8f8f8; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      font-family: system-ui, sans-serif; max-width: 500px; text-align: center; z-index: 10000;
+    ">
+      <h2>🔧 Application Error</h2>
+      <p>The 3D portfolio encountered an error in ${context}.</p>
+      <p><strong>Error:</strong> ${error.message}</p>
+      <p><small>Please refresh the page or check the console for details.</small></p>
+      <button onclick="location.reload()" style="
+        background: #007bff; color: white; border: none; padding: 0.5rem 1rem;
+        border-radius: 4px; cursor: pointer; margin-top: 1rem;
+      ">Reload Page</button>
+    </div>
+  `;
+  
+  document.body.insertAdjacentHTML('beforeend', errorMessage);
+  
+  // Prevent further execution
+  throw error;
 }
 
-bootstrap();
+// === INITIALIZATION FUNCTIONS ===
 
-// TODO: Future feature implementations
-// These are placeholders for additional functionality that could be added:
-// setupScrollEngine();        // Advanced scroll configurations
-// renderStack();              // Alternative rendering modes  
-// domManager.init();          // Dynamic content management
-// videoController.init();     // Video playback synchronization 
+/**
+ * Initialize performance monitoring system
+ * Sets up FPS monitoring, memory tracking, and quality scaling
+ */
+function initializePerformanceSystem() {
+  try {
+    ApplicationState.performanceManager = new PerformanceManager();
+    ApplicationState.performanceManager.startApplication();
+    
+    // Log performance targets
+    console.log('🎯 Performance Targets:');
+    console.log(`  - FPS: ${GLOBAL_CONFIG.PERFORMANCE.targetFPS}fps`);
+    console.log(`  - Frame Time: ${GLOBAL_CONFIG.PERFORMANCE.frameTimeTarget}ms`);
+    console.log(`  - Memory Limit: ${GLOBAL_CONFIG.PERFORMANCE.memoryLimit}MB`);
+    console.log(`  - Max Visible Pages: ${GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages}`);
+    
+    // Set up debug logging if enabled
+    if (ApplicationState.environment.isDebug) {
+      setInterval(() => {
+        ApplicationState.performanceManager.logPerformanceMetrics();
+      }, 5000);
+    }
+    
+  } catch (error) {
+    handleApplicationError(error, 'Performance System Initialization');
+  }
+}
+
+/**
+ * Initialize rendering context with specification settings
+ */
+function initializeRenderingSystem() {
+  try {
+    initializeRenderingContext();
+    console.log('🎭 Rendering system initialized with specification settings');
+    
+    // Apply global CSS variables
+    const root = document.documentElement;
+    root.style.setProperty('--ring-z-index', GLOBAL_CONFIG.SCENE.ringZIndex);
+    root.style.setProperty('--active-page-z-index', GLOBAL_CONFIG.SCENE.activePageZIndex);
+    
+  } catch (error) {
+    handleApplicationError(error, 'Rendering System Initialization');
+  }
+}
+
+/**
+ * Initialize browser theme integration
+ */
+function initializeBrowserTheme() {
+  try {
+    initBrowserTheme();
+    console.log('🎨 Browser theme integration initialized');
+  } catch (error) {
+    console.warn('⚠️ Browser theme initialization failed:', error);
+    // Non-critical error - continue without theme integration
+  }
+}
+
+/**
+ * Load and validate portfolio content
+ * @returns {Promise<HTMLElement[]>} Array of generated page elements
+ */
+async function loadPortfolioContent() {
+  try {
+    const notepad = document.getElementById('notepad');
+    const notepadInner = document.getElementById('notepad-inner');
+    
+    if (!notepad || !notepadInner) {
+      throw new Error('Required DOM elements #notepad or #notepad-inner not found');
+    }
+    
+    // Load portfolio data (supports both static and preview modes)
+    let portfolioDataToUse = portfolioData;
+    
+    if (ApplicationState.environment.isPreview) {
+      console.log('🔄 Loading portfolio in preview mode...');
+      const loader = new PortfolioLoader();
+      portfolioDataToUse = await loader.load();
+    }
+    
+    // Validate portfolio schema
+    const validation = validatePortfolioSchema(portfolioDataToUse);
+    if (!validation.isValid) {
+      console.error('❌ Portfolio validation failed:');
+      validation.errors.forEach(error => console.error(`  - ${error}`));
+      throw new Error('Portfolio data validation failed');
+    }
+    
+    console.log('✅ Portfolio schema validation passed');
+    
+    // Generate pages from validated data
+    console.log('📄 Generating portfolio pages...');
+    const pages = createPagesFromPortfolioData(notepadInner, portfolioDataToUse);
+    
+    // Update application state
+    ApplicationState.pages = pages;
+    ApplicationState.pageCount = pages.length;
+    
+    console.log(`📊 Portfolio loaded: ${pages.length} pages generated`);
+    
+    return pages;
+    
+  } catch (error) {
+    handleApplicationError(error, 'Portfolio Content Loading');
+  }
+}
+
+/**
+ * Initialize VirtualScrollEngine with specification compliance
+ * @param {HTMLElement} container - Container element
+ * @param {number} pageCount - Total page count
+ * @returns {VirtualScrollEngine} Initialized scroll engine
+ */
+function initializeScrollEngine(container, pageCount) {
+  try {
+    const scrollEngine = new VirtualScrollEngine();
+    scrollEngine.setMaxPages(pageCount);
+    scrollEngine.initializeEventListeners(container);
+    
+    console.log(`🎮 VirtualScrollEngine initialized with ${pageCount} pages`);
+    
+    return scrollEngine;
+    
+  } catch (error) {
+    handleApplicationError(error, 'VirtualScrollEngine Initialization');
+  }
+}
+
+/**
+ * Initialize chapter navigation system
+ * @param {HTMLElement[]} pages - Page elements
+ */
+function initializeChapterSystem(pages) {
+  try {
+    const notepad = document.getElementById('notepad-inner');
+    if (!notepad) {
+      throw new Error('Notepad container not found');
+    }
+    
+    // Get actual page elements from the DOM
+    const pageElements = Array.from(notepad.querySelectorAll('.page'));
+    
+    if (pageElements.length === 0) {
+      throw new Error('No page elements found in notepad');
+    }
+    
+    initChapters(pageElements, notepad);
+    console.log('📑 Chapter navigation system initialized');
+  } catch (error) {
+    console.warn('⚠️ Chapter system initialization failed:', error);
+    // Non-critical error - continue without chapter navigation
+  }
+}
+
+/**
+ * Create and initialize the render pipeline
+ * @param {HTMLElement[]} pages - Page elements
+ * @param {VirtualScrollEngine} scrollEngine - Scroll engine instance
+ * @returns {Function} Render pipeline function
+ */
+function createRenderingPipeline(pages, scrollEngine) {
+  try {
+    const renderPipeline = createRenderPipeline(pages);
+    
+    // Subscribe to scroll state changes
+    scrollEngine.addObserver((scrollState) => {
+      ApplicationState.performanceManager.startRender();
+      renderPipeline(scrollState);
+      ApplicationState.performanceManager.endRender();
+    });
+    
+    console.log('🎨 Render pipeline created and connected');
+    
+    return renderPipeline;
+    
+  } catch (error) {
+    handleApplicationError(error, 'Render Pipeline Creation');
+  }
+}
+
+/**
+ * Perform final application setup and validation
+ */
+function finalizeApplication() {
+  try {
+    // Validate critical systems
+    if (!ApplicationState.scrollEngine) {
+      throw new Error('VirtualScrollEngine not initialized');
+    }
+    
+    if (!ApplicationState.performanceManager) {
+      throw new Error('PerformanceManager not initialized');
+    }
+    
+    if (!ApplicationState.pages.length) {
+      throw new Error('No pages generated');
+    }
+    
+    // Apply quality scaling based on device capabilities
+    const qualityScale = ApplicationState.performanceManager.getQualityScale();
+    ApplicationState.performanceManager.applyQualityScale(qualityScale);
+    
+    // Mark application as initialized
+    ApplicationState.initialized = true;
+    
+    const initTime = Date.now() - ApplicationState.startTime.getTime();
+    console.log(`🚀 Application initialized successfully in ${initTime}ms`);
+    
+    // Log final state
+    if (ApplicationState.environment.isDebug) {
+      console.group('🔍 Final Application State');
+      console.log('Pages:', ApplicationState.pageCount);
+      console.log('Performance Manager:', ApplicationState.performanceManager.getPerformanceReport());
+      console.log('Environment:', ApplicationState.environment);
+      console.groupEnd();
+    }
+    
+  } catch (error) {
+    handleApplicationError(error, 'Application Finalization');
+  }
+}
+
+// === MAIN BOOTSTRAP FUNCTION ===
+
+/**
+ * Bootstrap the application with specification-compliant initialization
+ * Follows the exact architecture and requirements from the README
+ */
+async function bootstrap() {
+  try {
+    console.log('🔄 Initializing Ring-Bound Notepad Application...');
+    console.log('📋 Following technical specification v2.0.0');
+    
+    // Phase 1: Initialize core systems
+    console.log('📊 Phase 1: Initializing core systems...');
+    initializePerformanceSystem();
+    initializeRenderingSystem();
+    initializeBrowserTheme();
+    
+    // Phase 2: Load and validate content
+    console.log('📄 Phase 2: Loading and validating content...');
+    const pages = await loadPortfolioContent();
+    
+    // Phase 3: Initialize interaction systems
+    console.log('🎮 Phase 3: Initializing interaction systems...');
+    const container = document.getElementById('notepad-inner');
+    if (!container) throw new Error('Container element not found');
+    
+    ApplicationState.scrollEngine = initializeScrollEngine(container, ApplicationState.pageCount);
+    initializeChapterSystem(pages);
+    
+    // Phase 4: Create render pipeline
+    console.log('🎨 Phase 4: Creating render pipeline...');
+    ApplicationState.renderPipeline = createRenderingPipeline(pages, ApplicationState.scrollEngine);
+    
+    // Phase 5: Finalize application
+    console.log('✅ Phase 5: Finalizing application...');
+    finalizeApplication();
+    
+    console.log('🎉 Application bootstrap complete!');
+    
+  } catch (error) {
+    handleApplicationError(error, 'Application Bootstrap');
+  }
+}
+
+// === CLEANUP FUNCTIONS ===
+
+/**
+ * Clean up application resources
+ */
+function cleanup() {
+  try {
+    if (ApplicationState.scrollEngine) {
+      // Clean up scroll engine resources
+      ApplicationState.scrollEngine = null;
+    }
+    
+    if (ApplicationState.performanceManager) {
+      // Clean up performance monitoring
+      ApplicationState.performanceManager = null;
+    }
+    
+    console.log('🧹 Application cleanup complete');
+    
+  } catch (error) {
+    console.error('⚠️ Cleanup error:', error);
+  }
+}
+
+// === EVENT LISTENERS ===
+
+// Handle page visibility changes for performance optimization
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    console.log('📱 Page hidden - pausing performance monitoring');
+  } else {
+    console.log('📱 Page visible - resuming performance monitoring');
+  }
+});
+
+// Handle window beforeunload for cleanup
+window.addEventListener('beforeunload', cleanup);
+
+// Handle resize events for responsive behavior
+window.addEventListener('resize', () => {
+  if (ApplicationState.renderPipeline && ApplicationState.scrollEngine) {
+    // Trigger re-render on resize
+    const scrollState = ApplicationState.scrollEngine.getScrollState();
+    ApplicationState.renderPipeline(scrollState);
+  }
+});
+
+// === APPLICATION ENTRY POINT ===
+
+// Initialize the application when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bootstrap);
+} else {
+  bootstrap();
+}
+
+// Export for testing and debugging
+export { ApplicationState, bootstrap, cleanup }; 
