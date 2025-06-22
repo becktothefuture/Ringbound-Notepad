@@ -25,7 +25,7 @@ export const GLOBAL_CONFIG = {
   PERFORMANCE: {
     targetFPS: 60,
     frameTimeTarget: 16.67,          // ms
-    maxVisiblePages: 15,
+    maxVisiblePages: 5,              // Drastically reduce for performance
     memoryLimit: 100,                // MB
     qualityScaleMin: 0.5,
     qualityScaleMax: 1.0
@@ -34,14 +34,14 @@ export const GLOBAL_CONFIG = {
   // 3D Notebook Depth Model - User Specifications
   DEPTH: {
     bottomUnreadZ: 5,                // Bottom unread sheet starts at 5px
-    spacingZ: 2,                     // Every sheet above adds 4px
+    spacingZ: 1,                     // Every sheet above adds 4px
     liftHeight: 30,                  // px clearance during flip
   },
   
   // Flip Animation - User Specifications  
   ANIMATION: {
-    duration: 600,                   // ms for flip animation (60fps)
-    snapThreshold: 110,              // Degrees (61% progress)
+    duration: 300,                   // ms for flip animation (60fps)
+    snapThreshold: 50,              // Degrees (61% progress)
     snapDuration: 120,               // ms
     liftHeight: 30,                  // px arc maximum (matches DEPTH.liftHeight)
     scrollSensitivity: 0.1,
@@ -55,13 +55,27 @@ export const GLOBAL_CONFIG = {
   },
   
   SCENE: {
-    perspective: 2500,               // px
+    perspective: 7000,               // px
     perspectiveOriginX: '50%',
-    perspectiveOriginY: '30%',       // Bottom bias
+    perspectiveOriginY: '600%',      // Far bottom perspective
     transformOriginX: '50%',
     transformOriginY: '0%',          // Top edge hinge (user specification)
     ringZIndex: 5000,                // Always on top
     activePageZIndex: 1000
+  },
+  
+  RINGS: {
+    rotationRange: 60,                // degrees - max rotation in each direction
+    rotationUnflipped: 20,            // degrees - rotation when stack is unflipped
+    rotationFlipped: -20,             // degrees - rotation when stack is fully flipped
+    animationSmoothing: 0.1,          // 0-1 - lower = smoother but slower response
+    perspective: 4000,                // px - perspective distance for ring container
+    offsetY: -7,                      // % - vertical offset for ring positioning (static)
+    offsetZ: -25,                     // px - clearance offset from top page position
+    yPositionUnflipped: -14,           // % - Y position when stack is unflipped
+    yPositionFlipped: -4,             // % - Y position when stack is fully flipped
+    scaleX: 0.98,                     // horizontal scale factor (stays constant)
+    scaleY: 1.3                      // vertical scale factor (stays constant)
   }
 };
 

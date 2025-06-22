@@ -89,7 +89,7 @@ function getLandingDepth(pageIndex, totalPages) {
  * @param {number} pageIndex - Page index
  * @param {number} scrollPosition - Current scroll position (can be fractional)
  * @param {number} totalPages - Total number of pages
- * @returns {string} Transform string
+ * @returns {Object} Transform and filter properties
  */
 export function computeTransform(pageIndex, scrollPosition, totalPages) {
   const currentPageFloat = scrollPosition;
@@ -102,12 +102,18 @@ export function computeTransform(pageIndex, scrollPosition, totalPages) {
   } else if (rel < 0) {
     // Page hasn't been reached yet - unread stack
     const restingZ = getUnreadDepth(pageIndex, totalPages);
-    return `translateZ(${restingZ}px) rotateX(0deg)`;
+    return {
+      transform: `translateZ(${restingZ}px) rotateX(0deg)`,
+      filter: 'none'
+    };
   } else {
     // Page has been flipped - read stack
     // Use deterministic landing depth so read stack grows cleanly
     const flippedZ = getLandingDepth(pageIndex, totalPages);
-    return `translateZ(${flippedZ}px) rotateX(180deg)`;
+    return {
+      transform: `translateZ(${flippedZ}px) rotateX(180deg)`,
+      filter: 'none'
+    };
   }
 }
 
@@ -116,32 +122,30 @@ export function computeTransform(pageIndex, scrollPosition, totalPages) {
  * @param {number} pageIndex - Page index
  * @param {number} progress - Flip progress (0-1)
  * @param {number} totalPages - Total number of pages
- * @returns {string} Transform string
+ * @returns {Object} Transform and filter properties
  */
 function computeFlipTransform(pageIndex, progress, totalPages) {
   const restingZ = getUnreadDepth(pageIndex, totalPages);
   const targetZ = getLandingDepth(pageIndex, totalPages);
   
-  if (progress <= 0.5) {
-    // Phase 1: Lift & hinge (0 → 50%)
-    // Animate to translateZ(Zrest + 30px) rotateX(90deg) - flip OVER the top edge
-    const phaseProgress = progress * 2; // Convert 0-0.5 to 0-1
-    
-    const z = restingZ + (LIFT_HEIGHT * phaseProgress);
-    const rotX = 90 * phaseProgress; // Positive rotation = flip forward over top edge
-    
-    return `translateZ(${z}px) rotateX(${rotX}deg)`;
-  } else {
-    // Phase 2: Drop & settle (50 → 100%)
-    // Animate to translateZ(nextLandingZ) rotateX(180deg) - complete the flip over
-    const phaseProgress = (progress - 0.5) * 2; // Convert 0.5-1 to 0-1
-    
-    const startZ = restingZ + LIFT_HEIGHT;
-    const z = startZ + (targetZ - startZ) * phaseProgress;
-    const rotX = 90 + (90 * phaseProgress); // 90 to 180 degrees
-    
-    return `translateZ(${z}px) rotateX(${rotX}deg)`;
-  }
+  // Rotation progresses linearly 0-180°
+  const rotX = 180 * progress;
+
+  // Implement lift height: page lifts up during the flip, creating an arc
+  // Maximum lift occurs at 50% progress (90° rotation)
+  const liftAmount = Math.sin(progress * Math.PI) * LIFT_HEIGHT; // 0→30→0
+  
+  // Z position: interpolate from resting to target, plus lift
+  const baseZ = restingZ + (targetZ - restingZ) * progress;
+  const z = baseZ + liftAmount;
+
+  // Blur increases to max at 90° (progress 0.5) then back to 0 at 180°
+  const blurAmount = Math.sin(progress * Math.PI) * 3; // 0→3→0
+
+  return {
+    transform: `translateZ(${z}px) rotateX(${rotX}deg)`,
+    filter: `blur(${blurAmount}px)`
+  };
 }
 
 /**
@@ -154,27 +158,30 @@ function computeFlipTransform(pageIndex, progress, totalPages) {
 export function createFlipAnimation(pageElement, pageIndex, totalPages) {
   const restingZ = getUnreadDepth(pageIndex, totalPages);
   const targetZ = getLandingDepth(pageIndex, totalPages);
+  const midZ = (restingZ + targetZ) / 2 + LIFT_HEIGHT; // Add lift height at midpoint
   
   const keyframes = [
     {
       offset: 0,
       transform: `translateZ(${restingZ}px) rotateX(0deg)`,
-      easing: GLOBAL_CONFIG.ANIMATION.easing.liftHinge
+      filter: 'blur(0px)'
     },
     {
       offset: 0.5,
-      transform: `translateZ(${restingZ + LIFT_HEIGHT}px) rotateX(90deg)`,
-      easing: GLOBAL_CONFIG.ANIMATION.easing.dropSettle
+      transform: `translateZ(${midZ}px) rotateX(90deg)`,
+      filter: 'blur(3px)'
     },
     {
       offset: 1,
-      transform: `translateZ(${targetZ}px) rotateX(180deg)`
+      transform: `translateZ(${targetZ}px) rotateX(180deg)`,
+      filter: 'blur(0px)'
     }
   ];
   
   const animation = pageElement.animate(keyframes, {
     duration: DURATION,
-    fill: 'forwards'
+    fill: 'forwards',
+    easing: 'linear'
   });
   
   // No need to adjust global nextLandingZ – landing depth is deterministic
@@ -190,7 +197,7 @@ export function resetDepthSystem() {
 }
 
 /**
- * Calculate the dynamic rings front position, 10px above the highest possible page
+ * Calculate the dynamic rings front position, configurable offset above the highest possible page
  * @param {number} totalPages - Total number of pages
  * @returns {number} Z position for rings front in pixels
  */
@@ -200,10 +207,11 @@ export function calculateRingsFrontPosition(totalPages) {
   const topPageRestingZ = getUnreadDepth(0, totalPages);
   const highestPagePosition = topPageRestingZ + LIFT_HEIGHT;
   
-  // Position rings 10px above the highest page
-  const ringsFrontZ = highestPagePosition + 10;
+  // Position rings with configurable offset above the highest page
+  const ringOffset = GLOBAL_CONFIG.RINGS.offsetZ;
+  const ringsFrontZ = highestPagePosition + ringOffset;
   
-  console.log(`🔗 Rings front positioned at: ${ringsFrontZ}px (topPage: ${topPageRestingZ}px + lift: ${LIFT_HEIGHT}px + clearance: 10px)`);
+  console.log(`🔗 Rings front positioned at: ${ringsFrontZ}px (topPage: ${topPageRestingZ}px + lift: ${LIFT_HEIGHT}px + offset: ${ringOffset}px)`);
   
   return ringsFrontZ;
 } 

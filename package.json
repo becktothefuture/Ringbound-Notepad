@@ -8,7 +8,7 @@
     "start": "serve dist -l 3000",
     "build": "node build.cjs",
     "build:watch": "node build.cjs --watch",
-    "dev": "concurrently \"npm:build:watch\" \"live-server dist --port=3000 --wait=500 --no-cache --browser=chrome --verbose\"",
+    "dev": "concurrently \"npm:build:watch\" \"live-server dist --port=3000 --wait=200 --no-cache --browser=chrome --verbose --cors --ignore-pattern='node_modules/**'\"",
     "lint": "eslint src/js/**/*.js",
     "format": "prettier --write \"src/**/*.{js,css,html}\"",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
