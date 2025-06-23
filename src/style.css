@@ -364,8 +364,40 @@ main:not(.page-wrapper) {
   aspect-ratio: var(--page-aspect-ratio);
   transform-origin: var(--transform-origin-x, 50%) var(--transform-origin-y, 0%) 0;
   transform-style: preserve-3d;
-  backface-visibility: hidden;
+  backface-visibility: visible;
+  /* Shared border radius for consistent shadow shape */
   border-radius: 0.5em 0.5em var(--cover-radius) var(--cover-radius);
+  /* Improve blur rendering performance */
+  will-change: transform, filter;
+  /* Initial 3D positioning - will be overridden by JS */
+  transform: translateZ(5px);
+  /* Prevent flashing during transforms */
+  opacity: 1;
+  transition: 
+    opacity 150ms cubic-bezier(0.4, 0.0, 0.2, 1),
+    filter 100ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
+  /* Motion blur effects applied via JavaScript */
+  filter: var(--motion-blur-filter, none);
+  
+  /* Allow tabs to extend beyond page boundaries */
+  overflow: visible;
+}
+
+/* Page Front Face - contains all visible content */
+.page-front {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: end;
+  backface-visibility: hidden;
+  /* Inherit border radius from parent and hide overflow for clean edges */
+  border-radius: inherit;
+  overflow: hidden;
   background-color: #f5f5f5;
   background-image:
     url('./assets/background-assets/paper-holes.webp'), linear-gradient(231deg, #aca9a3a1, #0000);
@@ -377,36 +409,31 @@ main:not(.page-wrapper) {
     100% auto,
     auto;
   box-shadow:
-    0 4px 8px rgba(0, 0, 0, 0.02),
-    0 8px 16px rgba(0, 0, 0, 0.01),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
-  /* Improve blur rendering performance */
-  will-change: transform, filter;
-  /* Initial 3D positioning - will be overridden by JS */
-  transform: translateZ(5px);
+    0 4px 8px rgba(0, 0, 0, 0.04),
+    0 8px 16px rgba(0, 0, 0, 0.03),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5);
   /* Aggressive performance optimizations */
   isolation: isolate;
-  /* Prevent flashing during transforms */
-  opacity: 1;
-  transition: 
-    opacity 150ms cubic-bezier(0.4, 0.0, 0.2, 1),
-    filter 100ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  
-  /* Motion blur effects applied via JavaScript */
-  filter: var(--motion-blur-filter, none);
+  transform: translateZ(0);
+  transform-style: preserve-3d;
 }
 
-.page::after {
-  content: '';
+/* Page Back Face - visible when page is flipped */
+.page-back {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: #a5a5a5;
-  border-radius: 0.5em 0.5em var(--cover-radius) var(--cover-radius);
-  transform: rotateX(180deg) translateZ(-1px);
   backface-visibility: hidden;
+  /* Inherit border radius from parent for consistency */
+  border-radius: inherit;
+  overflow: hidden;
+  background: var(--backface-color, rgba(0, 0, 0, 0.8));
+  transform: rotateX(180deg) translateZ(-1px);
+  /* Performance optimization */
+  will-change: transform;
+  contain: layout style;
 }
 
 .page-content {
@@ -431,10 +458,7 @@ main:not(.page-wrapper) {
   will-change: filter;
 }
 
-/* Allow tabs to extend beyond page boundaries */
-.page {
-  overflow: visible;
-}
+/* Removed duplicate .page rule - overflow handled in main .page definition */
 
 .page-content__inner {
   width: 100%;
@@ -474,17 +498,19 @@ main:not(.page-wrapper) {
   left: -0.5%;
 }
 
-.cover.cover--back,
-.cover.cover--front {
+/* Cover styling applied to page-front when it has cover classes */
+.page-front.cover.cover--back,
+.page-front.cover.cover--front {
   z-index: auto !important;
+  /* Ensure cover inherits border radius and hides overflow */
+  border-radius: inherit;
+  overflow: hidden;
   background-image:
     linear-gradient(38deg, #0000001a, #0000), url('./assets/background-assets/images/cardboard.jpg');
   background-position:
     0 0,
     0 0;
   background-size: auto, auto;
-  border-top-left-radius: 0.5em;
-  border-top-right-radius: 0.5em;
   box-shadow:
     inset 0 3px 2px #c29154,
     inset 0 -2px 3px 2px #664620,
@@ -497,15 +523,15 @@ main:not(.page-wrapper) {
     -3.8px 8.9px 6.2px #00000015,
     -7.1px 16.7px 13px #00000016,
     -14.9px 35.1px 29.5px #00000018,
-    0 2px 4px rgba(0, 0, 0, 0.08),
-    0 4px 8px rgba(0, 0, 0, 0.05),
-    0 8px 16px rgba(0, 0, 0, 0.03);
+    0 2px 4px rgba(0, 0, 0, 0.12),
+    0 4px 8px rgba(0, 0, 0, 0.08),
+    0 8px 16px rgba(0, 0, 0, 0.06);
   position: relative;
 }
 
 /* Add paper holes to covers - positioned on top of cardboard texture */
-.cover.cover--back::before,
-.cover.cover--front::before {
+.page-front.cover.cover--back::before,
+.page-front.cover.cover--front::before {
   content: '';
   position: absolute;
   top: 0;
@@ -521,7 +547,7 @@ main:not(.page-wrapper) {
   transform: translateZ(1px);
 }
 
-.cover.cover--front {
+.page-front.cover.cover--front {
   transform-style: preserve-3d;
   position: absolute;
 }
@@ -1018,14 +1044,14 @@ h2 {
 }
 
 /* Hide content completely when page is showing its backside */
-.page--showing-backface .page-content {
+.page--showing-backface .page-front {
   opacity: 0;
   transition: opacity 100ms cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
-.page--showing-backface .page-content *,
-.page--showing-backface .page-content img,
-.page--showing-backface .page-content video {
+.page--showing-backface .page-front *,
+.page--showing-backface .page-front img,
+.page--showing-backface .page-front video {
   opacity: 0;
   backface-visibility: hidden;
   pointer-events: none;

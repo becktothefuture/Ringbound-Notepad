@@ -164,6 +164,21 @@ export const GLOBAL_CONFIG = {
     flipLimitDeg: 140, // degrees of the page ABOVE after which shadow completes
     exponentialCurve: 2, // Exponential curve factor for slower movement
   },
+
+  /**
+   * Page Backface Settings
+   * Controls the appearance and behavior of page backs
+   */
+  BACKFACE: {
+    color: 'rgba(0, 0, 0, 0.85)', // Semi-transparent black for testing (slightly darker)
+    gradient: null, // Optional gradient override (null = use solid color)
+    texture: null, // Optional texture/pattern URL
+    borderRadius: 'inherit', // Inherit from page-front
+    zOffset: -1, // px behind page-front
+    // Alternative backface colors for different page types
+    coverColor: 'rgba(139, 69, 19, 0.9)', // Darker brown for covers
+    videoPageColor: 'rgba(0, 0, 0, 0.9)', // Darker black for video pages
+  },
 };
 
 // Legacy compatibility - map old PAGE_ANIMATION to new GLOBAL_CONFIG

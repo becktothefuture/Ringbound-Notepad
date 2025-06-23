@@ -174,10 +174,14 @@ function createPageElement(pageData, chapterId, pageIndex, globalIndex) {
   pageEl.dataset.chapterId = chapterId;
   pageEl.dataset.pageIndex = pageIndex;
 
+  // Create page-front container with all existing content
+  const pageFront = document.createElement('div');
+  pageFront.className = 'page-front';
+
   // Add ring holes container (safe zone) - using CSS class
   const holesContainer = document.createElement('div');
   holesContainer.className = 'page-holes page-holes--styled';
-  pageEl.appendChild(holesContainer);
+  pageFront.appendChild(holesContainer);
 
   // Add content container with CSS class alignment
   const content = document.createElement('div');
@@ -195,9 +199,9 @@ function createPageElement(pageData, chapterId, pageIndex, globalIndex) {
   const mediaEl = createMediaElement(pageData.type, assetPath, pageData.commentary);
 
   content.appendChild(mediaEl);
-  pageEl.appendChild(content);
+  pageFront.appendChild(content);
 
-  // Add the new shadow overlay div (must be LAST so it sits on top)
+  // Add the shadow overlay div (must be LAST so it sits on top)
   const shadowWrapper = document.createElement('div');
   shadowWrapper.className = 'page-shadow-wrapper';
 
@@ -205,7 +209,15 @@ function createPageElement(pageData, chapterId, pageIndex, globalIndex) {
   shadowDiv.className = 'page-shadow';
 
   shadowWrapper.appendChild(shadowDiv);
-  pageEl.appendChild(shadowWrapper);
+  pageFront.appendChild(shadowWrapper);
+
+  // Create page-back container
+  const pageBack = document.createElement('div');
+  pageBack.className = 'page-back';
+
+  // Add both front and back to the page
+  pageEl.appendChild(pageFront);
+  pageEl.appendChild(pageBack);
 
   return pageEl;
 }
@@ -254,24 +266,38 @@ function createMediaElement(type, assetPath, altText) {
 function createCoverPage(type, commentary, globalIndex) {
   const coverEl = document.createElement('div');
 
+  // Create cover front container
+  const coverFront = document.createElement('div');
+  coverFront.className = 'page-front';
+
   if (type === 'front') {
     coverEl.className = 'page cover cover--front gpu-accelerated';
     coverEl.dataset.deckNumber = 'front';
+    coverFront.classList.add('cover', 'cover--front');
 
-    // Add centered logo image
+    // Add centered logo image to front
     const logoImg = document.createElement('img');
     logoImg.src = 'assets/folio-title.png';
     logoImg.alt = 'Portfolio Title';
     logoImg.className = 'cover-logo';
-    coverEl.appendChild(logoImg);
+    coverFront.appendChild(logoImg);
 
     // NO CONTENT - covers should have no text as requested
   } else {
     coverEl.className = 'page cover cover--back gpu-accelerated';
     coverEl.dataset.deckNumber = String(globalIndex + 1).padStart(2, '0');
+    coverFront.classList.add('cover', 'cover--back');
   }
 
   coverEl.dataset.commentary = commentary;
+
+  // Create cover back container
+  const coverBack = document.createElement('div');
+  coverBack.className = 'page-back';
+
+  // Add both front and back to the cover
+  coverEl.appendChild(coverFront);
+  coverEl.appendChild(coverBack);
 
   return coverEl;
 }
