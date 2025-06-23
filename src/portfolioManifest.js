@@ -107,6 +107,23 @@ export default [
     ]
   },
   {
+    "title": "Chapter covers",
+    "pages": [
+      "assets/portfolio-pages/chapter-covers/bentley-cover.png",
+      "assets/portfolio-pages/chapter-covers/keyboard-cover.png",
+      "assets/portfolio-pages/chapter-covers/s&p-cover.png",
+      "assets/portfolio-pages/chapter-covers/sunexpress-cover.png",
+      "assets/portfolio-pages/chapter-covers/titles/bentley-title.png",
+      "assets/portfolio-pages/chapter-covers/titles/keyboard-title.png",
+      "assets/portfolio-pages/chapter-covers/titles/s&p-title.png",
+      "assets/portfolio-pages/chapter-covers/titles/sunexpress-title.png",
+      "assets/portfolio-pages/chapter-covers/titles/website-title.png",
+      "assets/portfolio-pages/chapter-covers/titles/yoti-title.png",
+      "assets/portfolio-pages/chapter-covers/website-cover.png",
+      "assets/portfolio-pages/chapter-covers/yoti-cover.png"
+    ]
+  },
+  {
     "title": "Chapter tabs",
     "pages": [
       "assets/portfolio-pages/chapter-tabs/aboutme.png",

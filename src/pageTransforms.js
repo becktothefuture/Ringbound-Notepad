@@ -1,7 +1,7 @@
 /*
  * 3D NOTEBOOK PAGE TRANSFORMS – User Specification v2.0
  * ====================================================
- * 
+ *
  * Implements the exact 3D notebook specification:
  * - Pages flip over the top edge and land on a growing pile toward camera
  * - Depth model: Bottom unread Z=5px, each sheet adds 4px
@@ -15,10 +15,10 @@ import { GLOBAL_CONFIG } from './config.js';
 import { clamp } from './utils.js';
 
 // User specification constants
-const BOTTOM_UNREAD_Z = GLOBAL_CONFIG.DEPTH.bottomUnreadZ;  // 5px
-const SPACING_Z = GLOBAL_CONFIG.DEPTH.spacingZ;             // 4px
-const LIFT_HEIGHT = GLOBAL_CONFIG.DEPTH.liftHeight;         // 30px
-const DURATION = GLOBAL_CONFIG.ANIMATION.duration;          // 600ms
+const BOTTOM_UNREAD_Z = GLOBAL_CONFIG.DEPTH.bottomUnreadZ; // 5px
+const SPACING_Z = GLOBAL_CONFIG.DEPTH.spacingZ; // 4px
+const LIFT_HEIGHT = GLOBAL_CONFIG.DEPTH.liftHeight; // 30px
+const DURATION = GLOBAL_CONFIG.ANIMATION.duration; // 600ms
 
 // Track the next landing Z position for flipped pages
 let nextLandingZ = 0;
@@ -33,7 +33,7 @@ export function initializeDepthSystem(totalPages) {
   // So nextLandingZ = 801 + 4 = 805px
   const topUnreadZ = BOTTOM_UNREAD_Z + (totalPages - 1) * SPACING_Z;
   nextLandingZ = topUnreadZ + SPACING_Z;
-  
+
   console.log(`🎯 Depth system initialized: ${totalPages} pages, nextLandingZ: ${nextLandingZ}px`);
 }
 
@@ -85,7 +85,7 @@ function getLandingDepth(pageIndex, totalPages) {
  * 1. Start: translateZ(Zrest) rotateX(0deg)
  * 2. Lift & hinge (0→50%): translateZ(Zrest + 30px) rotateX(-90deg) cubic-bezier(.55,.05,.67,.19)
  * 3. Drop & settle (50→100%): translateZ(nextLandingZ) rotateX(-180deg) cubic-bezier(.25,.46,.45,.94)
- * 
+ *
  * @param {number} pageIndex - Page index
  * @param {number} scrollPosition - Current scroll position (can be fractional)
  * @param {number} totalPages - Total number of pages
@@ -93,8 +93,8 @@ function getLandingDepth(pageIndex, totalPages) {
  */
 export function computeTransform(pageIndex, scrollPosition, totalPages) {
   const currentPageFloat = scrollPosition;
-  const rel = currentPageFloat - pageIndex;  // Relative position
-  
+  const rel = currentPageFloat - pageIndex; // Relative position
+
   // Determine if this page is flipping
   if (rel >= 0 && rel <= 1) {
     // This page is currently flipping
@@ -104,7 +104,7 @@ export function computeTransform(pageIndex, scrollPosition, totalPages) {
     const restingZ = getUnreadDepth(pageIndex, totalPages);
     return {
       transform: `translateZ(${restingZ}px) rotateX(0deg)`,
-      filter: 'none'
+      filter: 'none',
     };
   } else {
     // Page has been flipped - read stack
@@ -112,7 +112,7 @@ export function computeTransform(pageIndex, scrollPosition, totalPages) {
     const flippedZ = getLandingDepth(pageIndex, totalPages);
     return {
       transform: `translateZ(${flippedZ}px) rotateX(180deg)`,
-      filter: 'none'
+      filter: 'none',
     };
   }
 }
@@ -127,24 +127,22 @@ export function computeTransform(pageIndex, scrollPosition, totalPages) {
 function computeFlipTransform(pageIndex, progress, totalPages) {
   const restingZ = getUnreadDepth(pageIndex, totalPages);
   const targetZ = getLandingDepth(pageIndex, totalPages);
-  
+
   // Rotation progresses linearly 0-180°
   const rotX = 180 * progress;
 
   // Implement lift height: page lifts up during the flip, creating an arc
   // Maximum lift occurs at 50% progress (90° rotation)
   const liftAmount = Math.sin(progress * Math.PI) * LIFT_HEIGHT; // 0→30→0
-  
+
   // Z position: interpolate from resting to target, plus lift
   const baseZ = restingZ + (targetZ - restingZ) * progress;
   const z = baseZ + liftAmount;
 
-  // Blur increases to max at 90° (progress 0.5) then back to 0 at 180°
-  const blurAmount = Math.sin(progress * Math.PI) * 3; // 0→3→0
-
+  // No blur effect – return none to improve clarity and performance
   return {
     transform: `translateZ(${z}px) rotateX(${rotX}deg)`,
-    filter: `blur(${blurAmount}px)`
+    filter: 'none',
   };
 }
 
@@ -159,33 +157,33 @@ export function createFlipAnimation(pageElement, pageIndex, totalPages) {
   const restingZ = getUnreadDepth(pageIndex, totalPages);
   const targetZ = getLandingDepth(pageIndex, totalPages);
   const midZ = (restingZ + targetZ) / 2 + LIFT_HEIGHT; // Add lift height at midpoint
-  
+
   const keyframes = [
     {
       offset: 0,
       transform: `translateZ(${restingZ}px) rotateX(0deg)`,
-      filter: 'blur(0px)'
+      filter: 'none',
     },
     {
       offset: 0.5,
       transform: `translateZ(${midZ}px) rotateX(90deg)`,
-      filter: 'blur(3px)'
+      filter: 'none',
     },
     {
       offset: 1,
       transform: `translateZ(${targetZ}px) rotateX(180deg)`,
-      filter: 'blur(0px)'
-    }
+      filter: 'none',
+    },
   ];
-  
+
   const animation = pageElement.animate(keyframes, {
     duration: DURATION,
     fill: 'forwards',
-    easing: 'linear'
+    easing: 'linear',
   });
-  
+
   // No need to adjust global nextLandingZ – landing depth is deterministic
-   
+
   return animation;
 }
 
@@ -206,12 +204,14 @@ export function calculateRingsFrontPosition(totalPages) {
   // This occurs when the top page (index 0) is lifted during flip
   const topPageRestingZ = getUnreadDepth(0, totalPages);
   const highestPagePosition = topPageRestingZ + LIFT_HEIGHT;
-  
+
   // Position rings with configurable offset above the highest page
   const ringOffset = GLOBAL_CONFIG.RINGS.offsetZ;
   const ringsFrontZ = highestPagePosition + ringOffset;
-  
-  console.log(`🔗 Rings front positioned at: ${ringsFrontZ}px (topPage: ${topPageRestingZ}px + lift: ${LIFT_HEIGHT}px + offset: ${ringOffset}px)`);
-  
+
+  console.log(
+    `🔗 Rings front positioned at: ${ringsFrontZ}px (topPage: ${topPageRestingZ}px + lift: ${LIFT_HEIGHT}px + offset: ${ringOffset}px)`
+  );
+
   return ringsFrontZ;
-} 
+}

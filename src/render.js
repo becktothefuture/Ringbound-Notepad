@@ -1,6 +1,6 @@
 /**
  * 3D NOTEBOOK RENDERING SYSTEM - USER SPECIFICATION
- * 
+ *
  * Implements the exact 3D notebook specification:
  * - Pages flip over the top edge and land on a growing pile toward camera
  * - Depth model: Bottom unread Z=5px, each sheet adds 4px
@@ -14,11 +14,11 @@
 import { GLOBAL_CONFIG } from './config.js';
 import { mapRange, clamp, lerp } from './utils.js';
 import { perf } from './performance.js';
-import { 
-  computeTransform, 
-  initializeDepthSystem, 
+import {
+  computeTransform,
+  initializeDepthSystem,
   createFlipAnimation,
-  calculateRingsFrontPosition
+  calculateRingsFrontPosition,
 } from './pageTransforms.js';
 
 // Cache for performance optimization
@@ -33,9 +33,9 @@ function updateCommentary(currentPage) {
   if (!commentaryOverlay) {
     commentaryOverlay = document.getElementById('commentary-overlay');
   }
-  
+
   const pixelCommentary = document.getElementById('pixel-commentary');
-  
+
   if (currentPage) {
     const commentary = currentPage.dataset.commentary;
     if (commentary !== lastCommentary) {
@@ -43,11 +43,11 @@ function updateCommentary(currentPage) {
         commentaryOverlay.textContent = commentary;
         commentaryOverlay.classList.toggle('visible', !!commentary);
       }
-      
+
       if (pixelCommentary) {
         pixelCommentary.textContent = commentary || 'No commentary available';
       }
-      
+
       lastCommentary = commentary;
     }
   }
@@ -65,7 +65,7 @@ function shouldRenderPage(page, pageIndex, scrollPosition) {
   const hasTab = page.querySelector('.page-tab') !== null;
   const isCover = page.classList.contains('cover');
   const isChapterStartPage = hasTab || isCover;
-  
+
   if (isChapterStartPage) {
     // Always show pages with tabs or covers - they need to maintain their z-position
     page.classList.remove('page--hidden');
@@ -73,14 +73,14 @@ function shouldRenderPage(page, pageIndex, scrollPosition) {
     page.style.display = 'flex';
     return true;
   }
-  
+
   // For regular content pages, apply aggressive culling
   const currentPage = Math.floor(scrollPosition);
   const distance = Math.abs(pageIndex - currentPage);
   const maxDistance = GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages;
-  
+
   const shouldShow = distance <= maxDistance;
-  
+
   if (shouldShow) {
     page.classList.remove('page--hidden');
     page.classList.add('page--visible');
@@ -90,102 +90,64 @@ function shouldRenderPage(page, pageIndex, scrollPosition) {
     page.classList.remove('page--visible');
     page.style.display = 'none';
   }
-  
+
   return shouldShow;
 }
 
 /**
  * MAIN RENDERING FUNCTION
- * 
+ *
  * Implements state-driven rendering with physically accurate transformations.
  * Converts scroll state into 3D page positions following specification requirements.
- * 
+ *
  * @param {HTMLElement[]} pages - Array of page elements
  * @param {Object} scrollState - Current scroll state from VirtualScrollEngine
  */
 export function render(pages, scrollState) {
   perf.startRender();
-  
+
   if (!pages || pages.length === 0) {
     perf.endRender();
     return;
   }
-  
+
   const { scroll, totalPages, velocity } = scrollState;
   const pageCount = pages.length;
-  
+
   // Update commentary for current page
   const currentPageIndex = Math.round(scroll);
   const currentPage = pages[clamp(currentPageIndex, 0, pageCount - 1)];
   updateCommentary(currentPage);
-  
+
   // Render each page with state-driven transforms
   for (let i = 0; i < pageCount; i++) {
     const page = pages[i];
-    
+
     // Performance optimization: visibility culling
     if (!shouldRenderPage(page, i, scroll)) {
       continue;
     }
-    
+
     // Calculate transform using specification physics
     const transformData = computeTransform(i, scroll, pageCount);
-    
-    // Apply dynamic shadow classes based on page above
-    applyDynamicShadow(page, i, scroll);
-    
+
+    // Update new page shadow overlay based on page ABOVE flipping
+    updatePageShadow(page, i, scroll);
+
     // Buffer page contents to optimize performance while all pages are visible
     updatePageContentVisibility(page, i, scroll);
-    
+
     // Apply flip-specific content visibility
     applyFlipContentVisibility(page, i, scroll);
-    
+
     // Apply transforms with clean CSS approach
     applyPageTransform(page, transformData);
   }
-  
+
   // Update ring rotations based on overall flip progress
   updateRingRotations(scroll, pageCount);
-  
-  perf.endRender();
-}
 
-/**
- * Apply dynamic shadow classes based on the status of the page above
- * @param {HTMLElement} page - Page element
- * @param {number} pageIndex - Index of this page
- * @param {number} scrollPosition - Current scroll position
- */
-function applyDynamicShadow(page, pageIndex, scrollPosition) {
-  // Don't apply shadows to covers
-  if (page.classList.contains('cover')) {
-    return;
-  }
-  
-  // Check if there's a page above this one that affects its shadow
-  const pageAboveIndex = pageIndex - 1;
-  
-  if (pageAboveIndex < 0) {
-    // This is the top page, no shadow reduction needed
-    page.classList.remove('shadow-reduced', 'shadow-hidden');
-    return;
-  }
-  
-  // Calculate how much the page above has flipped
-  const pageAboveProgress = scrollPosition - pageAboveIndex;
-  
-  if (pageAboveProgress <= 0) {
-    // Page above hasn't started flipping yet, full shadow
-    page.classList.remove('shadow-reduced', 'shadow-hidden');
-  } else if (pageAboveProgress < 1) {
-    // Page above is currently flipping, reduce shadow
-    page.classList.add('shadow-reduced');
-    page.classList.remove('shadow-hidden');
-  } else {
-    // Page above has been fully flipped, hide shadow almost completely
-    page.classList.remove('shadow-reduced');
-    page.classList.add('shadow-hidden');
-  }
+  perf.endRender();
 }
 
 /**
@@ -195,21 +157,96 @@ function applyDynamicShadow(page, pageIndex, scrollPosition) {
  */
 function applyPageTransform(page, transformData) {
   const style = page.style;
-  
+
   // Apply transforms and filters
   if (typeof transformData === 'string') {
-    // Legacy support for string transforms
     style.transform = transformData;
     style.filter = 'none';
   } else {
     style.transform = transformData.transform;
     style.filter = transformData.filter;
   }
-  
+
   // Ensure GPU acceleration is enabled
   if (!page.classList.contains('gpu-accelerated')) {
     page.classList.add('gpu-accelerated');
   }
+}
+
+/**
+ * Update the custom .page-shadow overlay based on the flip progress
+ * of the PAGE ABOVE this one.
+ *
+ * Requirements:
+ * 1. Shadow moves in perfect sync with page rotation (no CSS transitions)
+ * 2. Uses exponential curve for realistic slower movement as page rotates
+ * 3. Completes movement when the page above reaches 120° rotation
+ * 4. Gradient is angled 10° toward bottom-left for realism
+ *
+ * @param {HTMLElement} page        The current page element
+ * @param {number}      pageIndex   Index of this page in the overall array
+ * @param {number}      scrollPos   Current scroll position (fractional)
+ */
+function updatePageShadow(page, pageIndex, scrollPos) {
+  const shadowEl = page.querySelector('.page-shadow');
+  if (!shadowEl) return;
+
+  // No shadow logic for cover pages – they don't need dynamic shadows
+  if (page.classList.contains('cover')) {
+    shadowEl.style.opacity = '0';
+    return;
+  }
+
+  const pageAboveIndex = pageIndex - 1;
+
+  if (pageAboveIndex < 0) {
+    // Top-most page has no page above
+    shadowEl.style.opacity = '0';
+    return;
+  }
+
+  // Calculate rotation progress of page ABOVE (0 → 1, where 1 = 180°)
+  const rotationProgress = clamp(scrollPos - pageAboveIndex, 0, 1);
+  const rotationDegrees = rotationProgress * 180; // 0° to 180°
+
+  const flipLimitDegrees = GLOBAL_CONFIG.SHADOW.flipLimitDeg; // 120°
+  
+  if (rotationDegrees >= flipLimitDegrees) {
+    // After 120° rotation, shadow has completed its movement
+    // Pre-calculate final values for performance
+    const shadowConfig = GLOBAL_CONFIG.SHADOW;
+    const finalSkewX = shadowConfig.maxSkew; // Maximum skew at completion (-45°)
+    const finalScaleY = shadowConfig.minHeightScale; // Minimum height at completion (0%)
+    shadowEl.style.opacity = '1';
+    shadowEl.style.transform = `skewX(${finalSkewX}deg) scaleY(${finalScaleY}) translateZ(2px)`;
+    return;
+  }
+
+  // Calculate exponential movement progress (0 → 1 over 0° → 120°)
+  const normalizedProgress = rotationDegrees / flipLimitDegrees; // 0 to 1
+  const exponentialCurve = GLOBAL_CONFIG.SHADOW.exponentialCurve; // 2.5
+  
+  // Apply exponential curve: slower movement initially, faster as page rotates more
+  const exponentialProgress = Math.pow(normalizedProgress, exponentialCurve);
+
+  // Pre-calculate shadow config values for performance
+  const shadowConfig = GLOBAL_CONFIG.SHADOW;
+  
+  // Calculate skewing (0° to maxSkew as page rotates) - now goes to -45°
+  const skewX = exponentialProgress * shadowConfig.maxSkew; // 0° to -45°
+  
+  // Calculate height scaling (100% to minHeightScale as page rotates) - now goes to 0%
+  const scaleY = 1 - (exponentialProgress * (1 - shadowConfig.minHeightScale)); // 1.0 to 0.0
+
+  // Performance optimization: hide shadow when completely scaled down
+  if (scaleY <= 0.01) {
+    shadowEl.style.opacity = '0';
+    return;
+  }
+  
+  shadowEl.style.opacity = '1';
+  // Apply skewing and height scaling with top-left anchor
+  shadowEl.style.transform = `skewX(${skewX}deg) scaleY(${scaleY}) translateZ(2px)`;
 }
 
 /**
@@ -218,32 +255,32 @@ function applyPageTransform(page, transformData) {
  */
 export function initializeRenderingContext(totalPages = 0) {
   const root = document.documentElement;
-  
+
   // Apply 3D perspective settings from config
   root.style.setProperty('--perspective-distance', `${GLOBAL_CONFIG.SCENE.perspective}px`);
   root.style.setProperty('--perspective-origin-x', GLOBAL_CONFIG.SCENE.perspectiveOriginX);
   root.style.setProperty('--perspective-origin-y', GLOBAL_CONFIG.SCENE.perspectiveOriginY);
-  
+
   console.log('🎯 Perspective settings applied:', {
     distance: `${GLOBAL_CONFIG.SCENE.perspective}px`,
     originX: GLOBAL_CONFIG.SCENE.perspectiveOriginX,
-    originY: GLOBAL_CONFIG.SCENE.perspectiveOriginY
+    originY: GLOBAL_CONFIG.SCENE.perspectiveOriginY,
   });
-  
+
   console.log('🔗 Rings settings applied:', {
     perspective: `${GLOBAL_CONFIG.RINGS.perspective}px`,
     offsetY: `${GLOBAL_CONFIG.RINGS.offsetY}%`,
-    rotationRange: `${GLOBAL_CONFIG.RINGS.rotationUnflipped}° to ${GLOBAL_CONFIG.RINGS.rotationFlipped}°`
+    rotationRange: `${GLOBAL_CONFIG.RINGS.rotationUnflipped}° to ${GLOBAL_CONFIG.RINGS.rotationFlipped}°`,
   });
-  
+
   // Apply responsive layout settings
   root.style.setProperty('--page-aspect-ratio', GLOBAL_CONFIG.LAYOUT.pageAspectRatio);
   root.style.setProperty('--safe-zone-height', `${GLOBAL_CONFIG.LAYOUT.safeZoneHeight}px`);
-  
+
   // Apply transform origin settings from config
   root.style.setProperty('--transform-origin-x', GLOBAL_CONFIG.SCENE.transformOriginX);
   root.style.setProperty('--transform-origin-y', GLOBAL_CONFIG.SCENE.transformOriginY);
-  
+
   // Apply rings settings from config
   root.style.setProperty('--rings-perspective', `${GLOBAL_CONFIG.RINGS.perspective}px`);
   root.style.setProperty('--rings-offset-y', `${GLOBAL_CONFIG.RINGS.offsetY}%`);
@@ -251,29 +288,37 @@ export function initializeRenderingContext(totalPages = 0) {
   root.style.setProperty('--rings-y-flipped', `${GLOBAL_CONFIG.RINGS.yPositionFlipped}%`);
   root.style.setProperty('--rings-scale-x', GLOBAL_CONFIG.RINGS.scaleX);
   root.style.setProperty('--rings-scale-y', GLOBAL_CONFIG.RINGS.scaleY);
-  
+
+  // Apply page shadow settings from config
+  const shadowCfg = GLOBAL_CONFIG.SHADOW;
+  root.style.setProperty('--page-shadow-start', shadowCfg.gradientStart);
+  root.style.setProperty('--page-shadow-mid', shadowCfg.gradientMid);
+  root.style.setProperty('--page-shadow-end', shadowCfg.gradientEnd);
+  root.style.setProperty('--page-shadow-angle', `${shadowCfg.gradientAngle}deg`);
+  root.style.setProperty('--shadow-mid-stop', `${shadowCfg.gradientMidStop}%`);
+
   // Initialize the 3D notebook depth system
   if (totalPages > 0) {
     initializeDepthSystem(totalPages);
-    
+
     // Calculate and set dynamic rings front position
     const ringsFrontZ = calculateRingsFrontPosition(totalPages);
     root.style.setProperty('--rings-front-position', `${ringsFrontZ}px`);
   }
-  
+
   // Initialize ring rotations
   initializeRingRotations();
-  
+
   // Verify perspective is properly applied to all 3D elements
   verifyPerspectiveApplication();
-  
+
   console.log('🎯 3D Notebook system initialized:', {
     totalPages,
     bottomUnreadZ: GLOBAL_CONFIG.DEPTH.bottomUnreadZ,
     spacingZ: GLOBAL_CONFIG.DEPTH.spacingZ,
     liftHeight: GLOBAL_CONFIG.DEPTH.liftHeight,
     duration: GLOBAL_CONFIG.ANIMATION.duration,
-    ringRotationRange: `${GLOBAL_CONFIG.RINGS.rotationUnflipped}° to ${GLOBAL_CONFIG.RINGS.rotationFlipped}°`
+    ringRotationRange: `${GLOBAL_CONFIG.RINGS.rotationUnflipped}° to ${GLOBAL_CONFIG.RINGS.rotationFlipped}°`,
   });
 }
 
@@ -283,7 +328,7 @@ export function initializeRenderingContext(totalPages = 0) {
  * @returns {Function} Render function that accepts scroll state
  */
 export function createRenderPipeline(pages) {
-  return (scrollState) => render(pages, scrollState);
+  return scrollState => render(pages, scrollState);
 }
 
 /**
@@ -292,27 +337,26 @@ export function createRenderPipeline(pages) {
  */
 export function updateRingsPosition(totalPages) {
   console.log(`🔗 updateRingsPosition called with totalPages: ${totalPages}`);
-  
+
   if (totalPages > 0) {
     const root = document.documentElement;
     const ringsFrontZ = calculateRingsFrontPosition(totalPages);
-    
+
     // Set the CSS variable
     root.style.setProperty('--rings-front-position', `${ringsFrontZ}px`);
-    
+
     // Verify the variable was set
     const computedValue = getComputedStyle(root).getPropertyValue('--rings-front-position');
-    
+
     console.log(`🔗 Rings position updated for ${totalPages} pages:`);
     console.log(`  - Calculated: ${ringsFrontZ}px`);
     console.log(`  - CSS Variable Set: ${computedValue}`);
-    
+
     // Force a style recalculation on rings elements
     const ringsElements = document.querySelectorAll('.rings--front');
     ringsElements.forEach(ring => {
       ring.style.transform = `translateZ(var(--rings-front-position))`;
     });
-    
   } else {
     console.warn(`🔗 Cannot update rings position: totalPages is ${totalPages}`);
   }
@@ -332,12 +376,13 @@ function updatePageContentVisibility(page, pageIndex, scrollPosition) {
   const relativePos = scrollPosition - pageIndex;
   const hasTab = page.querySelector('.page-tab') !== null;
   const isCover = page.classList.contains('cover');
-  
+
   // For pages with tabs or covers, use a larger buffer since they're always visible
   // but still hide their content when far away for performance
-  const maxBuffer = (hasTab || isCover) ? 
-    GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages * 2 : 
-    GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages;
+  const maxBuffer =
+    hasTab || isCover
+      ? GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages * 2
+      : GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages;
 
   if (Math.abs(relativePos) > maxBuffer) {
     // Too far from viewport – hide heavy content
@@ -356,14 +401,14 @@ function updatePageContentVisibility(page, pageIndex, scrollPosition) {
 function applyFlipContentVisibility(page, pageIndex, scrollPosition) {
   const relativePos = scrollPosition - pageIndex;
   const pageContent = page.querySelector('.page-content');
-  
+
   if (!pageContent) return;
-  
+
   // If this page is currently flipping (relative position between 0 and 1)
   if (relativePos >= 0 && relativePos <= 1) {
     const rotationProgress = relativePos; // 0 to 1
     const rotationDegrees = rotationProgress * 180; // 0 to 180 degrees
-    
+
     // Start fading out content at 45 degrees, completely hidden by 60 degrees
     if (rotationDegrees >= 60) {
       // Completely hidden - content invisible from 60° onwards
@@ -396,7 +441,7 @@ function applyFlipContentVisibility(page, pageIndex, scrollPosition) {
  */
 function verifyPerspectiveApplication() {
   const root = document.documentElement;
-  
+
   // Get computed CSS values
   const computedStyle = getComputedStyle(root);
   const perspectiveDistance = computedStyle.getPropertyValue('--perspective-distance').trim();
@@ -404,33 +449,27 @@ function verifyPerspectiveApplication() {
   const perspectiveOriginY = computedStyle.getPropertyValue('--perspective-origin-y').trim();
   const transformOriginX = computedStyle.getPropertyValue('--transform-origin-x').trim();
   const transformOriginY = computedStyle.getPropertyValue('--transform-origin-y').trim();
-  
+
   console.log('🔍 Perspective verification:', {
     cssVariables: {
       perspectiveDistance,
       perspectiveOriginX,
       perspectiveOriginY,
       transformOriginX,
-      transformOriginY
+      transformOriginY,
     },
     configValues: {
       perspective: GLOBAL_CONFIG.SCENE.perspective + 'px',
       perspectiveOriginX: GLOBAL_CONFIG.SCENE.perspectiveOriginX,
       perspectiveOriginY: GLOBAL_CONFIG.SCENE.perspectiveOriginY,
       transformOriginX: GLOBAL_CONFIG.SCENE.transformOriginX,
-      transformOriginY: GLOBAL_CONFIG.SCENE.transformOriginY
-    }
+      transformOriginY: GLOBAL_CONFIG.SCENE.transformOriginY,
+    },
   });
-  
+
   // Check critical 3D elements
-  const criticalElements = [
-    '.notebook',
-    '.notebook-inner', 
-    '#notebook',
-    '.page-stack',
-    '.page'
-  ];
-  
+  const criticalElements = ['.notebook', '.notebook-inner', '#notebook', '.page-stack', '.page'];
+
   criticalElements.forEach(selector => {
     const element = document.querySelector(selector);
     if (element) {
@@ -438,11 +477,11 @@ function verifyPerspectiveApplication() {
       const perspective = style.perspective;
       const perspectiveOrigin = style.perspectiveOrigin;
       const transformStyle = style.transformStyle;
-      
+
       console.log(`🎯 ${selector}:`, {
         perspective,
         perspectiveOrigin,
-        transformStyle
+        transformStyle,
       });
     }
   });
@@ -450,7 +489,7 @@ function verifyPerspectiveApplication() {
 
 /**
  * Update ring rotations and Y position based on overall flip progress
- * @param {number} scrollPosition - Current scroll position  
+ * @param {number} scrollPosition - Current scroll position
  * @param {number} totalPages - Total number of pages
  */
 function updateRingRotations(scrollPosition, totalPages) {
@@ -461,33 +500,36 @@ function updateRingRotations(scrollPosition, totalPages) {
   const startRotation = GLOBAL_CONFIG.RINGS.rotationUnflipped;
   const endRotation = GLOBAL_CONFIG.RINGS.rotationFlipped;
   const currentRotation = startRotation + (endRotation - startRotation) * overallProgress;
-  
+
   // Interpolate Y position based on config settings
   const startYPosition = GLOBAL_CONFIG.RINGS.yPositionUnflipped;
   const endYPosition = GLOBAL_CONFIG.RINGS.yPositionFlipped;
   const currentYPosition = startYPosition + (endYPosition - startYPosition) * overallProgress;
-  
+
   // Get constant scale values from config
   const scaleX = GLOBAL_CONFIG.RINGS.scaleX;
   const scaleY = GLOBAL_CONFIG.RINGS.scaleY;
-  
+
   // Apply rotations, Y position, and scale to individual ring elements
   const frontRing = document.querySelector('.rings--front');
   const backRing = document.querySelector('.rings--back');
-  
+
   if (frontRing) {
     // Maintain the existing translateZ, add rotation, Y position, and separate X/Y scaling
     frontRing.style.transform = `translateZ(var(--rings-front-position)) translateY(${currentYPosition}%) scaleX(${scaleX}) scaleY(${scaleY}) rotateX(${currentRotation}deg)`;
   }
-  
+
   if (backRing) {
     // Maintain the existing translateZ, add rotation, Y position, and separate X/Y scaling
     backRing.style.transform = `translateZ(-10px) translateY(${currentYPosition}%) scaleX(${scaleX}) scaleY(${scaleY}) rotateX(${currentRotation}deg)`;
   }
-  
+
   // Debug logging
-  if (scrollPosition % 1 === 0) { // Only log on integer scroll positions to reduce spam
-    console.log(`🔗 Ring update: rotation ${currentRotation.toFixed(1)}° | Y position ${currentYPosition.toFixed(1)}% (progress: ${(overallProgress * 100).toFixed(1)}%)`);
+  if (scrollPosition % 1 === 0) {
+    // Only log on integer scroll positions to reduce spam
+    console.log(
+      `🔗 Ring update: rotation ${currentRotation.toFixed(1)}° | Y position ${currentYPosition.toFixed(1)}% (progress: ${(overallProgress * 100).toFixed(1)}%)`
+    );
   }
 }
 
@@ -501,14 +543,16 @@ function initializeRingRotations() {
   const initialYPosition = GLOBAL_CONFIG.RINGS.yPositionUnflipped;
   const scaleX = GLOBAL_CONFIG.RINGS.scaleX;
   const scaleY = GLOBAL_CONFIG.RINGS.scaleY;
-  
+
   if (frontRing) {
     frontRing.style.transform = `translateZ(var(--rings-front-position)) translateY(${initialYPosition}%) scaleX(${scaleX}) scaleY(${scaleY}) rotateX(${initialRotation}deg)`;
   }
-  
+
   if (backRing) {
     backRing.style.transform = `translateZ(-10px) translateY(${initialYPosition}%) scaleX(${scaleX}) scaleY(${scaleY}) rotateX(${initialRotation}deg)`;
   }
-  
-  console.log(`🔗 Rings initialized at: ${initialRotation}° rotation, ${initialYPosition}% Y position, scaleX(${scaleX}) scaleY(${scaleY}) (unflipped state)`);
+
+  console.log(
+    `🔗 Rings initialized at: ${initialRotation}° rotation, ${initialYPosition}% Y position, scaleX(${scaleX}) scaleY(${scaleY}) (unflipped state)`
+  );
 }
