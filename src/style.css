@@ -398,7 +398,7 @@ main:not(.page-wrapper) {
   /* Inherit border radius from parent and hide overflow for clean edges */
   border-radius: inherit;
   overflow: hidden;
-  background-color: #f5f5f5;
+  background-color: var(--page-color, #f5f5f5);
   background-image:
     url('./assets/background-assets/paper-holes.webp'), linear-gradient(231deg, #aca9a3a1, #0000);
   background-position:
@@ -418,6 +418,16 @@ main:not(.page-wrapper) {
   transform-style: preserve-3d;
 }
 
+/* Colored pages - use custom page color */
+.page--colored .page-front {
+  background-color: var(--page-color);
+}
+
+/* Colored pages back face */
+.page--colored .page-back {
+  background: var(--page-color);
+}
+
 /* Page Back Face - visible when page is flipped */
 .page-back {
   position: absolute;
@@ -429,11 +439,35 @@ main:not(.page-wrapper) {
   /* Inherit border radius from parent for consistency */
   border-radius: inherit;
   overflow: hidden;
-  background: var(--backface-color, rgba(0, 0, 0, 0.8));
+  /* Use same background as page-front for consistency */
+  background: var(--backface-color, #f5f5f5);
   transform: rotateX(180deg) translateZ(-1px);
   /* Performance optimization */
   will-change: transform;
   contain: layout style;
+}
+
+/* Shadow gradient overlay on backface for realistic depth */
+.page-back::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* Conditional gradient based on config */
+  background: var(--backface-shadow-gradient, none);
+  /* Dynamic opacity controlled by rotation animation */
+  opacity: var(--backface-shadow-opacity, var(--backface-shadow-enabled, 0));
+  border-radius: inherit;
+  pointer-events: none;
+  /* Performance optimizations */
+  will-change: opacity, transform;
+  transform: translateZ(0);
+  /* GPU acceleration for smooth rendering */
+  backface-visibility: hidden;
+  /* Smooth opacity transition for realistic lighting changes */
+  transition: opacity 60ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .page-content {
@@ -832,6 +866,8 @@ h2 {
   border-radius: 4px;
   box-sizing: border-box;
   transform-style: flat;
+  /* Remove any transform to keep tabs straight */
+  transform: none;
 }
 
 .tab-with-image {

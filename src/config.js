@@ -170,7 +170,7 @@ export const GLOBAL_CONFIG = {
    * Controls the appearance and behavior of page backs
    */
   BACKFACE: {
-    color: 'rgba(0, 0, 0, 0.85)', // Semi-transparent black for testing (slightly darker)
+    color: '#f5f5f5', // Same as page-front background color
     gradient: null, // Optional gradient override (null = use solid color)
     texture: null, // Optional texture/pattern URL
     borderRadius: 'inherit', // Inherit from page-front
@@ -178,6 +178,45 @@ export const GLOBAL_CONFIG = {
     // Alternative backface colors for different page types
     coverColor: 'rgba(139, 69, 19, 0.9)', // Darker brown for covers
     videoPageColor: 'rgba(0, 0, 0, 0.9)', // Darker black for video pages
+    
+    // Shadow gradient settings for realistic depth
+    shadowGradient: {
+      enabled: true,
+      direction: 'to bottom', // CSS gradient direction
+      startColor: 'rgba(0, 0, 0, 0.3)', // Top shadow (lighter)
+      endColor: 'rgba(0, 0, 0, 0.8)', // Bottom shadow (darker)
+      startPosition: '0%', // Where gradient starts
+      endPosition: '100%', // Where gradient ends
+      
+      // Animation settings during page flip
+      animation: {
+        enabled: true,
+        maxOpacity: 1.0, // Full opacity when page is flat (not rotating)
+        minOpacity: 0.3, // Minimum opacity during rotation
+        fadeStartAngle: 10, // Degrees - when fade starts
+        fadeEndAngle: 170, // Degrees - when fade completes
+      },
+    },
+  },
+
+  // Application colors
+  COLORS: {
+    // Default page color
+    default: '#f5f5f5',
+    
+    // Pastel color palette for chapter covers and tabs
+    palette: {
+      coral: '#ffb3ba',      // Soft coral pink
+      peach: '#ffdfba',      // Gentle peach
+      lavender: '#bae1ff',   // Light lavender blue
+      mint: '#baffc9',       // Soft mint green
+      lemon: '#ffffba',      // Pale lemon yellow
+      rose: '#ffb3e6',       // Light rose pink
+      sky: '#c9e4ff',        // Soft sky blue
+      sage: '#c9ffba',       // Sage green
+      cream: '#fff2e6',      // Warm cream
+      lilac: '#e6ccff'       // Soft lilac
+    }
   },
 };
 
