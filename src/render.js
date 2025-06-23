@@ -297,6 +297,16 @@ export function initializeRenderingContext(totalPages = 0) {
   root.style.setProperty('--page-shadow-angle', `${shadowCfg.gradientAngle}deg`);
   root.style.setProperty('--shadow-mid-stop', `${shadowCfg.gradientMidStop}%`);
 
+  // Apply backface settings from config
+  const backfaceCfg = GLOBAL_CONFIG.BACKFACE;
+  root.style.setProperty('--backface-color', backfaceCfg.color);
+  if (backfaceCfg.gradient) {
+    root.style.setProperty('--backface-gradient', backfaceCfg.gradient);
+  }
+  if (backfaceCfg.texture) {
+    root.style.setProperty('--backface-texture', `url('${backfaceCfg.texture}')`);
+  }
+
   // Initialize the 3D notebook depth system
   if (totalPages > 0) {
     initializeDepthSystem(totalPages);
@@ -370,7 +380,7 @@ export function updateRingsPosition(totalPages) {
  * @param {number} scrollPosition - Current scroll position
  */
 function updatePageContentVisibility(page, pageIndex, scrollPosition) {
-  const contentEl = page.querySelector('.page-content');
+  const contentEl = page.querySelector('.page-front .page-content');
   if (!contentEl) return;
 
   const relativePos = scrollPosition - pageIndex;
@@ -400,9 +410,10 @@ function updatePageContentVisibility(page, pageIndex, scrollPosition) {
  */
 function applyFlipContentVisibility(page, pageIndex, scrollPosition) {
   const relativePos = scrollPosition - pageIndex;
-  const pageContent = page.querySelector('.page-content');
+  const pageFront = page.querySelector('.page-front');
+  const pageContent = page.querySelector('.page-front .page-content');
 
-  if (!pageContent) return;
+  if (!pageContent || !pageFront) return;
 
   // If this page is currently flipping (relative position between 0 and 1)
   if (relativePos >= 0 && relativePos <= 1) {
@@ -413,26 +424,26 @@ function applyFlipContentVisibility(page, pageIndex, scrollPosition) {
     if (rotationDegrees >= 60) {
       // Completely hidden - content invisible from 60° onwards
       page.classList.add('page--showing-backface');
-      pageContent.style.opacity = '0';
+      pageFront.style.opacity = '0';
     } else if (rotationDegrees >= 45) {
       // Gradual fade from 45° to 60° (opacity goes from 1 to 0)
       page.classList.remove('page--showing-backface');
       const fadeProgress = (rotationDegrees - 45) / 15; // 0 to 1 over 15 degrees
       const opacity = 1 - fadeProgress;
-      pageContent.style.opacity = Math.max(0, opacity).toString();
+      pageFront.style.opacity = Math.max(0, opacity).toString();
     } else {
       // Fully visible - showing front side
       page.classList.remove('page--showing-backface');
-      pageContent.style.opacity = '1';
+      pageFront.style.opacity = '1';
     }
   } else if (relativePos > 1) {
     // Page has been completely flipped (showing backside permanently)
     page.classList.add('page--showing-backface');
-    pageContent.style.opacity = '0';
+    pageFront.style.opacity = '0';
   } else {
     // Page hasn't started flipping yet (showing front side)
     page.classList.remove('page--showing-backface');
-    pageContent.style.opacity = '1';
+    pageFront.style.opacity = '1';
   }
 }
 
