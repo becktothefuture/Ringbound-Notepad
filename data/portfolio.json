@@ -20,6 +20,7 @@
       "id": "chapter-1",
       "title": "Chapter 1",
       "tabImage": "sandp.png",
+      "color": "coral",
       "pages": [
         {
           "asset": "chapter-1-1.jpg",
@@ -107,6 +108,7 @@
       "id": "chapter-2",
       "title": "Chapter 2",
       "tabImage": "bentley.png",
+      "color": "peach",
       "pages": [
         {
           "asset": "chapter-2-1.jpg",
@@ -214,6 +216,7 @@
       "id": "chapter-3",
       "title": "Chapter 3",
       "tabImage": "yoti.png",
+      "color": "lavender",
       "pages": [
         {
           "asset": "chapter-3-1.jpg",
@@ -276,6 +279,7 @@
       "id": "chapter-4",
       "title": "Chapter 4",
       "tabImage": "sunexpress.png",
+      "color": "mint",
       "pages": [
         {
           "asset": "chapter-4-1.jpg",
@@ -323,6 +327,7 @@
       "id": "chapter-5",
       "title": "Chapter 5",
       "tabImage": "spacialweb.png",
+      "color": "lemon",
       "pages": [
         {
           "asset": "chapter-5-1.jpg",
@@ -365,6 +370,7 @@
       "id": "chapter-6",
       "title": "Chapter 6",
       "tabImage": "aboutme.png",
+      "color": "rose",
       "pages": [
         {
           "asset": "chapter-6-1.jpg",

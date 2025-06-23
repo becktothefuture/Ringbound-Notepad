@@ -363,11 +363,16 @@ export function createPagesFromPortfolioData(container, portfolioData) {
   portfolioData.projects.forEach((project, projectIndex) => {
     const chapterStartPage = globalPageIndex;
 
+    // Get color from project data, fallback to default
+    const projectColor = project.color 
+      ? GLOBAL_CONFIG.COLORS.palette[project.color] 
+      : GLOBAL_CONFIG.COLORS.default;
+
     // Update CHAPTERS array for navigation
     CHAPTERS.push({
       title: project.title,
       page: chapterStartPage,
-      color: `hsl(${(projectIndex * 47) % 360}, 70%, 85%)`,
+      color: projectColor,
       tabImage: project.tabImage, // Add tab image reference
     });
 
@@ -375,6 +380,13 @@ export function createPagesFromPortfolioData(container, portfolioData) {
     project.pages.forEach((pageData, pageIndex) => {
       try {
         const pageEl = createPageElement(pageData, project.id, pageIndex, globalPageIndex);
+        
+        // Apply color to chapter start page (first page of each project)
+        if (pageIndex === 0 && project.color) {
+          pageEl.style.setProperty('--page-color', projectColor);
+          pageEl.classList.add('page--colored');
+        }
+        
         pageStack.appendChild(pageEl);
         pages.push(pageEl);
         globalPageIndex++;

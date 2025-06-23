@@ -42,9 +42,8 @@ export function initChapters(pages, notebook) {
       const leftPositionPercent = index * (tabWidthPercent + TAB_SPACING_PERCENT);
       tab.style.left = `${leftPositionPercent}%`;
 
-      // Add a subtle, more random rotation for each tab
-      const rotation = Math.random() * 8 - 4; // random between -4 and 4 degrees
-      tab.style.transform = `rotate(${rotation.toFixed(2)}deg)`;
+      // Remove random rotation - keep tabs straight
+      // tab.style.transform = `rotate(${rotation.toFixed(2)}deg)`;
 
       // Set tab background image if available
       if (chapter.tabImage) {

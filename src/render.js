@@ -142,6 +142,9 @@ export function render(pages, scrollState) {
 
     // Apply transforms with clean CSS approach
     applyPageTransform(page, transformData);
+
+    // Update backface shadow animation based on page rotation
+    updateBackfaceShadowAnimation(page, i, scroll);
   }
 
   // Update ring rotations based on overall flip progress
@@ -305,6 +308,16 @@ export function initializeRenderingContext(totalPages = 0) {
   }
   if (backfaceCfg.texture) {
     root.style.setProperty('--backface-texture', `url('${backfaceCfg.texture}')`);
+  }
+
+  // Apply backface shadow gradient settings
+  const shadowGradientCfg = backfaceCfg.shadowGradient;
+  if (shadowGradientCfg.enabled) {
+    const gradient = `linear-gradient(${shadowGradientCfg.direction}, ${shadowGradientCfg.startColor} ${shadowGradientCfg.startPosition}, ${shadowGradientCfg.endColor} ${shadowGradientCfg.endPosition})`;
+    root.style.setProperty('--backface-shadow-gradient', gradient);
+    root.style.setProperty('--backface-shadow-enabled', '1');
+  } else {
+    root.style.setProperty('--backface-shadow-enabled', '0');
   }
 
   // Initialize the 3D notebook depth system
@@ -566,4 +579,49 @@ function initializeRingRotations() {
   console.log(
     `🔗 Rings initialized at: ${initialRotation}° rotation, ${initialYPosition}% Y position, scaleX(${scaleX}) scaleY(${scaleY}) (unflipped state)`
   );
+}
+
+/**
+ * Update backface shadow animation based on page rotation
+ * @param {HTMLElement} page - Page element
+ * @param {number} pageIndex - Index of this page
+ * @param {number} scrollPosition - Current scroll position
+ */
+function updateBackfaceShadowAnimation(page, pageIndex, scrollPosition) {
+  const backfaceEl = page.querySelector('.page-back');
+  if (!backfaceEl) return;
+
+  const shadowConfig = GLOBAL_CONFIG.BACKFACE.shadowGradient.animation;
+  if (!shadowConfig.enabled) return;
+
+  const relativePos = scrollPosition - pageIndex;
+  
+  // Only animate during flip (relative position between 0 and 1)
+  if (relativePos >= 0 && relativePos <= 1) {
+    const rotationProgress = relativePos; // 0 to 1
+    const rotationDegrees = rotationProgress * 180; // 0 to 180 degrees
+
+    // Calculate opacity based on rotation angle
+    let shadowOpacity = shadowConfig.maxOpacity;
+    
+    if (rotationDegrees >= shadowConfig.fadeStartAngle && rotationDegrees <= shadowConfig.fadeEndAngle) {
+      // Calculate fade progress within the specified angle range
+      const fadeRange = shadowConfig.fadeEndAngle - shadowConfig.fadeStartAngle;
+      const fadeProgress = (rotationDegrees - shadowConfig.fadeStartAngle) / fadeRange;
+      
+      // Interpolate between max and min opacity
+      shadowOpacity = shadowConfig.maxOpacity - (fadeProgress * (shadowConfig.maxOpacity - shadowConfig.minOpacity));
+    } else if (rotationDegrees > shadowConfig.fadeEndAngle) {
+      shadowOpacity = shadowConfig.minOpacity;
+    }
+
+    // Apply the calculated opacity to the pseudo-element via CSS custom property
+    backfaceEl.style.setProperty('--backface-shadow-opacity', shadowOpacity.toString());
+  } else if (relativePos > 1) {
+    // Page has been completely flipped - use minimum opacity
+    backfaceEl.style.setProperty('--backface-shadow-opacity', shadowConfig.minOpacity.toString());
+  } else {
+    // Page hasn't started flipping yet - use maximum opacity
+    backfaceEl.style.setProperty('--backface-shadow-opacity', shadowConfig.maxOpacity.toString());
+  }
 }
