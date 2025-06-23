@@ -19,16 +19,16 @@
   --webflow-gray: #b1b1b1;
   --webflow-paper: #dfdcd8;
   --webflow-paper-shadow: #aca9a3a1;
-  
+
   /* Typography */
-  --font-family: 'Uncut Sans', system-ui, sans-serif;
-  --webflow-font-tiny: 'Tiny5', sans-serif;
-  
+  --font-family: 'Geist', system-ui, sans-serif;
+  --webflow-font-tiny: 'Tiny5', monospace;
+
   /* Layout Settings */
   --page-aspect-ratio: calc(4 / 3);
   --safe-zone-height: 50px;
   --cover-size-multiplier: 1.01;
-  
+
   /* 3D Settings - Sync with config.js */
   --perspective-distance: 10000px;
   --perspective-origin-x: 50%;
@@ -37,19 +37,19 @@
   --page-rotation-origin-y: -1%;
   --transform-origin-x: 50%;
   --transform-origin-y: 0%;
-  
+
   /* Z-Index System */
   --ring-z-index: 0;
   --active-page-z-index: 1000;
   --front-cover-z-index: 300;
   --back-cover-z-index: 1;
-  
+
   /* Performance Settings */
-  --quality-scale: 1.0;
+  --quality-scale: 1;
   --max-visible-pages: 15;
   --shadow-quality: normal;
   --blur-quality: 2px;
-  
+
   /* Shadow System */
   --shadow-layers: 3;
   --shadow-color: rgba(0, 0, 0, 0.2);
@@ -58,58 +58,64 @@
   --shadow-x-offset: 0px;
   --shadow-y-offset: 2px;
   --shadow-transition: transform 0.2s ease-out;
-  
+
   /* Dynamic Positioning */
   --rings-front-position: 175px;
+
+  /* Zoom Configuration */
+  --notebook-zoom-scale: 0.8;
+  --notebook-zoom-focused-scale: 1.0;
+  --background-zoom-scale: 1.0;
+  --background-zoom-focused-scale: 1.04;
+  --zoom-duration: 600ms;
+  --zoom-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* SVG Noise Configuration */
+  --noise-base-frequency: 0.134;
+  --noise-octaves: 4;
+  --noise-seed: 15;
+  --noise-surface-scale: 7;
+  --noise-specular-constant: 0.8;
+  --noise-specular-exponent: 20;
+  --noise-lighting-color: #5a657e;
+  --noise-azimuth: 3;
+  --noise-elevation: 62;
+  --noise-opacity: 0.6;
+  --noise-blend-mode: normal;
+  --noise-size: 100px;
+
+  /* Page Shadow Settings */
+  --page-shadow-start: rgba(0,0,0,0.8);
+  --page-shadow-mid: rgba(0,0,0,0.5);
+  --page-shadow-end: rgba(0,0,0,0);
+  --shadow-mid-stop: 50%;
+  --page-shadow-angle: 170deg;
 }
 
 /* =====================================================
-   2. FONT FACES
+   2. FONT CONFIGURATION
    ===================================================== */
-@font-face {
-  font-family: 'Uncut Sans';
-  src: url('./assets/fonts/UncutSans-Regular.woff2') format('woff2'),
-       url('./assets/fonts/UncutSans-Regular.woff') format('woff'),
-       url('./assets/fonts/UncutSans-Regular.otf') format('opentype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Uncut Sans';
-  src: url('./assets/fonts/UncutSans-Medium.woff2') format('woff2'),
-       url('./assets/fonts/UncutSans-Medium.woff') format('woff');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Uncut Sans';
-  src: url('./assets/fonts/UncutSans-Light.otf') format('opentype');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Uncut Sans';
-  src: url('./assets/fonts/UncutSans-LightItalic.otf') format('opentype');
-  font-weight: 300;
-  font-style: italic;
-  font-display: swap;
-}
+/* Fonts are now loaded from Google Fonts:
+   - Geist: Primary font for all text
+   - Tiny5: Commentary/pixel screen text only
+*/
 
 /* =====================================================
    3. GLOBAL RESET & BASE STYLES
    ===================================================== */
-body, html {
+body,
+html {
   height: 100%;
   margin: 0;
   padding: 0;
   overflow: hidden; /* Prevent unwanted scrollbars */
   /* Removed transform-style: preserve-3d to avoid clipping in some browsers */
+  
+  /* HOUSEKEEPING: Disable text selection globally */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 body {
@@ -123,17 +129,63 @@ body {
   justify-content: center;
   transition: var(--theme-transition);
   /* Removed transform-style: preserve-3d */
+  cursor: zoom-in; /* Visual hint that clicking will zoom */
 }
 
-body, * {
-  font-family: 'Uncut Sans', system-ui, sans-serif !important;
+body.zoom-focused {
+  cursor: zoom-out; /* Visual hint that clicking will zoom out */
+}
+
+/* Add subtle visual feedback on hover for zoom areas */
+body:hover {
+  background-color: color-mix(in srgb, var(--browser-color) 95%, #007bff 5%);
+  transition: background-color 200ms ease;
+}
+
+/* Enable zoom cursor on the entire notebook area */
+.page-wrapper {
+  cursor: zoom-in;
+}
+
+.page-wrapper.zoom-focused {
+  cursor: zoom-out;
+}
+
+/* Subtle hover feedback for the entire clickable area */
+.page-wrapper:hover {
+  background-color: color-mix(in srgb, transparent 97%, #007bff 3%);
+}
+
+/* Disable zoom cursor only on specific interactive elements */
+.rings,
+.rings-wrapper,
+.commentary,
+.overlay--rotate,
+.heading-wrapper,
+h1,
+h2 {
+  cursor: default !important;
+}
+
+body,
+* {
+  font-family: 'Geist', system-ui, sans-serif !important;
+  
+  /* HOUSEKEEPING: Add smooth easing to all elements that don't have specific transitions */
+  transition: 
+    opacity 300ms ease,
+    transform 300ms ease,
+    background-color 300ms ease,
+    color 300ms ease,
+    border-color 300ms ease,
+    box-shadow 300ms ease;
 }
 
 /* Webflow Body Override */
 .body {
   background-color: var(--webflow-gray);
   color: #333;
-  font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
+  font-family: 'Geist', system-ui, sans-serif;
   font-size: 12px;
   line-height: 20px;
   /* Removed transform-style: preserve-3d */
@@ -211,7 +263,23 @@ main:not(.page-wrapper) {
   /* Optimize 3D rendering at larger viewports */
   will-change: transform;
   backface-visibility: hidden;
+  
+  /* ZOOM FUNCTIONALITY - Apply to parent container for better performance */
+  transform: scale(var(--notebook-zoom-scale));
+  transform-origin: 50% 60%;
+  transition: transform var(--zoom-duration) var(--zoom-easing);
 }
+
+.notebook.notebook--focused {
+  transform: scale(var(--notebook-zoom-focused-scale));
+}
+
+.notebook.notebook--transitioning {
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* Zoom functionality moved to parent .notebook container for better performance */
 
 .notebook-inner {
   z-index: 10;
@@ -237,10 +305,9 @@ main:not(.page-wrapper) {
   --shadow-blur: 28px;
   --shadow-offset-y: 60px;
   --shadow-anim-duration: 0.3s;
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  transform-origin: center center;
   z-index: 100;
   transform-style: preserve-3d;
+  /* Zoom functionality moved to parent .notebook container */
 }
 
 #notebook:not(.notebook-inner) {
@@ -254,7 +321,10 @@ main:not(.page-wrapper) {
   transform-style: preserve-3d;
   overflow: visible;
   margin: auto;
-  top: 0; left: 0; bottom: 0; right: 0;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
   --shadow-layers: 5;
   --shadow-color: 0, 0, 0;
   --shadow-opacity: 0.35;
@@ -266,9 +336,7 @@ main:not(.page-wrapper) {
   transform-origin: center center;
 }
 
-#notebook.notebook--zoomed {
-  transform: scale(2);
-}
+/* Zoom classes removed - using .notebook--focused instead */
 
 /* =====================================================
    7. PAGE SYSTEM
@@ -297,13 +365,18 @@ main:not(.page-wrapper) {
   transform-origin: var(--transform-origin-x, 50%) var(--transform-origin-y, 0%) 0;
   transform-style: preserve-3d;
   backface-visibility: hidden;
-  border-radius: .5em .5em var(--cover-radius) var(--cover-radius);
+  border-radius: 0.5em 0.5em var(--cover-radius) var(--cover-radius);
   background-color: #f5f5f5;
-  background-image: url('./assets/background-assets/paper-holes.webp'), linear-gradient(231deg, #aca9a3a1, #0000);
-  background-position: 50% -14%, 0 0;
+  background-image:
+    url('./assets/background-assets/paper-holes.webp'), linear-gradient(231deg, #aca9a3a1, #0000);
+  background-position:
+    50% -14%,
+    0 0;
   background-repeat: no-repeat, repeat;
-  background-size: 100% auto, auto;
-  box-shadow: 
+  background-size:
+    100% auto,
+    auto;
+  box-shadow:
     0 4px 8px rgba(0, 0, 0, 0.02),
     0 8px 16px rgba(0, 0, 0, 0.01),
     inset 0 -1px 0 rgba(0, 0, 0, 0.3);
@@ -315,7 +388,12 @@ main:not(.page-wrapper) {
   isolation: isolate;
   /* Prevent flashing during transforms */
   opacity: 1;
-  transition: opacity 0.1s ease-out;
+  transition: 
+    opacity 150ms cubic-bezier(0.4, 0.0, 0.2, 1),
+    filter 100ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
+  /* Motion blur effects applied via JavaScript */
+  filter: var(--motion-blur-filter, none);
 }
 
 .page::after {
@@ -326,49 +404,9 @@ main:not(.page-wrapper) {
   width: 100%;
   height: 100%;
   background: #a5a5a5;
-  border-radius: .5em .5em var(--cover-radius) var(--cover-radius);
+  border-radius: 0.5em 0.5em var(--cover-radius) var(--cover-radius);
   transform: rotateX(180deg) translateZ(-1px);
   backface-visibility: hidden;
-}
-
-.page::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    180deg, 
-    rgba(0,0,0,0.15) 0%, 
-    rgba(0,0,0,0.08) 20%, 
-    rgba(0,0,0,0.02) 50%, 
-    transparent 70%
-  );
-  border-radius: inherit;
-  pointer-events: none;
-  transform: translateZ(1px);
-  opacity: 1;
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.page.flipped::before {
-  background: linear-gradient(
-    0deg, 
-    rgba(0,0,0,0.15) 0%, 
-    transparent 15%
-  );
-  transform: translateZ(1px) rotateY(180deg);
-}
-
-.page.shadow-reduced::before {
-  opacity: 0.3;
-  transform: translateZ(1px) translateY(-10px);
-}
-
-.page.shadow-hidden::before {
-  opacity: 0;
-  transform: translateZ(1px) translateY(-20px);
 }
 
 .page-content {
@@ -379,7 +417,7 @@ main:not(.page-wrapper) {
   padding: 2%;
   box-sizing: border-box;
   /* Ensure content fades appropriately during flip */
-  transition: opacity 0.1s ease-out;
+  transition: opacity 150ms cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 .page-content *,
@@ -439,15 +477,29 @@ main:not(.page-wrapper) {
 .cover.cover--back,
 .cover.cover--front {
   z-index: auto !important;
-  background-image: linear-gradient(38deg, #0000001a, #0000), url('./assets/background-assets/images/cardboard.jpg');
-  background-position: 0 0, 0 0;
+  background-image:
+    linear-gradient(38deg, #0000001a, #0000), url('./assets/background-assets/images/cardboard.jpg');
+  background-position:
+    0 0,
+    0 0;
   background-size: auto, auto;
-  border-top-left-radius: .5em;
-  border-top-right-radius: .5em;
-  box-shadow: 
-    inset 0 3px 2px #c29154, inset 0 -2px 3px 2px #664620,
-    0 0 #0000, -.2px .4px #0000000e, -.4px .9px .1px #0001, -.7px 1.6px .5px #00000013, -1.2px 2.8px 1.3px #00000014, -2.1px 5px 2.9px #00000015, -3.8px 8.9px 6.2px #00000015, -7.1px 16.7px 13px #00000016, -14.9px 35.1px 29.5px #00000018,
-    0 2px 4px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.05), 0 8px 16px rgba(0, 0, 0, 0.03);
+  border-top-left-radius: 0.5em;
+  border-top-right-radius: 0.5em;
+  box-shadow:
+    inset 0 3px 2px #c29154,
+    inset 0 -2px 3px 2px #664620,
+    0 0 #0000,
+    -0.2px 0.4px #0000000e,
+    -0.4px 0.9px 0.1px #0001,
+    -0.7px 1.6px 0.5px #00000013,
+    -1.2px 2.8px 1.3px #00000014,
+    -2.1px 5px 2.9px #00000015,
+    -3.8px 8.9px 6.2px #00000015,
+    -7.1px 16.7px 13px #00000016,
+    -14.9px 35.1px 29.5px #00000018,
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    0 4px 8px rgba(0, 0, 0, 0.05),
+    0 8px 16px rgba(0, 0, 0, 0.03);
   position: relative;
 }
 
@@ -517,13 +569,13 @@ main:not(.page-wrapper) {
   transform-origin: center center;
   transform-style: preserve-3d;
   will-change: transform;
-  transition: transform 0.1s ease-out;
+  transition: transform 120ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
   box-sizing: border-box;
 }
 
 .rings--front {
   top: 0;
-  opacity: 1.0;
+  opacity: 1;
   transform: translateZ(var(--rings-front-position));
   transform-style: preserve-3d;
   width: 100% !important;
@@ -548,7 +600,7 @@ main:not(.page-wrapper) {
   pointer-events: none;
   z-index: 0;
   box-sizing: border-box;
-  box-shadow: 
+  box-shadow:
     0px 10px 15px -3px hsla(0, 5%, 0%, 0.1),
     0px 30px 30px -10px hsla(0, 5%, 0%, 0.15),
     0px 60px 50px -15px hsla(0, 5%, 0%, 0.2);
@@ -564,9 +616,12 @@ main:not(.page-wrapper) {
   pointer-events: none;
   transform-style: preserve-3d;
   box-shadow:
-    calc(var(--shadow-x-offset)) var(--shadow-y-offset) var(--shadow-blur) var(--shadow-spread) var(--shadow-color),
-    calc(var(--shadow-x-offset) * 1.5) calc(var(--shadow-y-offset) * 2) calc(var(--shadow-blur) * 2) calc(var(--shadow-spread) * 2) var(--shadow-color),
-    calc(var(--shadow-x-offset) * 2) calc(var(--shadow-y-offset) * 3) calc(var(--shadow-blur) * 3) calc(var(--shadow-spread) * 3) var(--shadow-color);
+    calc(var(--shadow-x-offset)) var(--shadow-y-offset) var(--shadow-blur) var(--shadow-spread)
+      var(--shadow-color),
+    calc(var(--shadow-x-offset) * 1.5) calc(var(--shadow-y-offset) * 2) calc(var(--shadow-blur) * 2)
+      calc(var(--shadow-spread) * 2) var(--shadow-color),
+    calc(var(--shadow-x-offset) * 2) calc(var(--shadow-y-offset) * 3) calc(var(--shadow-blur) * 3)
+      calc(var(--shadow-spread) * 3) var(--shadow-color);
   transition: var(--shadow-transition);
   will-change: transform;
 }
@@ -586,7 +641,12 @@ main:not(.page-wrapper) {
   width: 232%;
   display: block;
   position: absolute;
-  transform: translate3d(0, 4vh, -1px);
+  transform: translate3d(0, 4vh, -1px) scale(var(--background-zoom-scale));
+  transition: transform var(--zoom-duration) var(--zoom-easing);
+}
+
+.notebook--focused .notebook-background {
+  transform: translate3d(0, 4vh, -1px) scale(var(--background-zoom-focused-scale));
 }
 
 .pixel-screen {
@@ -600,14 +660,14 @@ main:not(.page-wrapper) {
 
 .pixel-screen__text {
   color: #fefdfb;
-  letter-spacing: .05ch;
+  letter-spacing: 0.05ch;
   -webkit-text-stroke-width: 1px;
   -webkit-text-stroke-color: #77d8ff;
-  text-shadow: 0 0 .5em #2ea5df;
+  text-shadow: 0 0 0.5em #2ea5df;
   word-break: break-all;
-  padding: .5em;
-  font-family: var(--webflow-font-tiny);
-  font-size: calc(clamp(1.1em, 1.5vw - .092em, 2.7em));
+  padding: 0.5em;
+  font-family: 'Tiny5', monospace !important;
+  font-size: calc(clamp(1.1em, 1.5vw - 0.092em, 2.7em));
   line-height: 1.3;
   overflow: hidden;
 }
@@ -683,21 +743,23 @@ main:not(.page-wrapper) {
 h1 {
   margin-top: 0;
   margin-bottom: 0;
-  font-size: 2.4em;
+  font-size: 1.5em;
   font-weight: 700;
+  font-family: 'Geist', system-ui, sans-serif;
 }
 
 h2 {
   margin-top: 0;
   margin-bottom: 0;
-  font-size: 2.2em;
+  font-size: 1.5em;
   font-weight: 400;
   line-height: 36px;
+  font-family: 'Geist', system-ui, sans-serif;
 }
 
 .commentary {
   position: absolute;
-  bottom: 3rem;
+  bottom: 2rem;
   width: 100%;
   text-align: center;
   font-style: italic;
@@ -707,12 +769,18 @@ h2 {
   text-shadow: 0 1px 2px var(--browser-button-outline);
   z-index: 101;
   transform: translateZ(0.2px);
+  font-family: 'Tiny5', monospace !important;
+  transition: 
+    opacity 300ms cubic-bezier(0.4, 0.0, 0.2, 1),
+    transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-
 
 .commentary-overlay.visible {
   opacity: 1;
   transform: translate(-50%, 0);
+  transition: 
+    opacity 200ms cubic-bezier(0.4, 0.0, 0.2, 1),
+    transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .page-tab {
@@ -722,11 +790,14 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-family);
+  font-family: 'Geist', system-ui, sans-serif;
   font-weight: 600;
   color: transparent !important;
   text-align: center;
-  transition: transform 0.2s ease-out;
+  transition: 
+    transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    opacity 150ms cubic-bezier(0.4, 0.0, 0.2, 1),
+    filter 100ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
   background: #fff;
   pointer-events: auto;
   filter: none !important;
@@ -747,8 +818,8 @@ h2 {
 
 .overlay--rotate {
   z-index: 999;
-  grid-column-gap: .5em;
-  grid-row-gap: .5em;
+  grid-column-gap: 0.5em;
+  grid-row-gap: 0.5em;
   text-align: center;
   background-color: #b9bcbd;
   flex-flow: column;
@@ -812,10 +883,6 @@ h2 {
   .page {
     box-shadow: var(--shadow-quality, none);
   }
-  
-  .page::before {
-    display: var(--shadow-quality, none);
-  }
 }
 
 @media (--quality-scale < 0.7) {
@@ -848,6 +915,50 @@ h2 {
   backface-visibility: hidden !important;
   display: block;
   box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ensure videos respect container boundaries */
+.page-content__inner.page-content__media--video {
+  max-height: calc(100% - 4%); /* Account for page-content padding */
+  object-fit: contain;
+  object-position: center;
+}
+
+/* Video container: 16:9 aspect ratio mask for all content */
+.page-content--video-container {
+  aspect-ratio: 16 / 9 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  align-self: center !important;
+  position: relative !important;
+  background: #000; /* Optional: black bars for letterboxing */
+}
+
+.page--video-page {
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Video fills the 16:9 container completely */
+.page-content__media--video.page-content__inner {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important; /* Fill the container, crop if needed */
+  object-position: center !important;
+  display: block !important;
+}
+
+/* Ensure video containers have no padding that interferes */
+.page-content--video-container.page-content--bottom,
+.page-content--video-container.page-content--center,
+.page-content--video-container.page-content--top {
+  padding: 0 !important;
 }
 
 /* Cover content styles moved to utility section */
@@ -855,7 +966,6 @@ h2 {
 .cover-title h1 {
   font-size: 2.5em;
   font-weight: 700;
-
 }
 
 .cover-title p {
@@ -902,14 +1012,15 @@ h2 {
 }
 
 .page-content--hidden {
-  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none;
+  transition: opacity 200ms cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 /* Hide content completely when page is showing its backside */
 .page--showing-backface .page-content {
   opacity: 0;
-  backface-visibility: hidden;
-  transition: opacity 0.1s ease-out;
+  transition: opacity 100ms cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 .page--showing-backface .page-content *,
@@ -935,4 +1046,116 @@ h2 {
   pointer-events: none;
   user-select: none;
   opacity: 0.9;
+}
+
+/* =====================================================
+   15. RGB NOISE SYSTEM (CSS-based, high performance)
+   ===================================================== */
+
+/* Apply SVG noise texture to the body using configurable background */
+body::before {
+  content: '';
+  position: fixed;
+  /* 120% size, centered with 10% margin on all sides for movement range */
+  top: -10vh;
+  left: -10vw;
+  width: 120vw;
+  height: 120vh;
+  pointer-events: none;
+  z-index: 99999;
+  opacity: var(--noise-opacity);
+  mix-blend-mode: var(--noise-blend-mode);
+  
+  /* SVG noise texture as repeating background - dynamically generated */
+  background-image: var(--noise-svg-url, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' version='1.1' xmlns:xlink='http://www.w3.org/1999/xlink' xmlns:svgjs='http://svgjs.dev/svgjs' viewBox='0 0 700 700' width='700' height='700'%3E%3Cdefs%3E%3Cfilter id='nnnoise-filter' x='-20%25' y='-20%25' width='140%25' height='140%25' filterUnits='objectBoundingBox' primitiveUnits='userSpaceOnUse' color-interpolation-filters='linearRGB'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.134' numOctaves='4' seed='15' stitchTiles='stitch' x='0%25' y='0%25' width='100%25' height='100%25' result='turbulence'%3E%3C/feTurbulence%3E%3CfeSpecularLighting surfaceScale='7' specularConstant='0.8' specularExponent='20' lighting-color='%235a657e' x='0%25' y='0%25' width='100%25' height='100%25' in='turbulence' result='specularLighting'%3E%3CfeDistantLight azimuth='3' elevation='62'%3E%3C/feDistantLight%3E%3C/feSpecularLighting%3E%3CfeColorMatrix type='saturate' values='0' x='0%25' y='0%25' width='100%25' height='100%25' in='specularLighting' result='colormatrix'%3E%3C/feColorMatrix%3E%3C/filter%3E%3C/defs%3E%3Crect width='700' height='700' fill='transparent'%3E%3C/rect%3E%3Crect width='700' height='700' fill='%235a657e' filter='url(%23nnnoise-filter)'%3E%3C/rect%3E%3C/svg%3E"));
+  background-size: var(--noise-size);
+  background-repeat: repeat;
+  
+  /* Constantly moving grain effect in steps of 20px every 0.5s */
+  animation: grainMovement 0.5s infinite steps(1, end);
+}
+
+/* Film grain effect - constantly jumping in large steps every 0.5s */
+@keyframes grainMovement {
+  0% { transform: translate(0px, 0px); }
+  10% { transform: translate(20px, -15px); }
+  20% { transform: translate(-25px, 10px); }
+  30% { transform: translate(15px, 25px); }
+  40% { transform: translate(-20px, -8px); }
+  50% { transform: translate(25px, 18px); }
+  60% { transform: translate(-10px, -25px); }
+  70% { transform: translate(18px, 5px); }
+  80% { transform: translate(-25px, 20px); }
+  90% { transform: translate(8px, -22px); }
+  100% { transform: translate(-18px, 12px); }
+}
+
+/* Keep noise visible on mobile */
+@media (max-width: 768px) {
+  body::before {
+    --noise-opacity: 0.4;
+    --noise-size: 80px;
+    /* Slower grain movement on mobile for better performance */
+    animation-duration: 0.8s;
+  }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+    transform: translate(0, 0);
+    /* Still show noise, just no movement */
+    --noise-opacity: 0.3;
+  }
+}
+
+/* High contrast mode - still keep noise visible */
+@media (prefers-contrast: high) {
+  body::before {
+    --noise-opacity: 0.2;
+  }
+}
+
+/* ================================================
+   PAGE SHADOW OVERLAY (new implementation)
+   ================================================ */
+.page-shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0;
+  /* Inherit border radius from parent page */
+  border-radius: inherit;
+  /* Updated gradient with configurable angle (170° = 10° tilt to bottom-left) */
+  background: linear-gradient(var(--page-shadow-angle, 170deg), var(--page-shadow-start, rgba(0,0,0,0.8)) 0%, var(--page-shadow-mid, rgba(0,0,0,0.5)) var(--shadow-mid-stop, 90%), var(--page-shadow-end, rgba(0,0,0,0)) 100%);
+  will-change: transform, opacity;
+  transform: translateZ(2px);
+  /* Smooth transitions for elegant shadow movement */
+  transition: 
+    transform 80ms cubic-bezier(0.33, 1, 0.68, 1),
+    opacity 80ms cubic-bezier(0.33, 1, 0.68, 1);
+  /* Transform origin at top-left for skewing and height scaling */
+  transform-origin: 0% 0%;
+}
+
+.page-shadow-wrapper {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 5; /* same as shadow layer */
+  transform: translateZ(2px);
+}
+
+/* Container blur for high-velocity motion */
+.page-stack--motion-blur {
+  filter: blur(var(--motion-blur-radius, 0px));
+  transition: filter var(--motion-blur-duration, 300ms) var(--motion-blur-easing, cubic-bezier(0.16, 1, 0.3, 1));
+  will-change: filter;
 }

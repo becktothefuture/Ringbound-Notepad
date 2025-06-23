@@ -1,1 +1,1 @@
-export const CHAPTERS = []; 
+export const CHAPTERS = [];

@@ -1,9 +1,9 @@
 /**
  * RINGBOUND NOTEPAD - MAIN APPLICATION ORCHESTRATOR
- * 
+ *
  * This module implements the specification-compliant application architecture
  * following the exact requirements from the README technical specification.
- * 
+ *
  * ARCHITECTURE OVERVIEW:
  * ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
  * │   User Input    │───▶│ VirtualScrollEngine│───▶│ RenderPipeline │
@@ -17,10 +17,10 @@
  * │ - Touch events  │    │ - Quality scaling│    │ - GPU accel     │
  * │ - Keyboard nav  │    │ - Memory tracking│    │ - Visibility    │
  * └─────────────────┘    └──────────────────┘    └─────────────────┘
- * 
+ *
  * DATA FLOW:
  * Portfolio JSON → Schema Validation → Page Generation → VirtualScrollEngine → RenderPipeline → DOM
- * 
+ *
  * @author Alexander Beck
  * @version 2.0.0 (Specification Compliant)
  * @since 2025-01-01
@@ -29,11 +29,22 @@
 // === CORE SYSTEM IMPORTS ===
 import { GLOBAL_CONFIG } from './config.js';
 import { VirtualScrollEngine } from './scrollEngine.js';
-import { render, initializeRenderingContext, createRenderPipeline, updateRingsPosition } from './render.js';
+import {
+  render,
+  initializeRenderingContext,
+  createRenderPipeline,
+  updateRingsPosition,
+} from './render.js';
 import { PerformanceManager } from './performance.js';
-import { createPagesFromPortfolioData, PortfolioLoader, validatePortfolioSchema } from './portfolioLoader.js';
+import {
+  createPagesFromPortfolioData,
+  PortfolioLoader,
+  validatePortfolioSchema,
+} from './portfolioLoader.js';
 import { initBrowserTheme } from './browserTheme.js';
 import { initChapters } from './chapterManager.js';
+import { zoomManager } from './zoomManager.js';
+import { initializeDynamicNoise } from './noiseGenerator.js';
 import portfolioData from '../data/portfolio.json' assert { type: 'json' };
 
 // === APPLICATION STATE ===
@@ -44,30 +55,33 @@ import portfolioData from '../data/portfolio.json' assert { type: 'json' };
 const ApplicationState = {
   /** @type {boolean} Application initialization status */
   initialized: false,
-  
+
   /** @type {VirtualScrollEngine} Scroll engine instance */
   scrollEngine: null,
-  
+
   /** @type {PerformanceManager} Performance manager instance */
   performanceManager: null,
-  
+
   /** @type {HTMLElement[]} All page elements */
   pages: [],
-  
+
   /** @type {Function} Render pipeline function */
   renderPipeline: null,
-  
+
   /** @type {number} Total page count */
   pageCount: 0,
-  
+
   /** @type {Date} Application start time */
   startTime: new Date(),
-  
+
   /** @type {Object} Environment flags */
   environment: {
     isPreview: new URLSearchParams(window.location.search).has('preview'),
-    isDebug: new URLSearchParams(window.location.search).has('debug')
-  }
+    isDebug: new URLSearchParams(window.location.search).has('debug'),
+  },
+
+  /** @type {Object} Zoom manager instance */
+  zoomManager: null,
 };
 
 // === ERROR HANDLING ===
@@ -78,7 +92,7 @@ const ApplicationState = {
  */
 function handleApplicationError(error, context = 'Application') {
   console.error(`❌ ${context} Error:`, error);
-  
+
   // Log error details for debugging
   if (ApplicationState.environment.isDebug) {
     console.group('🔍 Error Details');
@@ -86,7 +100,7 @@ function handleApplicationError(error, context = 'Application') {
     console.log('Application State:', ApplicationState);
     console.groupEnd();
   }
-  
+
   // Show user-friendly error message
   const errorMessage = `
     <div style="
@@ -104,9 +118,9 @@ function handleApplicationError(error, context = 'Application') {
       ">Reload Page</button>
     </div>
   `;
-  
+
   document.body.insertAdjacentHTML('beforeend', errorMessage);
-  
+
   // Prevent further execution
   throw error;
 }
@@ -121,21 +135,20 @@ function initializePerformanceSystem() {
   try {
     ApplicationState.performanceManager = new PerformanceManager();
     ApplicationState.performanceManager.startApplication();
-    
+
     // Log performance targets
     console.log('🎯 Performance Targets:');
     console.log(`  - FPS: ${GLOBAL_CONFIG.PERFORMANCE.targetFPS}fps`);
     console.log(`  - Frame Time: ${GLOBAL_CONFIG.PERFORMANCE.frameTimeTarget}ms`);
     console.log(`  - Memory Limit: ${GLOBAL_CONFIG.PERFORMANCE.memoryLimit}MB`);
     console.log(`  - Max Visible Pages: ${GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages}`);
-    
+
     // Set up debug logging if enabled
     if (ApplicationState.environment.isDebug) {
       setInterval(() => {
         ApplicationState.performanceManager.logPerformanceMetrics();
       }, 5000);
     }
-    
   } catch (error) {
     handleApplicationError(error, 'Performance System Initialization');
   }
@@ -148,12 +161,11 @@ function initializeRenderingSystem(totalPages = 0) {
   try {
     initializeRenderingContext(totalPages);
     console.log('🎯 3D Notebook rendering system initialized');
-    
+
     // Apply global CSS variables
     const root = document.documentElement;
     root.style.setProperty('--ring-z-index', GLOBAL_CONFIG.SCENE.ringZIndex);
     root.style.setProperty('--active-page-z-index', GLOBAL_CONFIG.SCENE.activePageZIndex);
-    
   } catch (error) {
     handleApplicationError(error, '3D Notebook Rendering System Initialization');
   }
@@ -178,21 +190,21 @@ function initializeBrowserTheme() {
  */
 async function loadPortfolioContent() {
   try {
-        const notebook = document.getElementById('notebook');
+    const notebook = document.getElementById('notebook');
 
     if (!notebook) {
       throw new Error('Required DOM element #notebook not found');
     }
-    
+
     // Load portfolio data (supports both static and preview modes)
     let portfolioDataToUse = portfolioData;
-    
+
     if (ApplicationState.environment.isPreview) {
       console.log('🔄 Loading portfolio in preview mode...');
       const loader = new PortfolioLoader();
       portfolioDataToUse = await loader.load();
     }
-    
+
     // Validate portfolio schema
     const validation = validatePortfolioSchema(portfolioDataToUse);
     if (!validation.isValid) {
@@ -200,26 +212,25 @@ async function loadPortfolioContent() {
       validation.errors.forEach(error => console.error(`  - ${error}`));
       throw new Error('Portfolio data validation failed');
     }
-    
+
     console.log('✅ Portfolio schema validation passed');
-    
+
     // Generate pages from validated data in the page-stack container
     console.log('🎯 Generating 3D notebook pages...');
     const pageStack = document.getElementById('page-stack') || notebook;
     if (!pageStack) {
       throw new Error('Page stack container not found. Expected #page-stack.');
     }
-    
+
     const pages = createPagesFromPortfolioData(pageStack, portfolioDataToUse);
-    
+
     // Update application state
     ApplicationState.pages = pages;
     ApplicationState.pageCount = pages.length;
-    
+
     console.log(`🎯 3D Notebook loaded: ${pages.length} pages generated in page-stack`);
-    
+
     return pages;
-    
   } catch (error) {
     handleApplicationError(error, 'Portfolio Content Loading');
   }
@@ -236,11 +247,10 @@ function initializeScrollEngine(container, pageCount) {
     const scrollEngine = new VirtualScrollEngine();
     scrollEngine.setMaxPages(pageCount);
     scrollEngine.initializeEventListeners(container);
-    
+
     console.log(`🎮 VirtualScrollEngine initialized with ${pageCount} pages`);
-    
+
     return scrollEngine;
-    
   } catch (error) {
     handleApplicationError(error, 'VirtualScrollEngine Initialization');
   }
@@ -256,14 +266,14 @@ function initializeChapterSystem(pages) {
     if (!notebook) {
       throw new Error('Notebook container not found');
     }
-    
+
     // Get actual page elements from the DOM
     const pageElements = Array.from(notebook.querySelectorAll('.page'));
-    
+
     if (pageElements.length === 0) {
       throw new Error('No page elements found in notebook');
     }
-    
+
     initChapters(pageElements, notebook);
     console.log('📑 Chapter navigation system initialized');
   } catch (error) {
@@ -281,18 +291,17 @@ function initializeChapterSystem(pages) {
 function createRenderingPipeline(pages, scrollEngine) {
   try {
     const renderPipeline = createRenderPipeline(pages);
-    
+
     // Subscribe to scroll state changes
-    scrollEngine.addObserver((scrollState) => {
+    scrollEngine.addObserver(scrollState => {
       ApplicationState.performanceManager.startRender();
       renderPipeline(scrollState);
       ApplicationState.performanceManager.endRender();
     });
-    
+
     console.log('🎨 Render pipeline created and connected');
-    
+
     return renderPipeline;
-    
   } catch (error) {
     handleApplicationError(error, 'Render Pipeline Creation');
   }
@@ -307,34 +316,36 @@ function finalizeApplication() {
     if (!ApplicationState.scrollEngine) {
       throw new Error('VirtualScrollEngine not initialized');
     }
-    
+
     if (!ApplicationState.performanceManager) {
       throw new Error('PerformanceManager not initialized');
     }
-    
+
     if (!ApplicationState.pages.length) {
       throw new Error('No pages generated');
     }
-    
+
     // Apply quality scaling based on device capabilities
     const qualityScale = ApplicationState.performanceManager.getQualityScale();
     ApplicationState.performanceManager.applyQualityScale(qualityScale);
-    
+
     // Mark application as initialized
     ApplicationState.initialized = true;
-    
+
     const initTime = Date.now() - ApplicationState.startTime.getTime();
     console.log(`🚀 Application initialized successfully in ${initTime}ms`);
-    
+
     // Log final state
     if (ApplicationState.environment.isDebug) {
       console.group('🔍 Final Application State');
       console.log('Pages:', ApplicationState.pageCount);
-      console.log('Performance Manager:', ApplicationState.performanceManager.getPerformanceReport());
+      console.log(
+        'Performance Manager:',
+        ApplicationState.performanceManager.getPerformanceReport()
+      );
       console.log('Environment:', ApplicationState.environment);
       console.groupEnd();
     }
-    
   } catch (error) {
     handleApplicationError(error, 'Application Finalization');
   }
@@ -350,40 +361,51 @@ async function bootstrap() {
   try {
     console.log('🔄 Initializing Ring-Bound Notebook Application...');
     console.log('📋 Following technical specification v2.0.0');
-    
+
     // Phase 1: Initialize core systems
     console.log('📊 Phase 1: Initializing core systems...');
     initializePerformanceSystem();
     initializeBrowserTheme();
-    
+    initializeDynamicNoise();
+
     // Phase 2: Load and validate content
     console.log('🎯 Phase 2: Loading and validating 3D notebook content...');
     const pages = await loadPortfolioContent();
-    
+
     // Initialize rendering system with page count for depth model
     initializeRenderingSystem(ApplicationState.pageCount);
-    
+
     // Ensure rings position is calculated with actual page count
     updateRingsPosition(ApplicationState.pageCount);
-    
+
     // Phase 3: Initialize interaction systems
     console.log('🎮 Phase 3: Initializing interaction systems...');
     const container = document.getElementById('notebook');
     if (!container) throw new Error('Container element not found');
-    
+
     ApplicationState.scrollEngine = initializeScrollEngine(container, ApplicationState.pageCount);
     initializeChapterSystem(pages);
-    
+
     // Phase 4: Create render pipeline
     console.log('🎨 Phase 4: Creating render pipeline...');
     ApplicationState.renderPipeline = createRenderingPipeline(pages, ApplicationState.scrollEngine);
-    
-    // Phase 5: Finalize application
-    console.log('✅ Phase 5: Finalizing application...');
+
+    // Phase 5: Initialize zoom system
+    console.log('🔍 Phase 5: Initializing zoom system...');
+    ApplicationState.zoomManager = zoomManager;
+    const notebookContainer = document.querySelector('.notebook');
+    // Use the page wrapper as click container to make entire notebook area clickable
+    const clickContainer = document.querySelector('.page-wrapper');
+    zoomManager.initialize(notebookContainer, clickContainer, ApplicationState.scrollEngine);
+
+    // Phase 6: Finalize application
+    console.log('✅ Phase 6: Finalizing application...');
     finalizeApplication();
-    
+
     console.log('🎉 Application bootstrap complete!');
-    
+    console.log('');
+    console.log('💡 TIP: Click anywhere on the notebook area to zoom in/out (80% ⇄ 100%)');
+    console.log('🎯 Current zoom: 80% (overview mode)');
   } catch (error) {
     handleApplicationError(error, 'Application Bootstrap');
   }
@@ -400,14 +422,19 @@ function cleanup() {
       // Clean up scroll engine resources
       ApplicationState.scrollEngine = null;
     }
-    
+
     if (ApplicationState.performanceManager) {
       // Clean up performance monitoring
       ApplicationState.performanceManager = null;
     }
-    
+
+    if (ApplicationState.zoomManager) {
+      // Clean up zoom manager
+      ApplicationState.zoomManager.destroy();
+      ApplicationState.zoomManager = null;
+    }
+
     console.log('🧹 Application cleanup complete');
-    
   } catch (error) {
     console.error('⚠️ Cleanup error:', error);
   }
@@ -446,4 +473,4 @@ if (document.readyState === 'loading') {
 }
 
 // Export for testing and debugging
-export { ApplicationState, bootstrap, cleanup }; 
+export { ApplicationState, bootstrap, cleanup };

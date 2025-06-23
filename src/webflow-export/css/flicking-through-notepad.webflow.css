@@ -11,7 +11,11 @@
 
 body {
   color: #333;
-  font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
+  font-family:
+    Arial,
+    Helvetica Neue,
+    Helvetica,
+    sans-serif;
   font-size: 12px;
   line-height: 20px;
 }
@@ -116,7 +120,7 @@ h2 {
   max-width: 1300px;
   display: flex;
   position: relative;
-  transform: scale(.71);
+  transform: scale(0.71);
 }
 
 .notebook-inner {
@@ -145,24 +149,50 @@ h2 {
 .cover.cover--back {
   z-index: 1;
   background-image: linear-gradient(38deg, #0000001a, #0000), url('../images/cardboard.jpg');
-  background-position: 0 0, 0 0;
+  background-position:
+    0 0,
+    0 0;
   background-size: auto, auto;
-  border-top-left-radius: .5em;
-  border-top-right-radius: .5em;
-  box-shadow: inset 0 3px 2px #c29154, inset 0 -2px 3px 2px #664620, 0 0 #0000, -.2px .4px #0000000e, -.4px .9px .1px #0001, -.7px 1.6px .5px #00000013, -1.2px 2.8px 1.3px #00000014, -2.1px 5px 2.9px #00000015, -3.8px 8.9px 6.2px #00000015, -7.1px 16.7px 13px #00000016, -14.9px 35.1px 29.5px #00000018;
+  border-top-left-radius: 0.5em;
+  border-top-right-radius: 0.5em;
+  box-shadow:
+    inset 0 3px 2px #c29154,
+    inset 0 -2px 3px 2px #664620,
+    0 0 #0000,
+    -0.2px 0.4px #0000000e,
+    -0.4px 0.9px 0.1px #0001,
+    -0.7px 1.6px 0.5px #00000013,
+    -1.2px 2.8px 1.3px #00000014,
+    -2.1px 5px 2.9px #00000015,
+    -3.8px 8.9px 6.2px #00000015,
+    -7.1px 16.7px 13px #00000016,
+    -14.9px 35.1px 29.5px #00000018;
 }
 
 .cover.cover--front {
   z-index: 300;
   transform-style: preserve-3d;
   background-image: linear-gradient(38deg, #0000001a, #0000), url('../images/cardboard.jpg');
-  background-position: 0 0, 0 0;
+  background-position:
+    0 0,
+    0 0;
   background-size: auto, auto;
-  border-top-left-radius: .5em;
-  border-top-right-radius: .5em;
+  border-top-left-radius: 0.5em;
+  border-top-right-radius: 0.5em;
   position: absolute;
-  transform: rotateX(180deg)rotateY(0)rotateZ(0)translate(0);
-  box-shadow: inset 0 3px 2px #c29154, inset 0 -2px 3px 2px #664620, 0 0 #0000, -.2px .4px #0000000e, -.4px .9px .1px #0001, -.7px 1.6px .5px #00000013, -1.2px 2.8px 1.3px #00000014, -2.1px 5px 2.9px #00000015, -3.8px 8.9px 6.2px #00000015, -7.1px 16.7px 13px #00000016, -14.9px 35.1px 29.5px #00000018;
+  transform: rotateX(180deg) rotateY(0) rotateZ(0) translate(0);
+  box-shadow:
+    inset 0 3px 2px #c29154,
+    inset 0 -2px 3px 2px #664620,
+    0 0 #0000,
+    -0.2px 0.4px #0000000e,
+    -0.4px 0.9px 0.1px #0001,
+    -0.7px 1.6px 0.5px #00000013,
+    -1.2px 2.8px 1.3px #00000014,
+    -2.1px 5px 2.9px #00000015,
+    -3.8px 8.9px 6.2px #00000015,
+    -7.1px 16.7px 13px #00000016,
+    -14.9px 35.1px 29.5px #00000018;
 }
 
 .heading-wrapper {
@@ -181,12 +211,14 @@ h2 {
 }
 
 .page {
-  border-radius: .5em .5em var(--cover-radius) var(--cover-radius);
+  border-radius: 0.5em 0.5em var(--cover-radius) var(--cover-radius);
   opacity: 1;
   transform-origin: 50% 0;
   background-color: #dfdcd8;
   background-image: url('../images/paper-holes.webp'), linear-gradient(231deg, #aca9a3a1, #0000);
-  background-position: 50% -14%, 0 0;
+  background-position:
+    50% -14%,
+    0 0;
   background-repeat: no-repeat, repeat;
   background-size: 99%, auto;
   width: 100%;
@@ -197,15 +229,17 @@ h2 {
 
 .page.page--test {
   transform-style: preserve-3d;
-  background-position: 50% -13%, 0 0;
+  background-position:
+    50% -13%,
+    0 0;
   background-size: 100%, auto;
-  transform: rotateX(28deg)rotateY(0)rotateZ(0);
+  transform: rotateX(28deg) rotateY(0) rotateZ(0);
 }
 
 .overlay--rotate {
   z-index: 999;
-  grid-column-gap: .5em;
-  grid-row-gap: .5em;
+  grid-column-gap: 0.5em;
+  grid-row-gap: 0.5em;
   text-align: center;
   background-color: #b9bcbd;
   flex-flow: column;
@@ -256,7 +290,7 @@ h2 {
   transform-style: preserve-3d;
   /* Position rings 10px above highest possible page - dynamically calculated */
   transform: translateZ(var(--rings-front-position, 375px));
-  opacity: 1.0;
+  opacity: 1;
 }
 
 .rings.rings--back {
@@ -269,14 +303,14 @@ h2 {
 
 .pixel-screen__text {
   color: #fefdfb;
-  letter-spacing: .05ch;
+  letter-spacing: 0.05ch;
   -webkit-text-stroke-width: 1px;
   -webkit-text-stroke-color: #77d8ff;
-  text-shadow: 0 0 .5em #2ea5df;
+  text-shadow: 0 0 0.5em #2ea5df;
   word-break: break-all;
-  padding: .5em;
-  font-family: Tiny5, sans-serif;
-  font-size: calc(clamp(1.1em, 1.5vw - .092em, 2.7em));
+  padding: 0.5em;
+  font-family: 'Tiny5', monospace;
+  font-size: calc(clamp(1.1em, 1.5vw - 0.092em, 2.7em));
   line-height: 1.3;
   overflow: hidden;
 }
@@ -350,5 +384,3 @@ h2 {
 #w-node-_0152f777-d495-afcc-3a33-d4b8eefbb93a-285ad1b9 {
   grid-area: span 1 / span 3 / span 1 / span 3;
 }
-
-

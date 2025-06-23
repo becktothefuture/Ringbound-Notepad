@@ -18,8 +18,8 @@ const PORTFOLIO_SCHEMA = {
       type: 'object',
       properties: {
         title: { type: 'string' },
-        description: { type: 'string' }
-      }
+        description: { type: 'string' },
+      },
     },
     projects: {
       type: 'array',
@@ -30,12 +30,12 @@ const PORTFOLIO_SCHEMA = {
           id: {
             type: 'string',
             pattern: '^chapter-\\d+$',
-            description: 'Chapter ID must match /^chapter-\\d+$/'
+            description: 'Chapter ID must match /^chapter-\\d+$/',
           },
           title: {
             type: 'string',
             minLength: 1,
-            maxLength: 100
+            maxLength: 100,
           },
           pages: {
             type: 'array',
@@ -47,24 +47,25 @@ const PORTFOLIO_SCHEMA = {
                 asset: {
                   type: 'string',
                   pattern: '^chapter-\\d+-\\d+\\.(jpg|jpeg|png|webp|mp4|webm)$',
-                  description: 'Asset naming must match /^chapter-\\d+-\\d+\\.(jpg|jpeg|png|webp|mp4|webm)$/'
+                  description:
+                    'Asset naming must match /^chapter-\\d+-\\d+\\.(jpg|jpeg|png|webp|mp4|webm)$/',
                 },
                 type: {
                   type: 'string',
-                  enum: ['image', 'video']
+                  enum: ['image', 'video'],
                 },
                 commentary: {
                   type: 'string',
                   maxLength: 500,
-                  description: 'Commentary maximum 500 characters'
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+                  description: 'Commentary maximum 500 characters',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 };
 
 /**
@@ -85,53 +86,55 @@ function resolveAssetPath(chapterId, assetName) {
  */
 function validatePortfolioSchema(data) {
   const errors = [];
-  
+
   try {
     // Basic structure validation
     if (!data || typeof data !== 'object') {
       errors.push('Portfolio data must be an object');
       return { isValid: false, errors };
     }
-    
+
     if (!Array.isArray(data.projects)) {
       errors.push('Portfolio must have "projects" array');
       return { isValid: false, errors };
     }
-    
+
     // Validate each project
     data.projects.forEach((project, projectIndex) => {
       const projectPath = `projects[${projectIndex}]`;
-      
+
       // Required fields
       if (!project.id || typeof project.id !== 'string') {
         errors.push(`${projectPath}.id is required and must be a string`);
       } else if (!/^chapter-\d+$/.test(project.id)) {
         errors.push(`${projectPath}.id must match pattern /^chapter-\\d+$/`);
       }
-      
+
       if (!project.title || typeof project.title !== 'string') {
         errors.push(`${projectPath}.title is required and must be a string`);
       }
-      
+
       if (!Array.isArray(project.pages)) {
         errors.push(`${projectPath}.pages must be an array`);
         return;
       }
-      
+
       // Validate each page
       project.pages.forEach((page, pageIndex) => {
         const pagePath = `${projectPath}.pages[${pageIndex}]`;
-        
+
         if (!page.asset || typeof page.asset !== 'string') {
           errors.push(`${pagePath}.asset is required and must be a string`);
         } else if (!/^chapter-\d+-\d+\.(jpg|jpeg|png|webp|mp4|webm)$/.test(page.asset)) {
-          errors.push(`${pagePath}.asset must match pattern /^chapter-\\d+-\\d+\\.(jpg|jpeg|png|webp|mp4|webm)$/`);
+          errors.push(
+            `${pagePath}.asset must match pattern /^chapter-\\d+-\\d+\\.(jpg|jpeg|png|webp|mp4|webm)$/`
+          );
         }
-        
+
         if (!page.type || !['image', 'video'].includes(page.type)) {
           errors.push(`${pagePath}.type must be "image" or "video"`);
         }
-        
+
         if (typeof page.commentary !== 'string') {
           errors.push(`${pagePath}.commentary is required and must be a string`);
         } else if (page.commentary.length > 500) {
@@ -139,14 +142,13 @@ function validatePortfolioSchema(data) {
         }
       });
     });
-    
   } catch (error) {
     errors.push(`Validation error: ${error.message}`);
   }
-  
+
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 }
 
@@ -160,27 +162,51 @@ function validatePortfolioSchema(data) {
  */
 function createPageElement(pageData, chapterId, pageIndex, globalIndex) {
   const pageEl = document.createElement('div');
-  pageEl.className = 'page page--positioned gpu-accelerated';
+  let pageClasses = 'page page--positioned gpu-accelerated';
+  
+  // Add video-specific classes for proper layout
+  if (pageData.type === 'video') {
+    pageClasses += ' page--video-page';
+  }
+  
+  pageEl.className = pageClasses;
   pageEl.dataset.commentary = pageData.commentary;
   pageEl.dataset.chapterId = chapterId;
   pageEl.dataset.pageIndex = pageIndex;
-  
+
   // Add ring holes container (safe zone) - using CSS class
   const holesContainer = document.createElement('div');
   holesContainer.className = 'page-holes page-holes--styled';
   pageEl.appendChild(holesContainer);
-  
+
   // Add content container with CSS class alignment
   const content = document.createElement('div');
-  content.className = `page-content page-content--${GLOBAL_CONFIG.LAYOUT.contentAlignment}`;
+  let contentClasses = `page-content page-content--${GLOBAL_CONFIG.LAYOUT.contentAlignment}`;
   
+  // Add video-specific container class for proper alignment
+  if (pageData.type === 'video') {
+    contentClasses += ' page-content--video-container';
+  }
+  
+  content.className = contentClasses;
+
   // Create media element with proper CSS classes
   const assetPath = resolveAssetPath(chapterId, pageData.asset);
   const mediaEl = createMediaElement(pageData.type, assetPath, pageData.commentary);
-  
+
   content.appendChild(mediaEl);
   pageEl.appendChild(content);
-  
+
+  // Add the new shadow overlay div (must be LAST so it sits on top)
+  const shadowWrapper = document.createElement('div');
+  shadowWrapper.className = 'page-shadow-wrapper';
+
+  const shadowDiv = document.createElement('div');
+  shadowDiv.className = 'page-shadow';
+
+  shadowWrapper.appendChild(shadowDiv);
+  pageEl.appendChild(shadowWrapper);
+
   return pageEl;
 }
 
@@ -193,7 +219,7 @@ function createPageElement(pageData, chapterId, pageIndex, globalIndex) {
  */
 function createMediaElement(type, assetPath, altText) {
   let mediaEl;
-  
+
   if (type === 'video') {
     mediaEl = document.createElement('video');
     mediaEl.src = assetPath;
@@ -202,7 +228,7 @@ function createMediaElement(type, assetPath, altText) {
     mediaEl.muted = true;
     mediaEl.playsInline = true;
     mediaEl.className = 'page-content__inner page-content__media--video';
-    mediaEl.addEventListener('error', (e) => {
+    mediaEl.addEventListener('error', e => {
       console.error(`Failed to load video: ${assetPath}`, e);
     });
   } else {
@@ -210,11 +236,11 @@ function createMediaElement(type, assetPath, altText) {
     mediaEl.src = assetPath;
     mediaEl.alt = altText;
     mediaEl.className = 'page-content__inner page-content__media';
-    mediaEl.addEventListener('error', (e) => {
+    mediaEl.addEventListener('error', e => {
       console.error(`Failed to load image: ${assetPath}`, e);
     });
   }
-  
+
   return mediaEl;
 }
 
@@ -227,26 +253,26 @@ function createMediaElement(type, assetPath, altText) {
  */
 function createCoverPage(type, commentary, globalIndex) {
   const coverEl = document.createElement('div');
-  
+
   if (type === 'front') {
     coverEl.className = 'page cover cover--front gpu-accelerated';
     coverEl.dataset.deckNumber = 'front';
-    
+
     // Add centered logo image
     const logoImg = document.createElement('img');
     logoImg.src = 'assets/folio-title.png';
     logoImg.alt = 'Portfolio Title';
     logoImg.className = 'cover-logo';
     coverEl.appendChild(logoImg);
-    
+
     // NO CONTENT - covers should have no text as requested
   } else {
     coverEl.className = 'page cover cover--back gpu-accelerated';
     coverEl.dataset.deckNumber = String(globalIndex + 1).padStart(2, '0');
   }
-  
+
   coverEl.dataset.commentary = commentary;
-  
+
   return coverEl;
 }
 
@@ -269,7 +295,7 @@ function createCoverContent() {
  */
 export function createPagesFromPortfolioData(container, portfolioData) {
   if (!container) throw new Error('Container element is required');
-  
+
   // Ensure we're working with the page-stack container
   let pageStack = container;
   if (!container.classList.contains('page-stack')) {
@@ -279,7 +305,7 @@ export function createPagesFromPortfolioData(container, portfolioData) {
       pageStack = container;
     }
   }
-  
+
   // Validate portfolio data
   const validation = validatePortfolioSchema(portfolioData);
   if (!validation.isValid) {
@@ -287,37 +313,38 @@ export function createPagesFromPortfolioData(container, portfolioData) {
     validation.errors.forEach(error => console.error(`  - ${error}`));
     throw new Error('Portfolio data validation failed');
   }
-  
+
   console.log('✅ Portfolio schema validation passed');
-  
+
   const pages = [];
   let globalPageIndex = 0;
-  
+
   // Clear existing content from page stack
   const existingElements = pageStack.querySelectorAll('.page, .cover');
   existingElements.forEach(el => el.remove());
-  
+
   // Create front cover
-  const frontCover = createCoverPage('front', 
+  const frontCover = createCoverPage(
+    'front',
     'Welcome to my portfolio. Scroll to begin exploring my work as a UX/UI Designer and Creative Technologist.',
     globalPageIndex
   );
   pageStack.appendChild(frontCover);
   pages.push(frontCover);
   globalPageIndex++;
-  
+
   // Process each project
   portfolioData.projects.forEach((project, projectIndex) => {
     const chapterStartPage = globalPageIndex;
-    
+
     // Update CHAPTERS array for navigation
     CHAPTERS.push({
       title: project.title,
       page: chapterStartPage,
       color: `hsl(${(projectIndex * 47) % 360}, 70%, 85%)`,
-      tabImage: project.tabImage // Add tab image reference
+      tabImage: project.tabImage, // Add tab image reference
     });
-    
+
     // Create pages for this project
     project.pages.forEach((pageData, pageIndex) => {
       try {
@@ -330,16 +357,17 @@ export function createPagesFromPortfolioData(container, portfolioData) {
       }
     });
   });
-  
+
   // Create back cover
-  const backCover = createCoverPage('back',
+  const backCover = createCoverPage(
+    'back',
     'Thank you for exploring my portfolio. I hope you enjoyed the journey through my creative work.',
     globalPageIndex
   );
   pageStack.appendChild(backCover);
   pages.push(backCover);
   globalPageIndex++;
-  
+
   console.log(`📄 Generated ${pages.length} pages from ${portfolioData.projects.length} projects`);
   return pages;
 }
@@ -351,13 +379,15 @@ export function createPagesFromPortfolioData(container, portfolioData) {
  * @returns {HTMLElement[]} Array of created page elements
  */
 export function createPagesFromManifest(container, manifest) {
-  console.warn('⚠️ Using legacy createPagesFromManifest. Consider migrating to createPagesFromPortfolioData.');
-  
+  console.warn(
+    '⚠️ Using legacy createPagesFromManifest. Consider migrating to createPagesFromPortfolioData.'
+  );
+
   // Convert manifest to portfolio data format for validation
   const portfolioData = {
-    projects: manifest || []
+    projects: manifest || [],
   };
-  
+
   return createPagesFromPortfolioData(container, portfolioData);
 }
 
@@ -371,7 +401,7 @@ export class PortfolioLoader {
     this.isPreview = new URLSearchParams(window.location.search).has('preview');
     this.isDebug = new URLSearchParams(window.location.search).has('debug');
   }
-  
+
   /**
    * Load and validate portfolio data
    * @returns {Promise<Object>} Validated portfolio data
@@ -381,14 +411,14 @@ export class PortfolioLoader {
       console.log('💡 Preview mode not enabled. Use ?preview=true to load JSON at runtime.');
       return portfolioData; // Return static data
     }
-    
+
     try {
       console.log('🔄 Loading portfolio data in preview mode...');
       const response = await fetch('/data/portfolio.json');
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      
+
       this.portfolioData = await response.json();
-      
+
       // Validate schema
       const validation = validatePortfolioSchema(this.portfolioData);
       if (!validation.isValid) {
@@ -396,25 +426,27 @@ export class PortfolioLoader {
         validation.errors.forEach(error => console.error(`  - ${error}`));
         throw new Error('Portfolio validation failed');
       }
-      
+
       if (this.isDebug) {
         console.group('🔍 Portfolio Debug Info');
         console.log('Projects:', this.portfolioData.projects.length);
-        console.log('Total pages:', this.portfolioData.projects.reduce((sum, p) => sum + p.pages.length, 0));
+        console.log(
+          'Total pages:',
+          this.portfolioData.projects.reduce((sum, p) => sum + p.pages.length, 0)
+        );
         console.log('Validation:', validation);
         console.groupEnd();
       }
-      
+
       console.log('✅ Portfolio data loaded and validated successfully');
       return this.portfolioData;
-      
     } catch (error) {
       console.error('❌ Error loading portfolio:', error);
       console.log('📦 Falling back to static portfolio data');
       return portfolioData; // Fallback to static data
     }
   }
-  
+
   /**
    * Inject loaded content into DOM
    * @param {HTMLElement} container - Target container
@@ -427,4 +459,4 @@ export class PortfolioLoader {
 }
 
 // Export validation utilities
-export { validatePortfolioSchema, resolveAssetPath, PORTFOLIO_SCHEMA }; 
+export { validatePortfolioSchema, resolveAssetPath, PORTFOLIO_SCHEMA };
