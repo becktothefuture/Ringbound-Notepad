@@ -62,32 +62,35 @@
   /* Dynamic Positioning */
   --rings-front-position: 175px;
 
+  /* Tab Configuration */
+  --tab-safe-area-horizontal: 16px;
+
   /* Zoom Configuration */
   --notebook-zoom-scale: 0.8;
-  --notebook-zoom-focused-scale: 1.0;
+  --notebook-zoom-focused-scale: 1;
   --background-zoom-scale: 1.0;
-  --background-zoom-focused-scale: 1.04;
+  --background-zoom-focused-scale: 0.95;
   --zoom-duration: 600ms;
   --zoom-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
   /* SVG Noise Configuration */
-  --noise-base-frequency: 0.134;
-  --noise-octaves: 4;
-  --noise-seed: 15;
-  --noise-surface-scale: 7;
-  --noise-specular-constant: 0.8;
-  --noise-specular-exponent: 20;
-  --noise-lighting-color: #5a657e;
-  --noise-azimuth: 3;
-  --noise-elevation: 62;
-  --noise-opacity: 0.6;
-  --noise-blend-mode: normal;
-  --noise-size: 100px;
+  --noise-base-frequency: 0.085; /* Lower frequency for more natural grain */
+  --noise-octaves: 6; /* More octaves for richer detail */
+  --noise-seed: 23; /* Different seed for varied pattern */
+  --noise-surface-scale: 4; /* Increased scale for more depth */
+  --noise-specular-constant: 0.6; /* Reduced specularity for paper-like finish */
+  --noise-specular-exponent: 15; /* Softer specular highlights */
+  --noise-lighting-color: #4a5266; /* Cooler, more subtle lighting */
+  --noise-azimuth: 45; /* More natural lighting angle */
+  --noise-elevation: 55; /* Lower elevation for softer shadows */
+  --noise-opacity: 0.45; /* Lower opacity for subtler effect */
+  --noise-blend-mode: overlay; /* Overlay blending for better integration */
+  --noise-size: 600px; /* Larger size for less obvious tiling */
 
   /* Page Shadow Settings */
   --page-shadow-start: rgba(0,0,0,0.8);
   --page-shadow-mid: rgba(0,0,0,0.5);
-  --page-shadow-end: rgba(0,0,0,0);
+  --page-shadow-end: rgba(0,0,0,0.3);
   --shadow-mid-stop: 50%;
   --page-shadow-angle: 170deg;
 }
@@ -654,12 +657,13 @@ main:not(.page-wrapper) {
    ===================================================== */
 .notebook__shadow {
   position: absolute;
-  width: 90%;
-  height: 90%;
+  width: 98%;
+  height: 98%;
   aspect-ratio: 16/11;
   pointer-events: none;
   z-index: 0;
   box-sizing: border-box;
+  border-radius: 0.5em 0.5em var(--cover-radius) var(--cover-radius);
   box-shadow:
     0px 10px 15px -3px hsla(0, 5%, 0%, 0.1),
     0px 30px 30px -10px hsla(0, 5%, 0%, 0.15),
@@ -868,6 +872,7 @@ h2 {
   transform-style: flat;
   /* Remove any transform to keep tabs straight */
   transform: none;
+  /* Safe area padding handled in JavaScript positioning */
 }
 
 .tab-with-image {
@@ -1220,4 +1225,52 @@ body::before {
   filter: blur(var(--motion-blur-radius, 0px));
   transition: filter var(--motion-blur-duration, 300ms) var(--motion-blur-easing, cubic-bezier(0.16, 1, 0.3, 1));
   will-change: filter;
+}
+
+/* === Figma Heading Group Styles === */
+.heading-group {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.heading-main {
+  color: var(--dark-1, #1E1E1E);
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: 1.5rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 100%;
+  letter-spacing: 0.0375rem;
+  text-transform: uppercase;
+  font-variant-numeric: lining-nums proportional-nums;
+}
+.heading-sub {
+  color: var(--dark-1, #1E1E1E);
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: 1.5rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 100%;
+  letter-spacing: 0.0375rem;
+  text-transform: uppercase;
+  font-variant-numeric: lining-nums proportional-nums;
+  margin-top: 0.75rem;
+}
+.heading-wrapper .divider { display: none; }
+
+/* Blinking caret for typewriter effect */
+.commentary-caret {
+  display: inline-block;
+  width: 0.6ch;
+  height: 1em;
+  background-color: currentColor;
+  margin-left: 1px;
+  vertical-align: baseline;
+  animation: commentary-caret-blink 1s steps(1) infinite;
+}
+
+@keyframes commentary-caret-blink {
+  0%, 60% { opacity: 1; }
+  61%, 100% { opacity: 0; }
 }

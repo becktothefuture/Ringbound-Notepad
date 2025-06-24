@@ -22,7 +22,7 @@ import { getAdaptiveMomentumConfig } from './utils.js';
  */
 class VirtualScrollEngine {
   constructor() {
-    this.scrollPosition = 0.0; // Fractional (1.5 = 50% through page 1)
+    this.scrollPosition = 0.0; // Fractional (1.5 = halfway through page 1 flip)
     this.snapThreshold = GLOBAL_CONFIG.ANIMATION.snapThreshold; // Auto-flip at threshold degrees
     this.isSnapping = false; // Prevent conflicts
     this.maxPages = 0; // Total number of pages
@@ -57,6 +57,11 @@ class VirtualScrollEngine {
     // Wheel event handling state
     this.lastWheelTime = null;
     this.wheelAccumulator = 0;
+
+    // Keyboard flipping state
+    // Tracks the latest requested page index for reliable, fast keyboard flipping.
+    // Always animates to this page, even if animation is in progress.
+    this.pendingTargetPage = Math.round(this.scrollPosition); // Initialize to current scroll position
 
     console.log('🎯 VirtualScrollEngine initialized');
     console.log('🚀 Momentum config:', this.momentumConfig);
@@ -143,15 +148,19 @@ class VirtualScrollEngine {
   setMaxPages(maxPages) {
     this.maxPages = maxPages;
     this.scrollPosition = Math.min(this.scrollPosition, maxPages - 1);
+    // If page count shrinks, ensure pendingTargetPage is valid
+    this.pendingTargetPage = Math.min(this.pendingTargetPage, maxPages - 1);
   }
 
   /**
    * Jump to specific page with animation
+   * Updates pendingTargetPage for both keyboard and programmatic jumps.
    * @param {number} targetPage - Target page index
    */
   jumpToPage(targetPage) {
-    const target = clamp(targetPage, 0, this.maxPages - 1);
-    this.animateToPosition(target);
+    // Always update pendingTargetPage, clamp to valid range
+    this.pendingTargetPage = clamp(targetPage, 0, this.maxPages - 1);
+    this.animateToPosition(this.pendingTargetPage);
   }
 
   /**
@@ -511,20 +520,24 @@ class VirtualScrollEngine {
     document.addEventListener('touchend', e => this.handleTouchEnd(e), { passive: true });
 
     // Keyboard events
+    // Reliable, fast flipping: each key press increments/decrements pendingTargetPage and animates to it.
     document.addEventListener('keydown', e => {
-      switch (e.key) {
-        case 'ArrowLeft':
-        case 'ArrowUp':
-          e.preventDefault();
-          this.jumpToPage(Math.floor(this.scrollPosition));
-          break;
-        case 'ArrowRight':
-        case 'ArrowDown':
-        case ' ':
-          e.preventDefault();
-          this.jumpToPage(Math.floor(this.scrollPosition) + 1);
-          break;
+      let handled = false;
+      // Guard: fallback to current page if pendingTargetPage is NaN
+      const safePending = (typeof this.pendingTargetPage === 'number' && !isNaN(this.pendingTargetPage))
+        ? this.pendingTargetPage
+        : Math.round(this.scrollPosition);
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        this.jumpToPage(safePending - 1);
+        handled = true;
+      } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+        e.preventDefault();
+        this.jumpToPage(safePending + 1);
+        handled = true;
       }
+      // Optionally: prevent key repeat from browser if needed
+      // if (handled) e.stopPropagation();
     });
 
     console.log('🎮 VirtualScrollEngine event listeners initialized (document-wide)');
