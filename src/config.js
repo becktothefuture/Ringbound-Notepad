@@ -218,6 +218,10 @@ export const GLOBAL_CONFIG = {
       lilac: '#e6ccff'       // Soft lilac
     }
   },
+
+  COMMENTARY: {
+    typewriterDelay: 400, // ms delay before commentary text animates in
+  },
 };
 
 // Legacy compatibility - map old PAGE_ANIMATION to new GLOBAL_CONFIG

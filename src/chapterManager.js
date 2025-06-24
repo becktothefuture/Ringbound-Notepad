@@ -5,6 +5,16 @@ const TAB_HEIGHT_PERCENT = 8; // percentage of page height
 const TAB_SPACING_PERCENT = 2; // percentage spacing between tabs
 
 /**
+ * Get the CSS variable value for tab safe area horizontal padding
+ * @returns {number} Safe area padding in pixels
+ */
+function getTabSafeAreaHorizontal() {
+  const rootStyle = getComputedStyle(document.documentElement);
+  const safeAreaValue = rootStyle.getPropertyValue('--tab-safe-area-horizontal').trim();
+  return parseInt(safeAreaValue, 10) || 8; // fallback to 8px
+}
+
+/**
  * Initializes the chapter navigation system.
  * Creates tabs and attaches them to the corresponding pages.
  * @param {HTMLElement[]} pages - Array of all page DOM elements.
@@ -12,16 +22,24 @@ const TAB_SPACING_PERCENT = 2; // percentage spacing between tabs
  */
 export function initChapters(pages, notebook) {
   const totalTabs = CHAPTERS.length;
+  
+  // Get safe area padding and convert to percentage based on page width
+  const safeAreaPx = getTabSafeAreaHorizontal();
+  // Assume page width is container width for calculation
+  const pageElement = pages[0];
+  const pageWidth = pageElement ? pageElement.offsetWidth : 800; // fallback
+  const safeAreaPercent = (safeAreaPx / pageWidth) * 100; // Single safe area for positioning
 
-  // Calculate tab dimensions using percentage-based logic
+  // Calculate tab dimensions using percentage-based logic with safe area
   // If we have N tabs, we have (N-1) gaps between them
   const totalGaps = totalTabs - 1;
   const totalSpacingPercent = totalGaps * TAB_SPACING_PERCENT;
-  const availableWidthPercent = 100 - totalSpacingPercent;
+  const totalSafeAreaPercent = safeAreaPercent * 2; // left + right safe areas
+  const availableWidthPercent = 100 - totalSpacingPercent - totalSafeAreaPercent;
   const tabWidthPercent = availableWidthPercent / totalTabs;
 
   console.log(
-    `📐 Tab calculations: ${totalTabs} tabs, ${tabWidthPercent.toFixed(1)}% each, ${TAB_SPACING_PERCENT}% spacing, ${TAB_HEIGHT_PERCENT}% height`
+    `📐 Tab calculations: ${totalTabs} tabs, ${tabWidthPercent.toFixed(1)}% each, ${TAB_SPACING_PERCENT}% spacing, ${TAB_HEIGHT_PERCENT}% height, ${totalSafeAreaPercent.toFixed(1)}% total safe area`
   );
 
   CHAPTERS.forEach((chapter, index) => {
@@ -37,9 +55,9 @@ export function initChapters(pages, notebook) {
       tab.style.height = `${TAB_HEIGHT_PERCENT}%`;
       tab.style.bottom = `-${TAB_HEIGHT_PERCENT * 0.75}%`; // Make tabs stick out more (also percentage-based)
 
-      // Position tabs evenly using percentages
-      // First tab starts at 0%, subsequent tabs positioned with spacing
-      const leftPositionPercent = index * (tabWidthPercent + TAB_SPACING_PERCENT);
+      // Position tabs evenly using percentages, starting after the safe area
+      // First tab starts at safe area offset, subsequent tabs positioned with spacing
+      const leftPositionPercent = safeAreaPercent + index * (tabWidthPercent + TAB_SPACING_PERCENT);
       tab.style.left = `${leftPositionPercent}%`;
 
       // Remove random rotation - keep tabs straight

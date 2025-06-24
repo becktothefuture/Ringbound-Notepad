@@ -25,29 +25,42 @@ import {
 let commentaryOverlay = null;
 let lastCommentary = null;
 
+// Typewriter effect for commentary overlay
+let commentaryTypewriterTimeout = null;
+
+function setCommentaryTextTypewriter(element, newText, typingSpeed = 24) {
+  if (!element) return;
+  if (commentaryTypewriterTimeout) clearTimeout(commentaryTypewriterTimeout);
+  element.innerHTML = '';
+  let i = 0;
+  // Add delay before starting typewriter effect
+  const delay = (typeof GLOBAL_CONFIG !== 'undefined' && GLOBAL_CONFIG.COMMENTARY && typeof GLOBAL_CONFIG.COMMENTARY.typewriterDelay === 'number')
+    ? GLOBAL_CONFIG.COMMENTARY.typewriterDelay
+    : 400;
+  function typeNext() {
+    element.innerHTML = newText.slice(0, i);
+    i++;
+    if (i <= newText.length) {
+      commentaryTypewriterTimeout = setTimeout(typeNext, typingSpeed);
+    } else {
+      element.innerHTML = newText;
+    }
+  }
+  commentaryTypewriterTimeout = setTimeout(typeNext, delay);
+}
+
 /**
  * Update commentary overlay with current page information
  * @param {HTMLElement} currentPage - Current page element
  */
 function updateCommentary(currentPage) {
-  if (!commentaryOverlay) {
-    commentaryOverlay = document.getElementById('commentary-overlay');
-  }
-
   const pixelCommentary = document.getElementById('pixel-commentary');
-
   if (currentPage) {
     const commentary = currentPage.dataset.commentary;
     if (commentary !== lastCommentary) {
-      if (commentaryOverlay) {
-        commentaryOverlay.textContent = commentary;
-        commentaryOverlay.classList.toggle('visible', !!commentary);
-      }
-
       if (pixelCommentary) {
-        pixelCommentary.textContent = commentary || 'No commentary available';
+        setCommentaryTextTypewriter(pixelCommentary, commentary);
       }
-
       lastCommentary = commentary;
     }
   }
