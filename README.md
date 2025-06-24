@@ -22,6 +22,20 @@ The notebook loads portfolio content from `data/portfolio.json` and creates 3D p
 
 ---
 
+## 🆕 Recent Features & Improvements
+
+- **Reliable Keyboard Flipping:** Arrow keys (left/right/up/down) and spacebar now flip exactly one page per press, even with rapid or repeated presses. The system tracks a pending target page, so holding or quickly pressing keys flips through pages smoothly and never skips or gets stuck.
+- **Performance Culling:** Only a limited number of regular pages are kept in the DOM for performance, but cover pages and chapter start pages (with tabs) are always visible and maintain their correct z-position and tab visibility.
+- **Tab & Cover System:** Tabs and covers are always visible, and their content is aggressively unloaded when far from the viewport for performance, but their shells remain for correct UI and navigation.
+- **3D Ring Positioning:** Rings are now positioned using pure 3D transforms, with no z-index or opacity hacks, and always maintain correct stacking and perspective.
+- **Shadow & Backface System:** Page shadows and backface gradients are now animated and configurable, with realistic exponential movement and fade based on page rotation.
+- **Zoom System:** The notebook supports smooth zoom in/out transitions, pausing scroll input during zoom to prevent conflicts, and resumes input after a short delay.
+- **Infinite Loop (if enabled):** The system supports seamless infinite page looping using virtual page positions and modular arithmetic, with a buffer system for smooth transitions.
+- **Commentary System:** Commentary overlays support typewriter effects and are always visible above the notebook.
+- **Centralized Configurability:** All performance, animation, and visual parameters are now centralized in `config.js` and can be tuned for different devices or user preferences.
+
+---
+
 ## 🎮 How It Works (For Junior Developers)
 
 ### The Big Picture
