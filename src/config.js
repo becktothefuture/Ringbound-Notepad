@@ -32,7 +32,7 @@ export const GLOBAL_CONFIG = {
   PERFORMANCE: {
     targetFPS: 60,
     frameTimeTarget: 16.67, // ms
-    maxVisiblePages: 5, // Drastically reduce for performance
+    maxVisiblePages: 12, // Increase buffer to reduce popping (was 5)
     memoryLimit: 100, // MB
     qualityScaleMin: 0.5,
     qualityScaleMax: 1.0,
@@ -99,7 +99,7 @@ export const GLOBAL_CONFIG = {
   SCENE: {
     perspective: 7000, // px
     perspectiveOriginX: '50%',
-    perspectiveOriginY: '600%', // Far bottom perspective
+    perspectiveOriginY: '350%', // Far bottom perspective
     transformOriginX: '50%',
     transformOriginY: '0%', // Top edge hinge (user specification)
     ringZIndex: 5000, // Always on top
@@ -109,7 +109,7 @@ export const GLOBAL_CONFIG = {
   // Zoom System Configuration
   ZOOM: {
     defaultScale: 0.8, // Default notebook scale (80%)
-    focusedScale: 1.0, // Focused notebook scale (100%)
+    focusedScale: 1.07, // Focused notebook scale (110%)
     transformOrigin: '50% 60%', // Zoom from center-bottom area
     transitionDuration: 600, // ms for zoom animation
     transitionEasing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Smooth ease-out
@@ -117,7 +117,7 @@ export const GLOBAL_CONFIG = {
     // Background zoom for realistic camera effect
     background: {
       defaultScale: 1.0, // Default background scale (100%)
-      focusedScale: 1.02, // Background scale when focused (104% = subtle zoom)
+      focusedScale: 0.97, // Background scale when focused (104% = subtle zoom)
     },
     
     // Coordination with scroll animations
@@ -132,12 +132,12 @@ export const GLOBAL_CONFIG = {
     animationSmoothing: 0.08, // 0-1 - lower = smoother but slower response
     easingTransition: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Smooth ease-out
     transitionDuration: 120, // ms for ring movement transitions
-    perspective: 4000, // px - perspective distance for ring container
-    offsetY: -7, // % - vertical offset for ring positioning (static)
+    perspective: 1000, // px - perspective distance for ring container
+    offsetY: -9, // % - vertical offset for ring positioning (static)
     offsetZ: -25, // px - clearance offset from top page position
     yPositionUnflipped: -14, // % - Y position when stack is unflipped
     yPositionFlipped: -4, // % - Y position when stack is fully flipped
-    scaleX: 0.98, // horizontal scale factor (stays constant)
+    scaleX: 1.02, // horizontal scale factor (stays constant)
     scaleY: 1.3, // vertical scale factor (stays constant)
   },
 
@@ -221,6 +221,16 @@ export const GLOBAL_CONFIG = {
 
   COMMENTARY: {
     typewriterDelay: 400, // ms delay before commentary text animates in
+  },
+
+  // Overlay hint configuration
+  OVERLAY: {
+    enabled: true, // Whether to show the overlay on page load
+    autoHideDelay: 3000, // Auto-hide after 3 seconds (ms)
+    fadeOutDuration: 300, // Fade out animation duration (ms)
+    backdropBlur: 10, // Backdrop blur amount (px)
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Overlay background color
+    zIndex: 90000, // Below noise (99999) but above everything else
   },
 };
 
