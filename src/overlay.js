@@ -51,27 +51,36 @@ class OverlayHints {
         <div class="overlay--hints__content">
           <!-- Click to Zoom Animation -->
           <div class="overlay--hints__wrapper">
-            <div class="overlay--hints__animation overlay--hints__animation--ripple">
-              <div class="ripple-circle ripple-circle--1"></div>
-              <div class="ripple-circle ripple-circle--2"></div>
-              <div class="ripple-circle ripple-circle--3"></div>
+            <div class="overlay--hints__animation overlay--hints__animation--circles">
+              <svg class="overlay--hints__svg" xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" fill="none">
+                <g id="overlay-animation_1_0">
+                  <circle id="overlay-node_4_1" opacity="0" cx="99.5" cy="99.5" r="84.5" stroke="#ffffff" stroke-width="2" />
+                  <circle id="overlay-node_3_2" opacity="0.3" cx="99.5" cy="99.5" r="60.5" stroke="#ffffff" stroke-width="2" />
+                  <circle id="overlay-node_2_3" cx="99.5" cy="99.5" r="25.5" stroke="#ffffff" stroke-width="2" />
+                  <circle id="overlay-node_1_4" opacity="0" cx="99.5" cy="99.5" r="18.5" stroke="#ffffff" stroke-width="2" />
+                  <circle id="overlay-node_4_5" opacity="0" cx="99.5" cy="99.5" r="84.5" stroke="#ffffff" stroke-width="2" />
+                </g>
+              </svg>
             </div>
             <div class="overlay--hints__label">CLICK TO ZOOM</div>
           </div>
           
           <!-- Scroll to Flip Animation -->
           <div class="overlay--hints__wrapper">
-            <div class="overlay--hints__animation overlay--hints__animation--scroll">
-              <div class="scroll-track">
-                <div class="scroll-line"></div>
-                <div class="scroll-line"></div>
-                <div class="scroll-line"></div>
-                <div class="scroll-line"></div>
-                <div class="scroll-line"></div>
-                <div class="scroll-line"></div>
-                <div class="scroll-line"></div>
-                <div class="scroll-line"></div>
-              </div>
+            <div class="overlay--hints__animation overlay--hints__animation--lines">
+              <svg class="overlay--hints__svg" xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" fill="none">
+                <g id="overlay-animation_4_0">
+                  <g id="overlay-animation2wrapper_1">
+                    <path id="overlay-Line07_2" opacity="0" d="M42 195H158" stroke="#ffffff" stroke-width="2" />
+                    <path id="overlay-Line06_3" opacity="0.5" d="M42 168H158" stroke="#ffffff" stroke-width="2" />
+                    <path id="overlay-Line05_4" d="M42 141H158" stroke="#ffffff" stroke-width="2" />
+                    <path id="overlay-Line04_5" d="M42 114H158" stroke="#ffffff" stroke-width="2" />
+                    <path id="overlay-Line03_6" d="M42 87H158" stroke="#ffffff" stroke-width="2" />
+                    <path id="overlay-Line02_7" d="M42 60H158" stroke="#ffffff" stroke-width="2" />
+                    <path id="overlay-Line01_8" opacity="0.5" d="M42 33H158" stroke="#ffffff" stroke-width="2" />
+                  </g>
+                </g>
+              </svg>
             </div>
             <div class="overlay--hints__label">SCROLL TO FLIP</div>
           </div>
@@ -84,6 +93,9 @@ class OverlayHints {
     
     // Add event listeners
     this.setupEventListeners();
+    
+    // Setup animation loops
+    this.setupAnimationLoops();
   }
 
   /**
@@ -123,6 +135,57 @@ class OverlayHints {
     
     window.addEventListener('touchstart', touchStartHandler);
     window.addEventListener('touchmove', touchMoveHandler, { passive: false });
+  }
+
+  /**
+   * Setup animation loops for both circle and line animations
+   */
+  setupAnimationLoops() {
+    // Animation 1: Circle animation loop
+    const circleIdNames = ["overlay-node_3_2", "overlay-node_2_3", "overlay-node_1_4"];
+    
+    const circleCandidate = document.getElementById("overlay-node_1_4");
+    if (circleCandidate) {
+      circleCandidate.addEventListener("animationend", (event) => {
+        if (event.animationName === "animation_node_1_4_flow_2" && this.isVisible) {
+          circleIdNames.forEach((id) => {
+            const element = document.getElementById(id);
+            if (element) {
+              const animation = element.style.animation;
+              element.style.animation = 'none';
+              setTimeout(() => {
+                if (this.isVisible) { // Check if overlay is still visible
+                  element.style.animation = animation;
+                }
+              }, 5);
+            }
+          });
+        }
+      });
+    }
+
+    // Animation 2: Line animation loop
+    const lineIdNames = ["overlay-Line07_2", "overlay-Line06_3", "overlay-Line05_4", "overlay-Line04_5", "overlay-Line03_6", "overlay-Line02_7", "overlay-Line01_8"];
+    
+    const lineCandidate = document.getElementById("overlay-Line01_8");
+    if (lineCandidate) {
+      lineCandidate.addEventListener("animationend", (event) => {
+        if (event.animationName === "animation_Line01_8_flow_2" && this.isVisible) {
+          lineIdNames.forEach((id) => {
+            const element = document.getElementById(id);
+            if (element) {
+              const animation = element.style.animation;
+              element.style.animation = 'none';
+              setTimeout(() => {
+                if (this.isVisible) { // Check if overlay is still visible
+                  element.style.animation = animation;
+                }
+              }, 5);
+            }
+          });
+        }
+      });
+    }
   }
 
   /**
