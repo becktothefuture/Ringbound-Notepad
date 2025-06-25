@@ -1782,3 +1782,123 @@ body.preloader-done .heading-wrapper {
     height: 100%;
   }
 }
+
+/* =============================================================================
+   17. TOP NAVIGATION BAR
+============================================================================= */
+
+.top-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 80px;
+  background: transparent;
+  z-index: 95000; /* Below noise (99999) and hints overlay (90000) but above everything else */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  box-sizing: border-box;
+  pointer-events: auto;
+  
+  /* Ensure navigation doesn't react to zoom transforms */
+  transform: none !important;
+  transform-style: flat !important;
+}
+
+.top-nav__left {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.top-nav__link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.top-nav__icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.top-nav__icon svg {
+  width: 100%;
+  height: 100%;
+  fill: #000000;
+  transition: fill 0.2s ease;
+  display: block;
+  color: #000000;
+}
+
+
+
+.top-nav__link--mail:hover svg {
+  fill: #17f484;
+  color: #17f484;
+}
+
+
+.top-nav__link--linkedin:hover svg {
+  fill: #104f84;
+  color: #104f84;
+}
+
+
+.top-nav__link--instagram:hover svg {
+  fill: #e4405f;
+  color: #e4405f;
+}
+
+.top-nav__cv {
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1;
+  color: #000000;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  padding: 0px 8px;
+}
+
+.top-nav__cv:hover {
+  text-decoration: underline;
+  color: #000000;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .top-nav {
+    height: 60px;
+    padding: 0 20px;
+  }
+  
+  .top-nav__left {
+    gap: 8px;
+  }
+  
+  .top-nav__link {
+    padding: 6px;
+  }
+  
+  .top-nav__icon {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .top-nav__cv {
+    font-size: 28px;
+  }
+}
