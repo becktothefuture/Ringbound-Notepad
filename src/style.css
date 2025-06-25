@@ -163,6 +163,37 @@ h2 {
   cursor: default !important;
 }
 
+/* Ensure tabs keep pointer cursor and override zoom cursor */
+.page-tab {
+  cursor: pointer !important;
+}
+
+/* Comprehensive anti-highlighting and selection prevention for tabs */
+.page-tab,
+.page-tab *,
+.page-tab::before,
+.page-tab::after {
+  /* Prevent text selection */
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  
+  /* Prevent touch highlighting */
+  -webkit-touch-callout: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  
+  /* Prevent drag operations */
+  -webkit-user-drag: none !important;
+  -khtml-user-drag: none !important;
+  -moz-user-drag: none !important;
+  -o-user-drag: none !important;
+  user-drag: none !important;
+  
+  /* Prevent focus highlighting */
+  outline: none !important;
+}
+
 body,
 * {
   font-family: 'Geist', system-ui, sans-serif !important;
@@ -469,24 +500,16 @@ main:not(.page-wrapper) {
 .page-content {
   position: relative;
   width: 100%;
-  overflow: visible; /* Allow tabs to extend beyond page boundaries */
-  backface-visibility: hidden;
+  overflow: hidden; /* Allow tabs to extend beyond page boundaries */
+  backface-visibility: visible;
   padding: 2%;
   box-sizing: border-box;
   /* Ensure content fades appropriately during flip */
   transition: opacity 150ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  border-radius: 0.5em ;
 }
 
-.page-content *,
-.page-content img,
-.page-content video,
-.page-content__inner,
-.page-content__media,
-.page-content__media--video {
-  backface-visibility: hidden !important;
-  /* Ensure smooth blurring on all content */
-  will-change: filter;
-}
+
 
 /* Removed duplicate .page rule - overflow handled in main .page definition */
 
@@ -894,7 +917,8 @@ h2 {
   transition: 
     transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
     opacity 150ms cubic-bezier(0.4, 0.0, 0.2, 1),
-    filter 100ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    filter 100ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    box-shadow 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
   background: #fff;
   pointer-events: auto;
   filter: none !important;
@@ -906,6 +930,35 @@ h2 {
   /* Remove any transform to keep tabs straight */
   transform: none;
   /* Safe area padding handled in JavaScript positioning */
+  
+  /* Prevent text selection and highlighting */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Tab hover effect - move down by 5% */
+.page-tab:hover {
+  transform: translateY(5%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Tab active/click effect for immediate feedback */
+.page-tab:active {
+  transform: translateY(7%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: 
+    transform 100ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    box-shadow 100ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Subtle tab focus style for accessibility (override only when absolutely needed) */
+.page-tab:focus-visible {
+  box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.5);
+  transform: translateY(2%);
 }
 
 .tab-with-image {

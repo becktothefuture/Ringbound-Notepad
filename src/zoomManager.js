@@ -290,6 +290,11 @@ class ZoomManager {
       return true;
     }
     
+    // Don't trigger zoom on tabs - they have their own navigation behavior
+    if (target.closest('.page-tab')) {
+      return true;
+    }
+    
     // Don't trigger zoom on commentary overlays
     if (target.closest('.commentary') || target.closest('.overlay--rotate')) {
       return true;

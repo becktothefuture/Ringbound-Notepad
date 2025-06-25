@@ -377,6 +377,9 @@ export function createPagesFromPortfolioData(container, portfolioData) {
       color: projectColor,
       tabImage: project.tabImage, // Add tab image reference
     });
+    
+    console.log(`📑 Added chapter: ${project.title} at page ${chapterStartPage}, CHAPTERS now has ${CHAPTERS.length} items`);
+    console.log('📑 Current CHAPTERS array:', CHAPTERS);
 
     // Create pages for this project
     project.pages.forEach((pageData, pageIndex) => {

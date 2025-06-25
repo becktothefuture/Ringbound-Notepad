@@ -1,8 +1,16 @@
 import { CHAPTERS } from './chapters.js';
-import { jumpToPage } from './scrollEngine.js';
+import { ApplicationState } from './app.js';
+
+console.log('📑 ChapterManager imports check:');
+console.log('  - CHAPTERS imported:', typeof CHAPTERS, CHAPTERS);
+console.log('  - ApplicationState imported:', typeof ApplicationState, ApplicationState);
 
 const TAB_HEIGHT_PERCENT = 8; // percentage of page height
 const TAB_SPACING_PERCENT = 2; // percentage spacing between tabs
+
+// Global state for chapter navigation
+let currentChapterIndex = 0;
+let isInitialized = false;
 
 /**
  * Get the CSS variable value for tab safe area horizontal padding
@@ -15,13 +23,198 @@ function getTabSafeAreaHorizontal() {
 }
 
 /**
+ * Navigate to next chapter (TAB key)
+ */
+function navigateToNextChapter() {
+  if (CHAPTERS.length === 0) {
+    console.warn('⚠️ No chapters available for navigation');
+    return;
+  }
+  
+  currentChapterIndex = (currentChapterIndex + 1) % CHAPTERS.length;
+  const targetChapter = CHAPTERS[currentChapterIndex];
+  
+  console.log(`📑 TAB Navigation: ${targetChapter.title} (page ${targetChapter.page})`);
+  try {
+    if (ApplicationState.scrollEngine && ApplicationState.scrollEngine.jumpToPage) {
+      ApplicationState.scrollEngine.jumpToPage(targetChapter.page);
+      console.log('✅ TAB jumpToPage called successfully');
+    } else {
+      console.error('❌ ScrollEngine not available in ApplicationState');
+    }
+  } catch (error) {
+    console.error('❌ TAB jumpToPage failed:', error);
+  }
+}
+
+/**
+ * Navigate to previous chapter (Shift+TAB)
+ */
+function navigateToPreviousChapter() {
+  if (CHAPTERS.length === 0) {
+    console.warn('⚠️ No chapters available for navigation');
+    return;
+  }
+  
+  currentChapterIndex = (currentChapterIndex - 1 + CHAPTERS.length) % CHAPTERS.length;
+  const targetChapter = CHAPTERS[currentChapterIndex];
+  
+  console.log(`📑 Shift+TAB Navigation: ${targetChapter.title} (page ${targetChapter.page})`);
+  try {
+    if (ApplicationState.scrollEngine && ApplicationState.scrollEngine.jumpToPage) {
+      ApplicationState.scrollEngine.jumpToPage(targetChapter.page);
+      console.log('✅ Shift+TAB jumpToPage called successfully');
+    } else {
+      console.error('❌ ScrollEngine not available in ApplicationState');
+    }
+  } catch (error) {
+    console.error('❌ Shift+TAB jumpToPage failed:', error);
+  }
+}
+
+/**
+ * Handle global keyboard navigation for chapter cycling
+ * @param {Event} event - Keyboard event
+ */
+function handleGlobalKeydown(event) {
+  if (!isInitialized || CHAPTERS.length === 0) {
+    if (event.key === 'Tab') {
+      console.log('🎯 TAB key pressed but chapters not initialized or no chapters available');
+    }
+    return;
+  }
+  
+  // Handle TAB key for chapter navigation
+  if (event.key === 'Tab') {
+    console.log('🎯 TAB key detected, activeElement:', document.activeElement);
+    
+    // Prevent default tab behavior when not focusing on interactive elements
+    const activeElement = document.activeElement;
+    const isOnTab = activeElement && activeElement.closest('.page-tab');
+    
+    console.log('🎯 Is focus on tab?', isOnTab);
+    
+    if (!isOnTab) {
+      console.log('🎯 Preventing default TAB behavior and triggering chapter navigation');
+      event.preventDefault();
+      
+      if (event.shiftKey) {
+        console.log('🎯 Shift+TAB detected');
+        navigateToPreviousChapter();
+      } else {
+        console.log('🎯 TAB detected');
+        navigateToNextChapter();
+      }
+    } else {
+      console.log('🎯 TAB focus on tab element, allowing normal browser behavior');
+    }
+  }
+}
+
+/**
+ * Handle tab click events for chapter navigation
+ * @param {Event} event - Click event
+ */
+function handleTabClick(event) {
+  const tab = event.target.closest('.page-tab');
+  if (!tab) return;
+
+  console.log('🎯 Tab clicked:', tab, 'Dataset:', tab.dataset);
+
+  // Get the chapter data from the tab's data attribute
+  const chapterIndex = parseInt(tab.dataset.chapterIndex, 10);
+  if (isNaN(chapterIndex) || chapterIndex < 0 || chapterIndex >= CHAPTERS.length) {
+    console.warn('⚠️ Invalid chapter index:', chapterIndex, 'CHAPTERS:', CHAPTERS);
+    return;
+  }
+
+  // Update current chapter index for TAB navigation continuity
+  currentChapterIndex = chapterIndex;
+  const targetChapter = CHAPTERS[chapterIndex];
+  console.log(`📑 Click Navigation: ${targetChapter.title} (page ${targetChapter.page})`);
+
+  // Use jumpToPage to navigate with smooth animation
+  try {
+    if (ApplicationState.scrollEngine && ApplicationState.scrollEngine.jumpToPage) {
+      ApplicationState.scrollEngine.jumpToPage(targetChapter.page);
+      console.log('✅ jumpToPage called successfully');
+    } else {
+      console.error('❌ ScrollEngine not available in ApplicationState');
+    }
+  } catch (error) {
+    console.error('❌ jumpToPage failed:', error);
+    console.log('Scroll engine available:', typeof ApplicationState.scrollEngine);
+  }
+
+  // Prevent any other click handlers
+  event.preventDefault();
+  event.stopPropagation();
+}
+
+/**
+ * Handle tab keyboard events for accessibility
+ * @param {Event} event - Keyboard event
+ */
+function handleTabKeydown(event) {
+  const tab = event.target.closest('.page-tab');
+  if (!tab) return;
+
+  // Handle Enter or Space key
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // Trigger the same navigation as click
+    const clickEvent = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      view: window
+    });
+    tab.dispatchEvent(clickEvent);
+  }
+}
+
+/**
+ * Initialize tab click handlers and global keyboard navigation
+ * @param {HTMLElement} notebook - The main notebook container element
+ */
+function initTabClickHandlers(notebook) {
+  // Add test event listener to verify event delegation is working
+  notebook.addEventListener('click', (event) => {
+    console.log('🎯 Notebook click detected on:', event.target);
+    console.log('🎯 Closest .page-tab:', event.target.closest('.page-tab'));
+  }, false);
+
+  // Use event delegation for better performance and automatic handling of dynamic tabs
+  notebook.addEventListener('click', handleTabClick, true);
+  notebook.addEventListener('keydown', handleTabKeydown, true);
+  
+  // Add global keyboard handler for TAB navigation
+  document.addEventListener('keydown', handleGlobalKeydown, true);
+  
+  console.log('🎯 Tab click, keyboard, and global TAB navigation handlers initialized');
+  console.log('🎯 Event listeners attached to notebook:', notebook.id, notebook.className);
+}
+
+/**
  * Initializes the chapter navigation system.
  * Creates tabs and attaches them to the corresponding pages.
  * @param {HTMLElement[]} pages - Array of all page DOM elements.
  * @param {HTMLElement} notebook - The main notebook container element.
  */
 export function initChapters(pages, notebook) {
+  console.log('🔍 Chapter initialization debug:');
+  console.log('  - CHAPTERS array:', CHAPTERS);
+  console.log('  - CHAPTERS length:', CHAPTERS.length);
+  console.log('  - Pages array length:', pages.length);
+  
   const totalTabs = CHAPTERS.length;
+  
+  if (totalTabs === 0) {
+    console.warn('⚠️ No chapters found - skipping tab initialization');
+    console.log('This might indicate the portfolio data hasn\'t been loaded yet');
+    return;
+  }
   
   // Get safe area padding and convert to percentage based on page width
   const safeAreaPx = getTabSafeAreaHorizontal();
@@ -48,6 +241,12 @@ export function initChapters(pages, notebook) {
       const tab = document.createElement('div');
       tab.className = 'page-tab';
       tab.textContent = chapter.title;
+      
+      // Store chapter index for click handling
+      tab.dataset.chapterIndex = index;
+      tab.setAttribute('aria-label', `Jump to ${chapter.title}`);
+      tab.setAttribute('role', 'button');
+      tab.setAttribute('tabindex', '0');
 
       // Style the tab with percentage-based positioning and sizing
       tab.style.backgroundColor = chapter.color;
@@ -59,9 +258,6 @@ export function initChapters(pages, notebook) {
       // First tab starts at safe area offset, subsequent tabs positioned with spacing
       const leftPositionPercent = safeAreaPercent + index * (tabWidthPercent + TAB_SPACING_PERCENT);
       tab.style.left = `${leftPositionPercent}%`;
-
-      // Remove random rotation - keep tabs straight
-      // tab.style.transform = `rotate(${rotation.toFixed(2)}deg)`;
 
       // Set tab background image if available
       if (chapter.tabImage) {
@@ -99,4 +295,14 @@ export function initChapters(pages, notebook) {
       pageElement.appendChild(tab);
     }
   });
+
+  // Initialize click handlers after all tabs are created
+  initTabClickHandlers(notebook);
+  
+  // Mark as initialized and set starting chapter
+  isInitialized = true;
+  currentChapterIndex = 0; // Start with first chapter
+  
+  console.log('📑 Chapter navigation system ready');
+  console.log('💡 TIP: Use TAB/Shift+TAB to navigate between chapters');
 }
