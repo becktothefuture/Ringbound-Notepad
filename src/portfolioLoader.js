@@ -223,7 +223,7 @@ function createPageElement(pageData, chapterId, pageIndex, globalIndex) {
 }
 
 /**
- * Create media element (image or video) with proper CSS classes
+ * Create media element (image or video) with lazy loading support
  * @param {string} type - Media type ('video' or 'image')
  * @param {string} assetPath - Path to media asset
  * @param {string} altText - Alt text for accessibility
@@ -234,19 +234,28 @@ function createMediaElement(type, assetPath, altText) {
 
   if (type === 'video') {
     mediaEl = document.createElement('video');
-    mediaEl.src = assetPath;
+    // Use data-src for lazy loading instead of immediate src
+    mediaEl.dataset.src = assetPath;
     mediaEl.autoplay = true;
     mediaEl.loop = true;
     mediaEl.muted = true;
     mediaEl.playsInline = true;
+    mediaEl.preload = 'none'; // Don't preload until explicitly needed
     mediaEl.className = 'page-content__inner page-content__media--video';
     mediaEl.addEventListener('error', e => {
       console.error(`Failed to load video: ${assetPath}`, e);
     });
+    
+    // Generate poster path for video thumbnails if available
+    const posterPath = assetPath.replace(/\.(mp4|webm)$/, '-poster-00001.jpg');
+    mediaEl.dataset.poster = posterPath;
+    
   } else {
     mediaEl = document.createElement('img');
-    mediaEl.src = assetPath;
+    // Use data-src for lazy loading instead of immediate src
+    mediaEl.dataset.src = assetPath;
     mediaEl.alt = altText;
+    mediaEl.loading = 'lazy'; // Native lazy loading as fallback
     mediaEl.className = 'page-content__inner page-content__media';
     mediaEl.addEventListener('error', e => {
       console.error(`Failed to load image: ${assetPath}`, e);
@@ -274,13 +283,6 @@ function createCoverPage(type, commentary, globalIndex) {
     coverEl.className = 'page cover cover--front gpu-accelerated';
     coverEl.dataset.deckNumber = 'front';
     coverFront.classList.add('cover', 'cover--front');
-
-    // Add centered logo image to front
-    const logoImg = document.createElement('img');
-    logoImg.src = 'assets/folio-title.png';
-    logoImg.alt = 'Portfolio Title';
-    logoImg.className = 'cover-logo';
-    coverFront.appendChild(logoImg);
 
     // NO CONTENT - covers should have no text as requested
   } else {

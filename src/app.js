@@ -45,6 +45,8 @@ import { initBrowserTheme } from './browserTheme.js';
 import { initChapters } from './chapterManager.js';
 import { zoomManager } from './zoomManager.js';
 import { initializeDynamicNoise } from './noiseGenerator.js';
+import { overlayHints } from './overlay.js';
+import { initPreloader, cleanupPreloader } from './preloader.js';
 import portfolioData from '../data/portfolio.json' assert { type: 'json' };
 
 // === APPLICATION STATE ===
@@ -372,6 +374,10 @@ async function bootstrap() {
     console.log('🎯 Phase 2: Loading and validating 3D notebook content...');
     const pages = await loadPortfolioContent();
 
+    // Phase 2.5: Initialize preloader system with critical assets
+    console.log('⏳ Phase 2.5: Initializing preloader and loading critical assets...');
+    await initPreloader(pages);
+
     // Initialize rendering system with page count for depth model
     initializeRenderingSystem(ApplicationState.pageCount);
 
@@ -398,8 +404,12 @@ async function bootstrap() {
     const clickContainer = document.querySelector('.page-wrapper');
     zoomManager.initialize(notebookContainer, clickContainer, ApplicationState.scrollEngine);
 
-    // Phase 6: Finalize application
-    console.log('✅ Phase 6: Finalizing application...');
+    // Phase 6: Initialize overlay hints (after preloader is done)
+    console.log('🎨 Phase 6: Initializing overlay hints...');
+    overlayHints.initialize(ApplicationState.scrollEngine);
+
+    // Phase 7: Finalize application
+    console.log('✅ Phase 7: Finalizing application...');
     finalizeApplication();
 
     console.log('🎉 Application bootstrap complete!');
@@ -433,6 +443,12 @@ function cleanup() {
       ApplicationState.zoomManager.destroy();
       ApplicationState.zoomManager = null;
     }
+
+    // Clean up overlay hints
+    overlayHints.destroy();
+
+    // Clean up preloader resources
+    cleanupPreloader();
 
     console.log('🧹 Application cleanup complete');
   } catch (error) {

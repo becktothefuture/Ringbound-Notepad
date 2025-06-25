@@ -139,11 +139,7 @@ body.zoom-focused {
   cursor: zoom-out; /* Visual hint that clicking will zoom out */
 }
 
-/* Add subtle visual feedback on hover for zoom areas */
-body:hover {
-  background-color: color-mix(in srgb, var(--browser-color) 95%, #007bff 5%);
-  transition: background-color 200ms ease;
-}
+/* Body hover effect removed - was causing unwanted grey overlay */
 
 /* Enable zoom cursor on the entire notebook area */
 .page-wrapper {
@@ -154,10 +150,7 @@ body:hover {
   cursor: zoom-out;
 }
 
-/* Subtle hover feedback for the entire clickable area */
-.page-wrapper:hover {
-  background-color: color-mix(in srgb, transparent 97%, #007bff 3%);
-}
+/* Page wrapper hover effect removed - was causing browser compatibility issues */
 
 /* Disable zoom cursor only on specific interactive elements */
 .rings,
@@ -270,7 +263,8 @@ main:not(.page-wrapper) {
   /* ZOOM FUNCTIONALITY - Apply to parent container for better performance */
   transform: scale(var(--notebook-zoom-scale));
   transform-origin: 50% 60%;
-  transition: transform var(--zoom-duration) var(--zoom-easing);
+  /* Smooth zoom & optional fade */
+  transition: transform var(--zoom-duration) var(--zoom-easing), opacity var(--zoom-duration) var(--zoom-easing);
 }
 
 .notebook.notebook--focused {
@@ -335,7 +329,6 @@ main:not(.page-wrapper) {
   --shadow-blur: 28px;
   --shadow-offset-y: 60px;
   --shadow-anim-duration: 0.3s;
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   transform-origin: center center;
 }
 
@@ -535,19 +528,44 @@ main:not(.page-wrapper) {
   left: -0.5%;
 }
 
-/* Cover styling applied to page-front when it has cover classes */
-.page-front.cover.cover--back,
+/* Front cover styling */
 .page-front.cover.cover--front {
   z-index: auto !important;
   /* Ensure cover inherits border radius and hides overflow */
   border-radius: inherit;
   overflow: hidden;
-  background-image:
-    linear-gradient(38deg, #0000001a, #0000), url('./assets/background-assets/images/cardboard.jpg');
-  background-position:
-    0 0,
-    0 0;
-  background-size: auto, auto;
+  background-image: url('./assets/portfolio-pages/folio-cover/cover-front.webp');
+  background-position: center bottom;
+  background-size: cover;
+  background-repeat: no-repeat;
+  box-shadow:
+    inset 0 3px 2px #c29154,
+    inset 0 -2px 3px 2px #664620,
+    0 0 #0000,
+    -0.2px 0.4px #0000000e,
+    -0.4px 0.9px 0.1px #0001,
+    -0.7px 1.6px 0.5px #00000013,
+    -1.2px 2.8px 1.3px #00000014,
+    -2.1px 5px 2.9px #00000015,
+    -3.8px 8.9px 6.2px #00000015,
+    -7.1px 16.7px 13px #00000016,
+    -14.9px 35.1px 29.5px #00000018,
+    0 2px 4px rgba(0, 0, 0, 0.12),
+    0 4px 8px rgba(0, 0, 0, 0.08),
+    0 8px 16px rgba(0, 0, 0, 0.06);
+  position: relative;
+}
+
+/* Back cover styling */
+.page-front.cover.cover--back {
+  z-index: auto !important;
+  /* Ensure cover inherits border radius and hides overflow */
+  border-radius: inherit;
+  overflow: hidden;
+  background-image: url('./assets/portfolio-pages/folio-cover/cover-default.webp');
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
   box-shadow:
     inset 0 3px 2px #c29154,
     inset 0 -2px 3px 2px #664620,
@@ -587,6 +605,21 @@ main:not(.page-wrapper) {
 .page-front.cover.cover--front {
   transform-style: preserve-3d;
   position: absolute;
+}
+
+/* Cover back faces - backside of covers when flipped */
+.cover.cover--front .page-back {
+  background-image: url('./assets/portfolio-pages/folio-cover/cover-default.webp');
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.cover.cover--back .page-back {
+  background-image: url('./assets/portfolio-pages/folio-cover/cover-default.webp');
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
 }
 
 .cover-content {
@@ -867,7 +900,7 @@ h2 {
   filter: none !important;
   opacity: 1 !important;
   overflow: hidden;
-  border-radius: 4px;
+  border-radius: 4px 4px 10px 10px;
   box-sizing: border-box;
   transform-style: flat;
   /* Remove any transform to keep tabs straight */
@@ -1054,11 +1087,20 @@ h2 {
 }
 
 .page--visible {
-  display: flex;
+  display: flex !important;
+  opacity: 1 !important;
+  transition: opacity 300ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.page--fading {
+  display: flex !important;
+  opacity: var(--fade-opacity, 0.5) !important;
+  transition: opacity 400ms cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 .page--hidden {
-  display: none;
+  display: none !important;
+  opacity: 0 !important;
 }
 
 .page-content--bottom {
@@ -1084,36 +1126,34 @@ h2 {
   transition: opacity 200ms cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
+.page-content--fading {
+  opacity: var(--content-fade-opacity, 0.5) !important;
+  transition: opacity 300ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
 /* Hide content completely when page is showing its backside */
 .page--showing-backface .page-front {
-  opacity: 0;
+  opacity: 0 !important;
   transition: opacity 100ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  /* Ensure proper backface handling during flip */
+  transform: translateZ(0);
 }
 
 .page--showing-backface .page-front *,
 .page--showing-backface .page-front img,
 .page--showing-backface .page-front video {
-  opacity: 0;
-  backface-visibility: hidden;
+  opacity: 0 !important;
+  backface-visibility: hidden !important;
   pointer-events: none;
+  /* Prevent rendering artifacts during flip */
+  transform: translateZ(0);
 }
 
 /* Test change Sun Jun 22 19:23:23 BST 2025 */
 /* Another test change Sun Jun 22 19:24:22 BST 2025 */
 /* Fixed watcher test Sun Jun 22 19:25:38 BST 2025 */
 
-/* Centered logo image on front cover */
-.cover-logo {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 30%;
-  height: auto;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  user-select: none;
-  opacity: 0.9;
-}
+
 
 /* =====================================================
    15. RGB NOISE SYSTEM (CSS-based, high performance)
@@ -1182,6 +1222,75 @@ body::before {
   body::before {
     --noise-opacity: 0.2;
   }
+}
+
+/* ================================================
+   PRELOADER SYSTEM (spinner and fade transitions)
+   ================================================ */
+
+.preloader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+  opacity: 1;
+  transition: opacity 300ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.preloader__spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.spinner-ring {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #333;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.preloader__text {
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+/* Hide all page content initially during preload */
+body.preloader-active .page-wrapper,
+body.preloader-active .notebook,
+body.preloader-active .page-stack,
+body.preloader-active .rings-wrapper,
+body.preloader-active .notebook-background,
+body.preloader-active .heading-wrapper {
+  opacity: 0;
+  transition: opacity 400ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* Show all content together when preloader is done */
+body.preloader-done .page-wrapper,
+body.preloader-done .notebook,
+body.preloader-done .page-stack,
+body.preloader-done .rings-wrapper,
+body.preloader-done .notebook-background,
+body.preloader-done .heading-wrapper {
+  opacity: 1;
 }
 
 /* ================================================
@@ -1273,4 +1382,197 @@ body::before {
 @keyframes commentary-caret-blink {
   0%, 60% { opacity: 1; }
   61%, 100% { opacity: 0; }
+}
+
+/* =============================================================================
+   16. OVERLAY HINTS SYSTEM
+============================================================================= */
+
+/* Overlay container */
+.overlay--hints {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--overlay-bg, rgba(0, 0, 0, 0.5));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 90000; /* Below noise (99999) but above everything else */
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+  pointer-events: none;
+}
+
+.overlay--hints--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Inner container for flexbox centering */
+.overlay--hints__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* Content container */
+.overlay--hints__content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 160px;
+}
+
+/* Animation wrapper */
+.overlay--hints__wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  width: 200px;
+}
+
+/* Animation containers */
+.overlay--hints__animation {
+  width: 200px;
+  height: 200px;
+  position: relative;
+}
+
+/* Label styles - Using Geist font */
+.overlay--hints__label {
+  font-family: 'Geist', sans-serif;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 1.15;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-align: center;
+}
+
+/* =============================================================================
+   16.1 RIPPLE ANIMATION (Click to Zoom)
+============================================================================= */
+
+.overlay--hints__animation--ripple {
+  position: relative;
+}
+
+/* Ripple circles */
+.ripple-circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.3);
+  border-radius: 50%;
+  border: 1px solid #ffffff;
+  animation: ripple 3s ease-out infinite;
+  width: 100%;
+  height: 100%;
+}
+
+/* Remove fixed sizes */
+.ripple-circle--1 { animation-delay: 0s; }
+.ripple-circle--2 { animation-delay: 1s; }
+.ripple-circle--3 { animation-delay: 2s; }
+
+@keyframes ripple {
+  from {
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
+/* =============================================================================
+   16.2 SCROLL ANIMATION (Scroll to Flip)
+============================================================================= */
+
+.overlay--hints__animation--scroll {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scroll-track {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Scroll lines */
+.scroll-line {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
+  height: 2px;
+  background: #ffffff;
+  opacity: 0;
+  animation: scrollLine 3s linear infinite;
+}
+
+/* Stagger the lines */
+.scroll-line:nth-child(1) { animation-delay: 0s; }
+.scroll-line:nth-child(2) { animation-delay: 0.375s; }
+.scroll-line:nth-child(3) { animation-delay: 0.75s; }
+.scroll-line:nth-child(4) { animation-delay: 1.125s; }
+.scroll-line:nth-child(5) { animation-delay: 1.5s; }
+.scroll-line:nth-child(6) { animation-delay: 1.875s; }
+.scroll-line:nth-child(7) { animation-delay: 2.25s; }
+.scroll-line:nth-child(8) { animation-delay: 2.625s; }
+
+@keyframes scrollLine {
+  0%   { top: -10%; opacity: 0; }
+  10%  { opacity: 0.3; }
+  20%  { opacity: 0.7; }
+  30%  { opacity: 1; }
+  60%  { top: 50%; opacity: 1; }
+  80%  { opacity: 0.5; }
+  88%  { opacity: 0; }
+  100% { top: 110%; opacity: 0; }
+}
+
+/* =============================================================================
+   16.3 MOBILE RESPONSIVE STYLES
+============================================================================= */
+
+@media (max-width: 768px) {
+  /* Stack animations vertically on mobile */
+  .overlay--hints__content {
+    flex-direction: column;
+    gap: 60px;
+  }
+  
+  /* Slightly smaller animations on mobile */
+  .overlay--hints__animation {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .overlay--hints__wrapper {
+    width: 150px;
+    gap: 30px;
+  }
+  
+  /* Adjust label size */
+  .overlay--hints__label {
+    font-size: 18px;
+  }
+  
+  /* Scale down ripple circles proportionally */
+  .ripple-circle--1,
+  .ripple-circle--2,
+  .ripple-circle--3 {
+    width: 100%;
+    height: 100%;
+  }
 }
