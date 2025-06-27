@@ -57,6 +57,7 @@ class VirtualScrollEngine {
     // Wheel event handling state
     this.lastWheelTime = null;
     this.wheelAccumulator = 0;
+    this.wheelLogCounter = 0;
 
     // Keyboard flipping state
     // Tracks the latest requested page index for reliable, fast keyboard flipping.
@@ -465,7 +466,12 @@ class VirtualScrollEngine {
     const velocityBoost = isRapidSequence && this.wheelAccumulator > 0.5 ? 2.0 : 1.0;
     const adjustedDelta = wheelDelta * velocityBoost;
     
-    console.log(`🎯 Wheel: delta=${wheelDelta.toFixed(3)}, rapid=${isRapidSequence}, accumulator=${this.wheelAccumulator.toFixed(3)}, boost=${velocityBoost}`);
+    // PERFORMANCE OPTIMIZATION: Only log every 10th wheel event to reduce console spam
+    if (!this.wheelLogCounter) this.wheelLogCounter = 0;
+    this.wheelLogCounter++;
+    if (this.wheelLogCounter % 10 === 0) {
+      console.log(`🎯 Wheel: delta=${wheelDelta.toFixed(3)}, rapid=${isRapidSequence}, accumulator=${this.wheelAccumulator.toFixed(3)}, boost=${velocityBoost} [${this.wheelLogCounter} events]`);
+    }
     
     this.updateScrollPosition(adjustedDelta);
   }

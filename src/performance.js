@@ -176,43 +176,53 @@ class PerformanceManager {
   }
 
   /**
-   * Assess performance and adjust quality scaling
+   * Assess current performance and adjust quality settings accordingly
    */
   assessPerformanceAndScale() {
-    const avgFps = this.getAverageFPS();
+    const now = performance.now();
+    
+    // PERFORMANCE OPTIMIZATION: Only assess every 2 seconds instead of every 500ms
+    if (now - this.lastFpsUpdate < 2000) return;
+    this.lastFpsUpdate = now;
+    
+    // Calculate average FPS
+    const averageFps = this.getAverageFPS();
     const memoryUsage = this.getMemoryUsage();
-    const currentScale = this.metrics.qualityScale;
-
-    // Performance assessment flags - made less aggressive to prevent jarring transitions
-    const lowFPS = avgFps < this.targetFPS * 0.6; // Below 36fps (was 42fps)
-    const highMemory = memoryUsage > this.memoryLimit * 0.9; // Above 90MB (was 80MB)
-    const criticalFPS = avgFps < this.targetFPS * 0.4; // Below 24fps (was 30fps)
-    const criticalMemory = memoryUsage > this.memoryLimit * 1.2; // Above 120MB (was 100MB)
-
-    let newScale = currentScale;
-
-    // Critical performance issues - more gradual scaling
-    if (criticalFPS || criticalMemory) {
-      newScale = Math.max(GLOBAL_CONFIG.PERFORMANCE.qualityScaleMin, currentScale - 0.05); // Smaller steps
-      console.warn('🔴 Critical performance detected, reducing quality to', newScale);
+    
+    // More lenient performance thresholds to prevent constant degradation
+    const targetFps = this.targetFPS;
+    const isUnderperforming = averageFps < (targetFps * 0.7); // 70% of target (was stricter)
+    const isCritical = averageFps < (targetFps * 0.4); // 40% of target (was stricter)
+    
+    let newQualityScale = this.metrics.qualityScale;
+    
+    if (isCritical) {
+      // Reduce quality more aggressively only in truly critical situations
+      newQualityScale = Math.max(
+        GLOBAL_CONFIG.PERFORMANCE.qualityScaleMin,
+        this.metrics.qualityScale - 0.1 // Smaller reduction steps (was larger)
+      );
+      console.log(`🔴 Critical performance detected, reducing quality to ${newQualityScale.toFixed(2)}`);
+    } else if (isUnderperforming) {
+      // Gentle quality reduction for moderate underperformance
+      newQualityScale = Math.max(
+        GLOBAL_CONFIG.PERFORMANCE.qualityScaleMin,
+        this.metrics.qualityScale - 0.05 // Much smaller reduction steps
+      );
+      console.log(`🟡 Performance below target, reducing quality to ${newQualityScale.toFixed(2)}`);
+    } else if (averageFps > (targetFps * 0.9) && this.metrics.qualityScale < 1.0) {
+      // Restore quality when performance is good - but slowly
+      newQualityScale = Math.min(
+        1.0,
+        this.metrics.qualityScale + 0.02 // Very slow quality restoration
+      );
+      console.log(`🟢 Good performance, increasing quality to ${newQualityScale.toFixed(2)}`);
     }
-    // Minor performance issues - gentler scaling
-    else if (lowFPS || highMemory) {
-      newScale = Math.max(GLOBAL_CONFIG.PERFORMANCE.qualityScaleMin, currentScale - 0.05);
-      console.log('🟡 Performance issues detected, reducing quality to', newScale);
-    }
-    // Good performance - try to improve quality
-    else if (avgFps >= this.targetFPS * 0.9 && memoryUsage < this.memoryLimit * 0.6) {
-      newScale = Math.min(GLOBAL_CONFIG.PERFORMANCE.qualityScaleMax, currentScale + 0.05);
-      if (newScale > currentScale) {
-        console.log('🟢 Good performance, increasing quality to', newScale);
-      }
-    }
-
-    // Apply quality scale changes
-    if (newScale !== currentScale) {
-      this.metrics.qualityScale = newScale;
-      this.applyQualityScale(newScale);
+    
+    // Apply quality scaling if changed
+    if (Math.abs(newQualityScale - this.metrics.qualityScale) > 0.01) {
+      this.metrics.qualityScale = newQualityScale;
+      this.applyQualityScale(this.metrics.qualityScale);
     }
   }
 

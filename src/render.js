@@ -20,6 +20,7 @@ import {
   createFlipAnimation,
   calculateRingsFrontPosition,
 } from './pageTransforms.js';
+import { updateSceneRealism } from './sceneTilting.js';
 
 // Cache for performance optimization
 let commentaryOverlay = null;
@@ -68,7 +69,7 @@ function updateCommentary(currentPage) {
 
 /**
  * Apply visibility culling for performance optimization using CSS classes
- * with smooth gradient transitions instead of hard cutoffs
+ * with smooth gradient transitions instead of hard cutoffs - PERFORMANCE OPTIMIZED
  * @param {HTMLElement} page - Page element
  * @param {number} pageIndex - Page index
  * @param {number} scrollPosition - Current scroll position
@@ -85,46 +86,38 @@ function shouldRenderPage(page, pageIndex, scrollPosition) {
     page.classList.remove('page--hidden', 'page--fading');
     page.classList.add('page--visible');
     page.style.display = 'flex';
-    // Remove inline opacity to prevent conflicts with CSS transitions
-    page.style.opacity = '';
     return true;
   }
 
-  // For regular content pages, apply gradient culling with smooth transitions
+  // For regular content pages, apply AGGRESSIVE culling for performance
   const currentPage = Math.floor(scrollPosition);
   const distance = Math.abs(pageIndex - currentPage);
   const maxDistance = GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages;
-  const fadeDistance = 2; // Start fading 2 pages before hard cutoff
+  const fadeDistance = 1; // REDUCED: More aggressive fading (was 2)
 
   // Calculate visibility states
   const shouldShow = distance <= maxDistance;
   const shouldFade = distance > (maxDistance - fadeDistance) && distance <= maxDistance;
-  const isFullyVisible = distance <= (maxDistance - fadeDistance);
 
   if (!shouldShow) {
-    // Too far away - completely hidden
+    // Too far away - completely hidden with display:none for performance
     page.classList.add('page--hidden');
     page.classList.remove('page--visible', 'page--fading');
     page.style.display = 'none';
-    // Remove inline opacity to prevent conflicts
-    page.style.opacity = '';
+    return false;
   } else if (shouldFade) {
-    // In fade zone - use CSS class instead of inline opacity
+    // In fade zone - minimal opacity for performance
     page.classList.add('page--fading');
     page.classList.remove('page--hidden', 'page--visible');
     page.style.display = 'flex';
-    // Use CSS custom property for smooth transition instead of inline style
     const fadeProgress = (distance - (maxDistance - fadeDistance)) / fadeDistance;
-    const opacity = 1.0 - (fadeProgress * 0.7); // Fade to 30% opacity, not 0%
-    page.style.setProperty('--fade-opacity', Math.max(0.3, opacity).toString());
-    page.style.opacity = '';
+    const opacity = 1.0 - (fadeProgress * 0.8); // More aggressive fading
+    page.style.setProperty('--fade-opacity', Math.max(0.2, opacity).toString());
   } else {
     // Fully visible
     page.classList.add('page--visible');
     page.classList.remove('page--hidden', 'page--fading');
     page.style.display = 'flex';
-    // Remove inline opacity to prevent conflicts
-    page.style.opacity = '';
   }
 
   return shouldShow;
@@ -185,6 +178,9 @@ export function render(pages, scrollState) {
 
   // Update ring rotations based on overall flip progress
   updateRingRotations(scroll, pageCount);
+
+  // Update scene realism effects (tilting, parallax, etc.)
+  updateSceneRealism(scrollState);
 
   perf.endRender();
 }
@@ -422,8 +418,7 @@ export function updateRingsPosition(totalPages) {
 }
 
 /**
- * Show/hide heavy page-content elements (images/videos) based on scroll proximity
- * while keeping page shells visible at all times.
+ * Show/hide heavy page-content elements based on scroll proximity - PERFORMANCE OPTIMIZED
  * @param {HTMLElement} page - Page element
  * @param {number} pageIndex - Index of the page
  * @param {number} scrollPosition - Current scroll position
@@ -436,27 +431,27 @@ function updatePageContentVisibility(page, pageIndex, scrollPosition) {
   const hasTab = page.querySelector('.page-tab') !== null;
   const isCover = page.classList.contains('cover');
 
-  // Use more generous buffers to prevent content popping
-  // For pages with tabs or covers, use larger buffer since they're always visible
+  // PERFORMANCE: More aggressive content hiding
   const maxBuffer = 
-    hasTab || isCover
-      ? GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages * 2.5 // Increased from 2x
-      : GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages * 1.5; // Increased from 1x
+    (hasTab || isCover) 
+      ? GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages * 1.5 // Reduced multiplier (was 2.5)
+      : GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages * 1.0; // Reduced multiplier (was 1.5)
   
-  const fadeBuffer = maxBuffer * 0.8; // Start fading at 80% of max buffer
+  const fadeBuffer = maxBuffer * 0.6; // More aggressive fade start (was 0.8)
 
   const distance = Math.abs(relativePos);
 
   if (distance > maxBuffer) {
-    // Too far from viewport – hide heavy content completely
+    // Too far from viewport – use display:none for maximum performance
     contentEl.classList.add('page-content--hidden');
+    contentEl.classList.remove('page-content--fading');
   } else if (distance > fadeBuffer) {
-    // In fade zone - gradually reduce opacity for smooth transition
+    // In fade zone - more aggressive fading
     contentEl.classList.remove('page-content--hidden');
     contentEl.classList.add('page-content--fading');
     const fadeProgress = (distance - fadeBuffer) / (maxBuffer - fadeBuffer);
-    const opacity = 1.0 - (fadeProgress * 0.8); // Fade to 20% instead of 0%
-    contentEl.style.setProperty('--content-fade-opacity', Math.max(0.2, opacity).toString());
+    const opacity = 1.0 - (fadeProgress * 0.9); // More aggressive fade (was 0.8)
+    contentEl.style.setProperty('--content-fade-opacity', Math.max(0.1, opacity).toString());
   } else {
     // Fully visible content
     contentEl.classList.remove('page-content--hidden', 'page-content--fading');
@@ -465,7 +460,7 @@ function updatePageContentVisibility(page, pageIndex, scrollPosition) {
 }
 
 /**
- * Apply flip-specific content visibility to prevent showing image backs during flip
+ * Apply flip-specific content visibility - KEEP PAGES VISIBLE AT OPACITY 1
  * @param {HTMLElement} page - Page element
  * @param {number} pageIndex - Index of this page
  * @param {number} scrollPosition - Current scroll position
@@ -473,9 +468,8 @@ function updatePageContentVisibility(page, pageIndex, scrollPosition) {
 function applyFlipContentVisibility(page, pageIndex, scrollPosition) {
   const relativePos = scrollPosition - pageIndex;
   const pageFront = page.querySelector('.page-front');
-  const pageContent = page.querySelector('.page-front .page-content');
 
-  if (!pageContent || !pageFront) return;
+  if (!pageFront) return;
 
   // Don't interfere with page culling - only apply flip visibility for visible pages
   if (page.classList.contains('page--hidden')) {
@@ -487,35 +481,22 @@ function applyFlipContentVisibility(page, pageIndex, scrollPosition) {
     const rotationProgress = relativePos; // 0 to 1
     const rotationDegrees = rotationProgress * 180; // 0 to 180 degrees
 
-    // Start fading out content at 45 degrees, completely hidden by 60 degrees
-    if (rotationDegrees >= 60) {
-      // Completely hidden - content invisible from 60° onwards
+    // FIXED: Keep pages visible at opacity 1 throughout the flip
+    // Only switch content visibility when we're showing the backface (after 90°)
+    if (rotationDegrees >= 90) {
+      // Show backface content, hide front content for performance
       page.classList.add('page--showing-backface');
-      // Remove inline opacity to let CSS class handle it
-      pageFront.style.opacity = '';
-    } else if (rotationDegrees >= 45) {
-      // Gradual fade from 45° to 60° - use CSS custom property
-      page.classList.remove('page--showing-backface');
-      const fadeProgress = (rotationDegrees - 45) / 15; // 0 to 1 over 15 degrees
-      const opacity = 1 - fadeProgress;
-      page.style.setProperty('--flip-fade-opacity', Math.max(0, opacity).toString());
-      pageFront.style.opacity = 'var(--flip-fade-opacity, 1)';
     } else {
-      // Fully visible - showing front side
+      // Show front content
       page.classList.remove('page--showing-backface');
-      page.style.removeProperty('--flip-fade-opacity');
-      pageFront.style.opacity = '';
     }
-  } else if (relativePos > 1) {
-    // Page has been completely flipped (showing backside permanently)
-    page.classList.add('page--showing-backface');
-    page.style.removeProperty('--flip-fade-opacity');
-    pageFront.style.opacity = '';
+    
+    // CRITICAL: Always keep the page itself at full opacity
+    pageFront.style.opacity = '1';
   } else {
-    // Page hasn't started flipping yet (showing front side)
+    // Not flipping - ensure front is visible
     page.classList.remove('page--showing-backface');
-    page.style.removeProperty('--flip-fade-opacity');
-    pageFront.style.opacity = '';
+    pageFront.style.opacity = '1';
   }
 }
 

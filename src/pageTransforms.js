@@ -81,9 +81,9 @@ function getLandingDepth(pageIndex, totalPages) {
 
 /**
  * Compute the 3D transform for a page during flip animation
- * Implements the exact user specification:
+ * Implements the exact user specification with Z-FIGHTING PREVENTION:
  * 1. Start: translateZ(Zrest) rotateX(0deg)
- * 2. Lift & hinge (0→50%): translateZ(Zrest + 30px) rotateX(-90deg) cubic-bezier(.55,.05,.67,.19)
+ * 2. Lift & hinge (0→50%): translateZ(Zrest + 35px) rotateX(-90deg) cubic-bezier(.55,.05,.67,.19)
  * 3. Drop & settle (50→100%): translateZ(nextLandingZ) rotateX(-180deg) cubic-bezier(.25,.46,.45,.94)
  *
  * @param {number} pageIndex - Page index
@@ -95,13 +95,16 @@ export function computeTransform(pageIndex, scrollPosition, totalPages) {
   const currentPageFloat = scrollPosition;
   const rel = currentPageFloat - pageIndex; // Relative position
 
+  // Z-fighting prevention: add tiny micro-offset based on page index
+  const microOffset = pageIndex * 0.001; // 0.001px per page index
+
   // Determine if this page is flipping
   if (rel >= 0 && rel <= 1) {
     // This page is currently flipping
-    return computeFlipTransform(pageIndex, rel, totalPages);
+    return computeFlipTransform(pageIndex, rel, totalPages, microOffset);
   } else if (rel < 0) {
     // Page hasn't been reached yet - unread stack
-    const restingZ = getUnreadDepth(pageIndex, totalPages);
+    const restingZ = getUnreadDepth(pageIndex, totalPages) + microOffset;
     return {
       transform: `translateZ(${restingZ}px) rotateX(0deg)`,
       filter: 'none',
@@ -109,7 +112,7 @@ export function computeTransform(pageIndex, scrollPosition, totalPages) {
   } else {
     // Page has been flipped - read stack
     // Use deterministic landing depth so read stack grows cleanly
-    const flippedZ = getLandingDepth(pageIndex, totalPages);
+    const flippedZ = getLandingDepth(pageIndex, totalPages) + microOffset;
     return {
       transform: `translateZ(${flippedZ}px) rotateX(180deg)`,
       filter: 'none',
@@ -122,11 +125,12 @@ export function computeTransform(pageIndex, scrollPosition, totalPages) {
  * @param {number} pageIndex - Page index
  * @param {number} progress - Flip progress (0-1)
  * @param {number} totalPages - Total number of pages
+ * @param {number} microOffset - Micro-offset for Z-fighting prevention
  * @returns {Object} Transform and filter properties
  */
-function computeFlipTransform(pageIndex, progress, totalPages) {
-  const restingZ = getUnreadDepth(pageIndex, totalPages);
-  const targetZ = getLandingDepth(pageIndex, totalPages);
+function computeFlipTransform(pageIndex, progress, totalPages, microOffset) {
+  const restingZ = getUnreadDepth(pageIndex, totalPages) + microOffset;
+  const targetZ = getLandingDepth(pageIndex, totalPages) + microOffset;
 
   // Rotation progresses linearly 0-180°
   const rotX = 180 * progress;
