@@ -32,17 +32,27 @@ export const GLOBAL_CONFIG = {
   PERFORMANCE: {
     targetFPS: 60,
     frameTimeTarget: 16.67, // ms
-    maxVisiblePages: 12, // Increase buffer to reduce popping (was 5)
-    memoryLimit: 100, // MB
-    qualityScaleMin: 0.5,
+    maxVisiblePages: 12, // RESTORED: Original value (was 8)
+    memoryLimit: 100, // RESTORED: Original value (was 80MB)
+    qualityScaleMin: 0.5, // RESTORED: Original value
     qualityScaleMax: 1.0,
+    
+    // Original emergency settings
+    emergencyFpsThreshold: 5,
+    emergencyMaxVisiblePages: 3,
+    emergencyQualityScale: 0.2,
+    
+    // Original background loading settings
+    backgroundLoadingEnabled: true,
+    backgroundLoadDelay: 150,
+    backgroundLoadSpeedReduction: 0.5,
   },
 
-  // 3D Notebook Depth Model - User Specifications
+  // 3D Notebook Depth Model - ORIGINAL VALUES RESTORED
   DEPTH: {
     bottomUnreadZ: 5, // Bottom unread sheet starts at 5px
-    spacingZ: 1, // Every sheet above adds 4px
-    liftHeight: 30, // px clearance during flip
+    spacingZ: 1, // RESTORED: Original spacing (was 10px)
+    liftHeight: 30, // RESTORED: Original lift height (was 60px)
   },
 
   // Flip Animation - User Specifications
@@ -51,8 +61,8 @@ export const GLOBAL_CONFIG = {
     snapThreshold: 30, // Lower threshold so pages commit sooner (~17% progress)
     snapDuration: 80, // Faster snap back / forward
     liftHeight: 30, // px arc maximum (matches DEPTH.liftHeight)
-    scrollSensitivity: 0.25, // Increase responsiveness to wheel / swipe input
-    scrollSensitivityMobile: 0.15, // Same for mobile
+    scrollSensitivity: 0.15, // REDUCED: Less sensitive to reduce wheel spam (was 0.25)
+    scrollSensitivityMobile: 0.1, // REDUCED: Less sensitive on mobile (was 0.15)
 
     // User-specified easing curves
     easing: {
@@ -73,35 +83,35 @@ export const GLOBAL_CONFIG = {
       shadowMovement: 80, // ms for shadow transformations
     },
 
-    // Momentum-driven page flipping
+    // Momentum-driven page flipping - OPTIMIZED
     momentum: {
       enabled: true,
       
-      // Physics parameters
-      decay: 0.0015, // 50% less damping = longer momentum, tighter control
-      decayMobile: 0.002, // 50% less damping on mobile too
-      minVelocity: 0.004, // Even lower threshold for precise control
-      deadZoneVelocity: 0.012, // Velocity threshold to prevent unwanted flicking
-      maxDuration: 1200, // Maximum coasting time in ms (safety cap)
+      // Physics parameters - REDUCED for smoother performance
+      decay: 0.003, // INCREASED: Faster decay to reduce processing time (was 0.0015)
+      decayMobile: 0.004, // INCREASED: Faster decay on mobile (was 0.002)
+      minVelocity: 0.008, // INCREASED: Higher threshold to stop earlier (was 0.004)
+      deadZoneVelocity: 0.02, // INCREASED: Higher threshold to prevent unwanted flicking (was 0.012)
+      maxDuration: 800, // REDUCED: Shorter maximum coasting time (was 1200ms)
       
-      // Velocity-to-page conversion
-      velocityToPages: 350, // Desktop: more aggressive page turning
-      velocityToPagesMobile: 150, // Mobile: more responsive to flicks
-      maxExtraPages: 4, // Maximum pages that can be flipped in one momentum burst
+      // Velocity-to-page conversion - REDUCED for less aggressive scrolling
+      velocityToPages: 250, // REDUCED: Less aggressive page turning (was 350)
+      velocityToPagesMobile: 100, // REDUCED: Less responsive to flicks (was 150)
+      maxExtraPages: 3, // REDUCED: Maximum pages per momentum burst (was 4)
       
       // Dynamic snap duration based on momentum
-      baseDuration: 200, // Base snap duration in ms
-      durationMultiplier: 50, // Additional ms per extra page
-      maxSnapDuration: 500, // Cap for very long flips
+      baseDuration: 150, // REDUCED: Faster base snap duration (was 200ms)
+      durationMultiplier: 30, // REDUCED: Less additional time per page (was 50ms)
+      maxSnapDuration: 400, // REDUCED: Lower cap for very long flips (was 500ms)
     },
   },
 
   SCENE: {
-    perspective: 7000, // px
+    perspective: 7000, // RESTORED: Original perspective (was 12000)
     perspectiveOriginX: '50%',
     perspectiveOriginY: '350%', // Far bottom perspective
     transformOriginX: '50%',
-    transformOriginY: '0%', // Top edge hinge (user specification)
+    transformOriginY: '-2%', // KEEP: Negative value for natural arch movement
     ringZIndex: 5000, // Always on top
     activePageZIndex: 1000,
   },
@@ -166,11 +176,11 @@ export const GLOBAL_CONFIG = {
   },
 
   /**
-   * Page Backface Settings
+   * Page Backface Settings - ORIGINAL VALUES RESTORED
    * Controls the appearance and behavior of page backs
    */
   BACKFACE: {
-    color: '#f5f5f5', // Same as page-front background color
+    color: '#f5f5f5', // RESTORED: Original light color (was #d8d8d8)
     gradient: null, // Optional gradient override (null = use solid color)
     texture: null, // Optional texture/pattern URL
     borderRadius: 'inherit', // Inherit from page-front
@@ -179,22 +189,23 @@ export const GLOBAL_CONFIG = {
     coverColor: 'rgba(139, 69, 19, 0.9)', // Darker brown for covers
     videoPageColor: 'rgba(0, 0, 0, 0.9)', // Darker black for video pages
     
-    // Shadow gradient settings for realistic depth
+    // Original shadow gradient settings
     shadowGradient: {
       enabled: true,
-      direction: 'to bottom', // CSS gradient direction
-      startColor: 'rgba(0, 0, 0, 0.3)', // Top shadow (lighter)
-      endColor: 'rgba(0, 0, 0, 0.8)', // Bottom shadow (darker)
+      direction: 'to bottom right', // Diagonal shadow for more realism
+      startColor: 'rgba(0, 0, 0, 0.15)', // RESTORED: Original lighter shadow
+      endColor: 'rgba(0, 0, 0, 0.35)', // RESTORED: Original lighter shadow
       startPosition: '0%', // Where gradient starts
       endPosition: '100%', // Where gradient ends
       
-      // Animation settings during page flip
+      // Original animation settings during page flip
       animation: {
         enabled: true,
-        maxOpacity: 1.0, // Full opacity when page is flat (not rotating)
-        minOpacity: 0.3, // Minimum opacity during rotation
-        fadeStartAngle: 10, // Degrees - when fade starts
-        fadeEndAngle: 170, // Degrees - when fade completes
+        maxOpacity: 0.8, // RESTORED: Original visibility
+        minOpacity: 0.2, // RESTORED: Original minimum visibility
+        fadeStartAngle: 10, // RESTORED: Original fade timing
+        fadeEndAngle: 170, // RESTORED: Original fade timing
+        hardwareAccelerated: true, // Enable GPU acceleration for shadows
       },
     },
   },

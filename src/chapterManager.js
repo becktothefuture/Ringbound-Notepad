@@ -1,9 +1,7 @@
 import { CHAPTERS } from './chapters.js';
-import { ApplicationState } from './app.js';
 
 console.log('📑 ChapterManager imports check:');
 console.log('  - CHAPTERS imported:', typeof CHAPTERS, CHAPTERS);
-console.log('  - ApplicationState imported:', typeof ApplicationState, ApplicationState);
 
 const TAB_HEIGHT_PERCENT = 8; // percentage of page height
 const TAB_SPACING_PERCENT = 2; // percentage spacing between tabs
@@ -11,6 +9,7 @@ const TAB_SPACING_PERCENT = 2; // percentage spacing between tabs
 // Global state for chapter navigation
 let currentChapterIndex = 0;
 let isInitialized = false;
+let scrollEngineInstance = null; // Store scroll engine instance
 
 /**
  * Get the CSS variable value for tab safe area horizontal padding
@@ -36,11 +35,11 @@ function navigateToNextChapter() {
   
   console.log(`📑 TAB Navigation: ${targetChapter.title} (page ${targetChapter.page})`);
   try {
-    if (ApplicationState.scrollEngine && ApplicationState.scrollEngine.jumpToPage) {
-      ApplicationState.scrollEngine.jumpToPage(targetChapter.page);
+    if (scrollEngineInstance && scrollEngineInstance.jumpToPage) {
+      scrollEngineInstance.jumpToPage(targetChapter.page);
       console.log('✅ TAB jumpToPage called successfully');
     } else {
-      console.error('❌ ScrollEngine not available in ApplicationState');
+      console.error('❌ ScrollEngine not available');
     }
   } catch (error) {
     console.error('❌ TAB jumpToPage failed:', error);
@@ -61,11 +60,11 @@ function navigateToPreviousChapter() {
   
   console.log(`📑 Shift+TAB Navigation: ${targetChapter.title} (page ${targetChapter.page})`);
   try {
-    if (ApplicationState.scrollEngine && ApplicationState.scrollEngine.jumpToPage) {
-      ApplicationState.scrollEngine.jumpToPage(targetChapter.page);
+    if (scrollEngineInstance && scrollEngineInstance.jumpToPage) {
+      scrollEngineInstance.jumpToPage(targetChapter.page);
       console.log('✅ Shift+TAB jumpToPage called successfully');
     } else {
-      console.error('❌ ScrollEngine not available in ApplicationState');
+      console.error('❌ ScrollEngine not available');
     }
   } catch (error) {
     console.error('❌ Shift+TAB jumpToPage failed:', error);
@@ -135,15 +134,15 @@ function handleTabClick(event) {
 
   // Use jumpToPage to navigate with smooth animation
   try {
-    if (ApplicationState.scrollEngine && ApplicationState.scrollEngine.jumpToPage) {
-      ApplicationState.scrollEngine.jumpToPage(targetChapter.page);
+    if (scrollEngineInstance && scrollEngineInstance.jumpToPage) {
+      scrollEngineInstance.jumpToPage(targetChapter.page);
       console.log('✅ jumpToPage called successfully');
     } else {
-      console.error('❌ ScrollEngine not available in ApplicationState');
+      console.error('❌ ScrollEngine not available');
     }
   } catch (error) {
     console.error('❌ jumpToPage failed:', error);
-    console.log('Scroll engine available:', typeof ApplicationState.scrollEngine);
+    console.log('Scroll engine available:', typeof scrollEngineInstance);
   }
 
   // Prevent any other click handlers
@@ -201,8 +200,11 @@ function initTabClickHandlers(notebook) {
  * Creates tabs and attaches them to the corresponding pages.
  * @param {HTMLElement[]} pages - Array of all page DOM elements.
  * @param {HTMLElement} notebook - The main notebook container element.
+ * @param {VirtualScrollEngine} scrollEngine - Scroll engine instance.
  */
-export function initChapters(pages, notebook) {
+export function initChapters(pages, notebook, scrollEngine) {
+  // Store scroll engine instance for navigation functions
+  scrollEngineInstance = scrollEngine;
   console.log('🔍 Chapter initialization debug:');
   console.log('  - CHAPTERS array:', CHAPTERS);
   console.log('  - CHAPTERS length:', CHAPTERS.length);

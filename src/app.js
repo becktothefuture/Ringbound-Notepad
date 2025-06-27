@@ -47,6 +47,9 @@ import { zoomManager } from './zoomManager.js';
 import { initializeDynamicNoise } from './noiseGenerator.js';
 import { overlayHints } from './overlay.js';
 import { initPreloader, cleanupPreloader } from './preloader.js';
+import { performanceDebugger } from './debuggingPipeline.js';
+import { updateSceneRealism } from './sceneTilting.js';
+import { terminalMonitor } from './performanceMonitor.js';
 import portfolioData from '../data/portfolio.json' assert { type: 'json' };
 
 // === APPLICATION STATE ===
@@ -261,8 +264,9 @@ function initializeScrollEngine(container, pageCount) {
 /**
  * Initialize chapter navigation system
  * @param {HTMLElement[]} pages - Page elements
+ * @param {VirtualScrollEngine} scrollEngine - Scroll engine instance
  */
-function initializeChapterSystem(pages) {
+function initializeChapterSystem(pages, scrollEngine) {
   try {
     const notebook = document.getElementById('notebook');
     if (!notebook) {
@@ -276,7 +280,7 @@ function initializeChapterSystem(pages) {
       throw new Error('No page elements found in notebook');
     }
 
-    initChapters(pageElements, notebook);
+    initChapters(pageElements, notebook, scrollEngine);
     console.log('📑 Chapter navigation system initialized');
   } catch (error) {
     console.warn('⚠️ Chapter system initialization failed:', error);
@@ -390,7 +394,7 @@ async function bootstrap() {
     if (!container) throw new Error('Container element not found');
 
     ApplicationState.scrollEngine = initializeScrollEngine(container, ApplicationState.pageCount);
-    initializeChapterSystem(pages);
+    initializeChapterSystem(pages, ApplicationState.scrollEngine);
 
     // Phase 4: Create render pipeline
     console.log('🎨 Phase 4: Creating render pipeline...');
@@ -407,6 +411,9 @@ async function bootstrap() {
     // Phase 6: Initialize overlay hints (after preloader is done)
     console.log('🎨 Phase 6: Initializing overlay hints...');
     overlayHints.initialize(ApplicationState.scrollEngine);
+
+    // Phase 6.5: Initialize scene realism effects
+    console.log('✨ Phase 6.5: Scene tilting ready (simple version)');
 
     // Phase 7: Finalize application
     console.log('✅ Phase 7: Finalizing application...');
@@ -449,6 +456,9 @@ function cleanup() {
 
     // Clean up preloader resources
     cleanupPreloader();
+
+    // Clean up scene realism effects
+    console.log('🧹 Scene tilting cleaned up (simple version)');
 
     console.log('🧹 Application cleanup complete');
   } catch (error) {

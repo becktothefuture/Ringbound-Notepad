@@ -1,36 +1,72 @@
 /**
- * PRELOADER SYSTEM FOR 3D NOTEBOOK PORTFOLIO
+ * PRELOADER SYSTEM FOR 3D NOTEBOOK PORTFOLIO - SEQUENTIAL CHAPTER LOADING
  * 
- * Implements intelligent asset preloading and lazy loading to optimize initial page load:
- * 1. Shows spinner until critical assets (cover + buffer pages) are loaded
- * 2. Uses Intersection Observer for lazy loading remaining assets
- * 3. Manages video playback based on page visibility
- * 4. Maintains current buffering logic for performance
+ * Implements intelligent sequential asset preloading optimized for graphics performance:
+ * 1. Shows spinner until 50% of assets are preloaded (was critical assets only)
+ * 2. Loads assets in exact book order: Chapter 1 → Chapter 2 → etc.
+ * 3. Continues background loading at reduced speed after reveal
+ * 4. Completely detached from viewport performance system
+ * 5. Uses modern performance techniques and best practices
  * 
  * @author Alexander Beck
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 import { GLOBAL_CONFIG } from './config.js';
 
 /**
- * Preloader state management
+ * Safely set video poster only if the file exists
+ * @param {HTMLVideoElement} video - Video element
+ * @param {string} posterPath - Path to poster image
+ */
+function setPosterSafely(video, posterPath) {
+  // Create a temporary image to test if poster exists
+  const testImg = new Image();
+  testImg.onload = () => {
+    // Poster exists, safe to set
+    video.poster = posterPath;
+  };
+  testImg.onerror = () => {
+    // Poster doesn't exist, skip silently
+    console.log(`ℹ️ Poster not found (skipping): ${posterPath.split('/').pop()}`);
+  };
+  testImg.src = posterPath;
+}
+
+/**
+ * Enhanced Preloader state management for sequential loading
  */
 const PreloaderState = {
   isLoading: true,
   spinner: null,
   lazyLoadObserver: null,
   videoPlaybackObserver: null,
-  loadedAssets: new Set(),
-  criticalAssets: [],
+  
+  // Sequential loading state
   totalAssets: 0,
+  loadedAssets: 0,
+  targetLoadPercentage: 50, // Show page when 50% loaded
+  isBackgroundLoading: false,
+  backgroundLoadSpeed: 0.5, // Reduced speed multiplier for background loading
+  
+  // Asset queues for sequential loading
+  assetQueue: [],
+  currentChapter: 0,
+  chaptersData: [],
+  
+  // Performance and timing
   loadTimeout: null,
   startTime: null,
   minDisplayTime: 1000, // Minimum 1 second display time
+  revealTime: null,
+  
+  // Background loading control
+  backgroundLoadInterval: null,
+  backgroundLoadDelay: 150, // ms between background loads (reduced speed)
 };
 
 /**
- * Create and inject preloader spinner overlay
+ * Create and inject preloader spinner overlay with progress indicator
  */
 function createSpinnerOverlay() {
   const preloaderHTML = `
@@ -38,20 +74,89 @@ function createSpinnerOverlay() {
       <div class="preloader__spinner">
         <div class="spinner-ring"></div>
         <div class="preloader__text">Loading Portfolio...</div>
+        <div class="preloader__progress">
+          <div class="preloader__progress-bar">
+            <div class="preloader__progress-fill"></div>
+          </div>
+          <div class="preloader__progress-text">0%</div>
+        </div>
       </div>
     </div>
   `;
   
   document.body.insertAdjacentHTML('afterbegin', preloaderHTML);
   PreloaderState.spinner = document.getElementById('preloader');
-  PreloaderState.startTime = Date.now(); // Record when preloader started
+  PreloaderState.startTime = Date.now();
   
-  console.log('🔄 Preloader spinner created');
+  // Add progress bar styles
+  const progressBarStyle = `
+    <style>
+      .preloader__progress {
+        margin-top: 20px;
+        width: 300px;
+        max-width: 80vw;
+      }
+      
+      .preloader__progress-bar {
+        width: 100%;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+        overflow: hidden;
+        margin-bottom: 8px;
+      }
+      
+      .preloader__progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4CAF50, #8BC34A);
+        border-radius: 2px;
+        width: 0%;
+        transition: width 0.3s ease-out;
+      }
+      
+      .preloader__progress-text {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.8);
+        text-align: center;
+      }
+    </style>
+  `;
+  
+  document.head.insertAdjacentHTML('beforeend', progressBarStyle);
+  
+  console.log('🔄 Sequential preloader created with progress tracking');
 }
 
 /**
- * Hide preloader and fade in the notebook scene
- * Ensures minimum 1 second display time before hiding
+ * Update progress bar and text
+ * @param {number} percentage - Progress percentage (0-100)
+ */
+function updateProgress(percentage) {
+  const progressFill = document.querySelector('.preloader__progress-fill');
+  const progressText = document.querySelector('.preloader__progress-text');
+  
+  if (progressFill && progressText) {
+    progressFill.style.width = `${percentage}%`;
+    progressText.textContent = `${Math.round(percentage)}%`;
+    
+    // Update loading text based on progress
+    const loadingText = document.querySelector('.preloader__text');
+    if (loadingText) {
+      if (percentage < 25) {
+        loadingText.textContent = 'Loading Portfolio...';
+      } else if (percentage < 50) {
+        loadingText.textContent = 'Loading Chapters...';
+      } else if (percentage < 75) {
+        loadingText.textContent = 'Almost Ready...';
+      } else {
+        loadingText.textContent = 'Finalizing...';
+      }
+    }
+  }
+}
+
+/**
+ * Hide preloader and reveal notebook
  */
 function hidePreloader() {
   if (!PreloaderState.spinner) return;
@@ -59,46 +164,50 @@ function hidePreloader() {
   const elapsedTime = Date.now() - PreloaderState.startTime;
   const remainingTime = Math.max(0, PreloaderState.minDisplayTime - elapsedTime);
   
-  console.log(`✅ Hiding preloader after ${elapsedTime}ms (waiting ${remainingTime}ms more for minimum display time)`);
+  PreloaderState.revealTime = Date.now();
   
-  // Wait for minimum display time if needed
   setTimeout(() => {
-    // Start fade out of preloader
-    PreloaderState.spinner.style.opacity = '0';
-    
-    // Simultaneously start fade in of notebook content
     const notebook = document.querySelector('.notebook');
-    const pageWrapper = document.querySelector('.page-wrapper');
+    
+    if (PreloaderState.spinner) {
+      PreloaderState.spinner.style.opacity = '0';
+      PreloaderState.spinner.style.pointerEvents = 'none';
+    }
     
     if (notebook) {
       notebook.style.opacity = '1';
+      notebook.style.transition = 'opacity 500ms ease-out';
     }
     
-    if (pageWrapper) {
-      pageWrapper.style.opacity = '1';
+    // Start background loading if not already started
+    if (!PreloaderState.isBackgroundLoading) {
+      startBackgroundLoading();
     }
     
-    // After fade transition, remove preloader element
+    // Clean up after transition
     setTimeout(() => {
-      PreloaderState.spinner.style.display = 'none';
+      if (PreloaderState.spinner && PreloaderState.spinner.parentNode) {
+        PreloaderState.spinner.parentNode.removeChild(PreloaderState.spinner);
+        PreloaderState.spinner = null;
+      }
       PreloaderState.isLoading = false;
       
-      // Trigger hint overlay to appear (it will be initialized by the main app)
-      // The overlay.js module will handle showing hints after preloader is done
       console.log('💡 Preloader done, overlay hints can now be shown by main app');
-    }, 500); // Match the longer fade transition duration
+      
+      // Notify the main app that preloader is complete
+      document.dispatchEvent(new CustomEvent('preloader:complete'));
+    }, 500);
     
   }, remainingTime);
 }
 
 /**
- * Create Intersection Observer for lazy loading assets
- * Uses larger root margin to preload assets before they're visible
+ * Create Intersection Observer for lazy loading remaining assets
  */
 function createLazyLoadObserver() {
   const options = {
     root: null,
-    rootMargin: '200px', // Load assets 200px before they enter viewport
+    rootMargin: '100px', // Reduced margin for better performance
     threshold: 0
   };
   
@@ -107,23 +216,22 @@ function createLazyLoadObserver() {
       if (entry.isIntersecting) {
         loadPageAssets(entry.target);
       } else {
-        // Optionally unload heavy assets when far away
+        // Unload heavy assets when far away (performance optimization)
         unloadPageAssets(entry.target);
       }
     });
   }, options);
   
-  console.log('👁️ Lazy load observer created with 200px margin');
+  console.log('👁️ Lazy load observer created with 100px margin');
 }
 
 /**
- * Create Intersection Observer for video playback management
- * Videos start playing just before page is revealed, pause when flipped away
+ * Create video playback observer for performance management
  */
 function createVideoPlaybackObserver() {
   const options = {
     root: null,
-    rootMargin: '50px', // Start playing videos 50px before visible
+    rootMargin: '50px',
     threshold: 0.1
   };
   
@@ -133,18 +241,19 @@ function createVideoPlaybackObserver() {
       if (!video) return;
       
       if (entry.isIntersecting) {
-        // Page with video is becoming visible - start playing
-        if (video.paused) {
-          video.play().catch(err => {
-            console.warn('Video autoplay prevented:', err);
+        // Video entering view - try to play
+        if (video.paused && video.readyState >= 2) {
+          video.play().catch(error => {
+            console.log('Video autoplay prevented:', error);
           });
-          console.log('▶️ Video started for page entering view');
         }
+        console.log('▶️ Video started for page entering view');
       } else {
-        // Page with video is going away - pause to save resources
+        // Video leaving view - pause and reset for memory optimization
         if (!video.paused) {
           video.pause();
-          console.log('⏸️ Video paused for page leaving view');
+          video.currentTime = 0;
+          console.log('💾 Video paused and reset for memory optimization');
         }
       }
     });
@@ -179,7 +288,7 @@ function loadPageAssets(pageElement) {
       
       // Set poster if available
       if (video.dataset.poster) {
-        video.poster = video.dataset.poster;
+        setPosterSafely(video, video.dataset.poster);
         video.removeAttribute('data-poster');
       }
       
@@ -189,98 +298,220 @@ function loadPageAssets(pageElement) {
 }
 
 /**
- * Unload heavy assets when page is far from viewport (memory optimization)
- * @param {HTMLElement} pageElement - Page element to potentially unload
+ * Unload heavy assets when page is far from viewport
+ * @param {HTMLElement} pageElement - Page element to unload assets from
  */
 function unloadPageAssets(pageElement) {
-  // Only unload if page is very far from current scroll position
-  const pageIndex = parseInt(pageElement.dataset.pageIndex) || 0;
-  const currentScroll = window.scrollY || 0;
-  const maxBuffer = GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages * 2;
+  // Only unload if background loading is active (after reveal)
+  if (!PreloaderState.isBackgroundLoading) return;
   
-  // For now, only unload videos to save memory - keep images cached
   const videos = pageElement.querySelectorAll('video[src]');
+  
+  // Pause and reset videos to save memory
   videos.forEach(video => {
-    if (video.src && !video.dataset.critical) {
+    if (!video.paused) {
       video.pause();
       video.currentTime = 0;
-      // Optionally clear src to free memory (aggressive unloading)
-      // video.removeAttribute('src');
-      console.log('💾 Video paused and reset for memory optimization');
     }
   });
 }
 
 /**
- * Get critical assets that need to be preloaded before showing the notebook
+ * Build sequential asset queue from pages data
  * @param {HTMLElement[]} pages - All page elements
- * @returns {Promise<void>[]} Array of promises for critical asset loading
+ * @returns {Array} Sequential asset queue
  */
-function getCriticalAssetPromises(pages) {
-  const criticalPages = pages.slice(0, GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages + 1);
-  const promises = [];
+function buildSequentialAssetQueue(pages) {
+  const assetQueue = [];
+  const chaptersData = [];
   
-  criticalPages.forEach((page, index) => {
-    // Mark as critical for memory management
-    page.dataset.critical = 'true';
+  // Group pages by chapter
+  let currentChapter = null;
+  let chapterPages = [];
+  
+  pages.forEach((page, index) => {
+    const chapterId = page.dataset.chapterId;
     
-    // Get all media elements that need preloading
+    if (chapterId !== currentChapter) {
+      // New chapter started
+      if (currentChapter !== null) {
+        chaptersData.push({
+          id: currentChapter,
+          pages: [...chapterPages]
+        });
+      }
+      currentChapter = chapterId;
+      chapterPages = [];
+    }
+    
+    chapterPages.push(page);
+    
+    // Add page assets to queue in order
     const images = page.querySelectorAll('img[data-src]');
     const videos = page.querySelectorAll('video[data-src]');
     
-    // Create promises for image loading
-    images.forEach(img => {
-      const promise = new Promise((resolve, reject) => {
-        const tempImg = new Image();
-        tempImg.onload = () => {
-          img.src = img.dataset.src;
-          img.removeAttribute('data-src');
-          PreloaderState.loadedAssets.add(img.dataset.src || img.src);
-          resolve();
-        };
-        tempImg.onerror = reject;
-        tempImg.src = img.dataset.src;
+    [...images, ...videos].forEach((element, assetIndex) => {
+      assetQueue.push({
+        element,
+        pageIndex: index,
+        chapterId,
+        assetIndex,
+        type: element.tagName.toLowerCase(),
+        src: element.dataset.src
       });
-      promises.push(promise);
-    });
-    
-    // Create promises for video loading
-    videos.forEach(video => {
-      const promise = new Promise((resolve, reject) => {
-        const tempVideo = document.createElement('video');
-        tempVideo.oncanplaythrough = () => {
-          video.src = video.dataset.src;
-          video.preload = 'auto';
-          video.removeAttribute('data-src');
-          
-          if (video.dataset.poster) {
-            video.poster = video.dataset.poster;
-            video.removeAttribute('data-poster');
-          }
-          
-          PreloaderState.loadedAssets.add(video.dataset.src || video.src);
-          resolve();
-        };
-        tempVideo.onerror = reject;
-        tempVideo.src = video.dataset.src;
-      });
-      promises.push(promise);
     });
   });
   
-  console.log(`📋 Created ${promises.length} critical asset promises for ${criticalPages.length} pages`);
-  return promises;
+  // Add last chapter
+  if (currentChapter !== null) {
+    chaptersData.push({
+      id: currentChapter,
+      pages: [...chapterPages]
+    });
+  }
+  
+  PreloaderState.chaptersData = chaptersData;
+  PreloaderState.totalAssets = assetQueue.length;
+  
+  console.log(`📚 Built sequential asset queue: ${assetQueue.length} assets across ${chaptersData.length} chapters`);
+  
+  return assetQueue;
 }
 
 /**
- * Initialize preloader system
+ * Load single asset from the queue
+ * @param {Object} assetInfo - Asset information object
+ * @returns {Promise} Promise that resolves when asset is loaded
+ */
+function loadSingleAsset(assetInfo) {
+  return new Promise((resolve, reject) => {
+    const { element, type, src } = assetInfo;
+    
+    if (type === 'img') {
+      const tempImg = new Image();
+      tempImg.onload = () => {
+        element.src = src;
+        element.removeAttribute('data-src');
+        console.log(`🖼️ Chapter asset loaded: ${src.split('/').pop()}`);
+        resolve();
+      };
+      tempImg.onerror = () => {
+        console.warn(`⚠️ Failed to load image: ${src}`);
+        resolve(); // Continue even if asset fails
+      };
+      tempImg.src = src;
+    } else if (type === 'video') {
+      const tempVideo = document.createElement('video');
+      tempVideo.oncanplaythrough = () => {
+        element.src = src;
+        element.preload = 'auto';
+        element.removeAttribute('data-src');
+        
+        if (element.dataset.poster) {
+          setPosterSafely(element, element.dataset.poster);
+          element.removeAttribute('data-poster');
+        }
+        
+        console.log(`🎬 Chapter video loaded: ${src.split('/').pop()}`);
+        resolve();
+      };
+      tempVideo.onerror = () => {
+        console.warn(`⚠️ Failed to load video: ${src}`);
+        resolve(); // Continue even if asset fails
+      };
+      tempVideo.src = src;
+    } else {
+      resolve();
+    }
+  });
+}
+
+/**
+ * Start sequential loading of assets
+ * @param {Array} assetQueue - Queue of assets to load sequentially
+ */
+async function startSequentialLoading(assetQueue) {
+  const targetAssets = Math.ceil(PreloaderState.totalAssets * (PreloaderState.targetLoadPercentage / 100));
+  
+  console.log(`⏳ Starting sequential loading: ${targetAssets}/${PreloaderState.totalAssets} assets (${PreloaderState.targetLoadPercentage}%)`);
+  
+  for (let i = 0; i < targetAssets && i < assetQueue.length; i++) {
+    try {
+      await loadSingleAsset(assetQueue[i]);
+      PreloaderState.loadedAssets++;
+      
+      // Update progress
+      const progress = (PreloaderState.loadedAssets / targetAssets) * 100;
+      updateProgress(progress);
+      
+      // Log chapter progress
+      if (i === 0 || assetQueue[i].chapterId !== assetQueue[i-1]?.chapterId) {
+        console.log(`📖 Loading Chapter: ${assetQueue[i].chapterId}`);
+      }
+      
+    } catch (error) {
+      console.warn(`⚠️ Asset load error (continuing):`, error);
+      PreloaderState.loadedAssets++;
+    }
+  }
+  
+  console.log(`✅ Sequential loading complete: ${PreloaderState.loadedAssets}/${targetAssets} assets loaded`);
+  updateProgress(100);
+  
+  // Hide preloader after brief delay
+  setTimeout(() => {
+    hidePreloader();
+  }, 300);
+}
+
+/**
+ * Start background loading of remaining assets at reduced speed
+ */
+function startBackgroundLoading() {
+  if (PreloaderState.isBackgroundLoading) return;
+  
+  PreloaderState.isBackgroundLoading = true;
+  const remainingAssets = PreloaderState.assetQueue.slice(PreloaderState.loadedAssets);
+  
+  if (remainingAssets.length === 0) {
+    console.log('🎯 All assets already loaded');
+    return;
+  }
+  
+  console.log(`🔄 Starting background loading: ${remainingAssets.length} remaining assets at reduced speed`);
+  
+  let backgroundIndex = 0;
+  
+  PreloaderState.backgroundLoadInterval = setInterval(async () => {
+    if (backgroundIndex >= remainingAssets.length) {
+      clearInterval(PreloaderState.backgroundLoadInterval);
+      console.log('✅ Background loading complete - all assets loaded');
+      return;
+    }
+    
+    try {
+      await loadSingleAsset(remainingAssets[backgroundIndex]);
+      backgroundIndex++;
+      
+      const totalProgress = ((PreloaderState.loadedAssets + backgroundIndex) / PreloaderState.totalAssets) * 100;
+      console.log(`📊 Background progress: ${Math.round(totalProgress)}% (${PreloaderState.loadedAssets + backgroundIndex}/${PreloaderState.totalAssets})`);
+      
+    } catch (error) {
+      console.warn('Background loading error:', error);
+      backgroundIndex++;
+    }
+  }, PreloaderState.backgroundLoadDelay);
+}
+
+/**
+ * Initialize sequential preloader system
  * @param {HTMLElement[]} pages - All page elements
- * @returns {Promise<void>} Promise that resolves when initial assets are loaded
+ * @returns {Promise<void>} Promise that resolves when initial loading is complete
  */
 export async function initPreloader(pages) {
-  console.log('🚀 Initializing preloader system...');
+  console.log('🚀 Initializing sequential preloader system...');
   
-  // Create spinner overlay
+  // Create enhanced spinner overlay
   createSpinnerOverlay();
   
   // Create observers for lazy loading and video management
@@ -298,42 +529,43 @@ export async function initPreloader(pages) {
     }
   });
   
-  // Get critical assets that need to load before reveal
-  const criticalPromises = getCriticalAssetPromises(pages);
-  PreloaderState.totalAssets = criticalPromises.length;
+  // Build sequential asset queue in book order
+  PreloaderState.assetQueue = buildSequentialAssetQueue(pages);
   
-  // Set timeout fallback (7 seconds as requested)
+  // Set timeout fallback (10 seconds for sequential loading)
   PreloaderState.loadTimeout = setTimeout(() => {
-    console.warn('⏰ Preloader timeout reached, forcing reveal after 7 seconds');
+    console.warn('⏰ Preloader timeout reached, forcing reveal after 10 seconds');
     hidePreloader();
-  }, 7000);
+  }, 10000);
   
   try {
-    // Wait for all critical assets to load
-    console.log(`⏳ Loading ${criticalPromises.length} critical assets...`);
-    await Promise.allSettled(criticalPromises);
+    // Start sequential loading
+    await startSequentialLoading(PreloaderState.assetQueue);
     
     // Clear timeout since we finished loading
     if (PreloaderState.loadTimeout) {
       clearTimeout(PreloaderState.loadTimeout);
     }
     
-    console.log(`✅ Critical assets loaded: ${PreloaderState.loadedAssets.size}/${PreloaderState.totalAssets}`);
-    
-    // Hide preloader and reveal notebook
-    hidePreloader();
-    
   } catch (error) {
-    console.error('❌ Error loading critical assets:', error);
+    console.error('❌ Error in sequential loading:', error);
     // Still hide preloader to prevent hanging
     hidePreloader();
   }
 }
 
 /**
- * Cleanup preloader resources
+ * Clean up preloader resources
  */
 export function cleanupPreloader() {
+  if (PreloaderState.backgroundLoadInterval) {
+    clearInterval(PreloaderState.backgroundLoadInterval);
+  }
+  
+  if (PreloaderState.loadTimeout) {
+    clearTimeout(PreloaderState.loadTimeout);
+  }
+  
   if (PreloaderState.lazyLoadObserver) {
     PreloaderState.lazyLoadObserver.disconnect();
   }
@@ -342,17 +574,5 @@ export function cleanupPreloader() {
     PreloaderState.videoPlaybackObserver.disconnect();
   }
   
-  if (PreloaderState.loadTimeout) {
-    clearTimeout(PreloaderState.loadTimeout);
-  }
-  
-  console.log('🧹 Preloader cleanup completed');
-}
-
-/**
- * Check if preloader is still active
- * @returns {boolean} True if still loading
- */
-export function isPreloaderActive() {
-  return PreloaderState.isLoading;
+  console.log('🧹 Preloader resources cleaned up');
 } 
