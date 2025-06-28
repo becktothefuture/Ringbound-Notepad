@@ -1,0 +1,2050 @@
+/* =====================================================
+   1. ROOT VARIABLES & CONFIGURATION
+   ===================================================== */
+:root {
+  /* Browser Theme Variables */
+  --browser-color: #ffffff;
+  --browser-text: #202124;
+  --browser-text-secondary: #5f6368;
+  --browser-spine: #f1f3f4;
+  --browser-commentary-bg: rgba(255, 255, 255, 0.95);
+  --browser-commentary-text: rgba(32, 33, 36, 0.8);
+
+  /* Theme Transitions */
+  --theme-transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+
+  /* Webflow Design Tokens */
+  --cover-radius: 2em;
+  --dark-1: #1b1b1b;
+  --webflow-gray: #b1b1b1;
+  --webflow-paper: #dfdcd8;
+  --webflow-paper-shadow: #aca9a3a1;
+
+  /* Typography */
+  --font-family: 'Geist', system-ui, sans-serif;
+  --webflow-font-tiny: 'Tiny5', monospace;
+
+  /* Layout Settings */
+  --page-aspect-ratio: calc(4 / 3);
+  --safe-zone-height: 50px;
+  --cover-size-multiplier: 1.01;
+
+  /* 3D Settings - Sync with config.js */
+  --perspective-distance: 10000px;
+  --perspective-origin-x: 50%;
+  --perspective-origin-y: 200%;
+  --page-rotation-origin-x: 50%;
+  --page-rotation-origin-y: -1%;
+  --transform-origin-x: 50%;
+  --transform-origin-y: 0%;
+
+  /* Z-Index System */
+  --ring-z-index: 0;
+  --active-page-z-index: 1000;
+  --front-cover-z-index: 300;
+  --back-cover-z-index: 1;
+
+  /* Performance Settings */
+  --quality-scale: 1;
+  --max-visible-pages: 15;
+  --shadow-quality: normal;
+  --blur-quality: 2px;
+
+  /* Shadow System */
+  --shadow-layers: 3;
+  --shadow-color: rgba(0, 0, 0, 0.2);
+  --shadow-blur: 15px;
+  --shadow-spread: 0px;
+  --shadow-x-offset: 0px;
+  --shadow-y-offset: 2px;
+  --shadow-transition: transform 0.2s ease-out;
+
+  /* Dynamic Positioning */
+  --rings-front-position: 175px;
+
+  /* Tab Configuration */
+  --tab-safe-area-horizontal: 16px;
+
+  /* Zoom Configuration */
+  --notebook-zoom-scale: 0.8;
+  --notebook-zoom-focused-scale: 1;
+  --background-zoom-scale: 1.0;
+  --background-zoom-focused-scale: 0.95;
+  --zoom-duration: 600ms;
+  --zoom-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* SVG Noise Configuration */
+  --noise-base-frequency: 0.085; /* Lower frequency for more natural grain */
+  --noise-octaves: 6; /* More octaves for richer detail */
+  --noise-seed: 23; /* Different seed for varied pattern */
+  --noise-surface-scale: 4; /* Increased scale for more depth */
+  --noise-specular-constant: 0.6; /* Reduced specularity for paper-like finish */
+  --noise-specular-exponent: 15; /* Softer specular highlights */
+  --noise-lighting-color: #4a5266; /* Cooler, more subtle lighting */
+  --noise-azimuth: 45; /* More natural lighting angle */
+  --noise-elevation: 55; /* Lower elevation for softer shadows */
+  --noise-opacity: 0.45; /* Lower opacity for subtler effect */
+  --noise-blend-mode: overlay; /* Overlay blending for better integration */
+  --noise-size: 600px; /* Larger size for less obvious tiling */
+
+  /* Page Shadow Settings */
+  --page-shadow-start: rgba(0,0,0,0.8);
+  --page-shadow-mid: rgba(0,0,0,0.5);
+  --page-shadow-end: rgba(0,0,0,0.3);
+  --shadow-mid-stop: 50%;
+  --page-shadow-angle: 170deg;
+}
+
+/* =====================================================
+   2. FONT CONFIGURATION
+   ===================================================== */
+/* Fonts are now loaded from Google Fonts:
+   - Geist: Primary font for all text
+   - Tiny5: Commentary/pixel screen text only
+*/
+
+/* =====================================================
+   3. GLOBAL RESET & BASE STYLES
+   ===================================================== */
+body,
+html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevent unwanted scrollbars */
+  /* Removed transform-style: preserve-3d to avoid clipping in some browsers */
+  
+  /* HOUSEKEEPING: Disable text selection globally */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+body {
+  background-color: var(--browser-color);
+  color: var(--browser-text);
+  font-size: 14px;
+  min-height: 100svh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--theme-transition);
+  /* Removed transform-style: preserve-3d */
+  cursor: zoom-in; /* Visual hint that clicking will zoom */
+}
+
+body.zoom-focused {
+  cursor: zoom-out; /* Visual hint that clicking will zoom out */
+}
+
+/* Body hover effect removed - was causing unwanted grey overlay */
+
+/* Enable zoom cursor on the entire notebook area */
+.page-wrapper {
+  cursor: zoom-in;
+}
+
+.page-wrapper.zoom-focused {
+  cursor: zoom-out;
+}
+
+/* Page wrapper hover effect removed - was causing browser compatibility issues */
+
+/* Disable zoom cursor only on specific interactive elements */
+.rings,
+.rings-wrapper,
+.commentary,
+.overlay--rotate,
+.heading-wrapper,
+h1,
+h2 {
+  cursor: default !important;
+}
+
+/* Ensure tabs keep pointer cursor and override zoom cursor */
+.page-tab {
+  cursor: pointer !important;
+}
+
+/* Comprehensive anti-highlighting and selection prevention for tabs */
+.page-tab,
+.page-tab *,
+.page-tab::before,
+.page-tab::after {
+  /* Prevent text selection */
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  
+  /* Prevent touch highlighting */
+  -webkit-touch-callout: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  
+  /* Prevent drag operations */
+  -webkit-user-drag: none !important;
+  -khtml-user-drag: none !important;
+  -moz-user-drag: none !important;
+  -o-user-drag: none !important;
+  user-drag: none !important;
+  
+  /* Prevent focus highlighting */
+  outline: none !important;
+}
+
+body,
+* {
+  font-family: 'Geist', system-ui, sans-serif !important;
+  
+  /* HOUSEKEEPING: Add smooth easing to all elements that don't have specific transitions */
+  transition: 
+    opacity 300ms ease,
+    transform 300ms ease,
+    background-color 300ms ease,
+    color 300ms ease,
+    border-color 300ms ease,
+    box-shadow 300ms ease;
+}
+
+/* Webflow Body Override */
+.body {
+  background-color: var(--webflow-gray);
+  color: #333;
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: 12px;
+  line-height: 20px;
+  /* Removed transform-style: preserve-3d */
+}
+
+body:not(.body) {
+  background-color: var(--browser-color);
+  color: var(--browser-text);
+}
+
+/* =====================================================
+   4. LAYOUT SYSTEM
+   ===================================================== */
+.w-layout-hflex {
+  flex-direction: row;
+  align-items: flex-start;
+  display: flex;
+}
+
+.page-wrapper {
+  transform-style: preserve-3d;
+  flex-flow: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100vh;
+  padding-left: 10vw;
+  padding-right: 10vw;
+  display: flex;
+  position: static;
+  overflow: visible;
+}
+
+main.page-wrapper {
+  position: relative;
+  box-sizing: border-box;
+  overflow: visible;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+main:not(.page-wrapper) {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 5vh;
+  box-sizing: border-box;
+  overflow: visible;
+  transform-style: preserve-3d;
+}
+
+/* =====================================================
+   5. 3D CONTEXT & PERSPECTIVE (merged with main.page-wrapper above)
+   ===================================================== */
+
+/* =====================================================
+   6. NOTEBOOK STRUCTURE
+   ===================================================== */
+.notebook {
+  aspect-ratio: 3 / 2;
+  perspective: var(--perspective-distance);
+  perspective-origin: var(--perspective-origin-x) var(--perspective-origin-y);
+  flex-flow: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 1000px;
+  display: flex;
+  position: relative;
+  transform-style: preserve-3d;
+  overflow: visible;
+  /* Optimize 3D rendering at larger viewports */
+  will-change: transform;
+  backface-visibility: hidden;
+  
+  /* ZOOM FUNCTIONALITY - Apply to parent container for better performance */
+  transform: scale(var(--notebook-zoom-scale));
+  transform-origin: 50% 60%;
+  /* Smooth zoom & optional fade */
+  transition: transform var(--zoom-duration) var(--zoom-easing), opacity var(--zoom-duration) var(--zoom-easing);
+}
+
+.notebook.notebook--focused {
+  transform: scale(var(--notebook-zoom-focused-scale));
+}
+
+.notebook.notebook--transitioning {
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* Zoom functionality moved to parent .notebook container for better performance */
+
+.notebook-inner {
+  z-index: 10;
+  transform-style: preserve-3d;
+  border-radius: 2vh;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  position: absolute;
+  overflow: visible;
+  /* Optimize 3D rendering */
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+#notebook.notebook-inner {
+  --shadow-layers: 5;
+  --shadow-color: 0, 0, 0;
+  --shadow-opacity: 0.35;
+  --shadow-spread: 12px;
+  --shadow-blur: 28px;
+  --shadow-offset-y: 60px;
+  --shadow-anim-duration: 0.3s;
+  z-index: 100;
+  transform-style: preserve-3d;
+  /* Zoom functionality moved to parent .notebook container */
+}
+
+#notebook:not(.notebook-inner) {
+  position: relative;
+  width: 100%;
+  height: auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 1000;
+  transform-style: preserve-3d;
+  overflow: visible;
+  margin: auto;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  --shadow-layers: 5;
+  --shadow-color: 0, 0, 0;
+  --shadow-opacity: 0.35;
+  --shadow-spread: 12px;
+  --shadow-blur: 28px;
+  --shadow-offset-y: 60px;
+  --shadow-anim-duration: 0.3s;
+  transform-origin: center center;
+}
+
+/* Zoom classes removed - using .notebook--focused instead */
+
+/* =====================================================
+   7. PAGE SYSTEM - ENHANCED Z-FIGHTING PREVENTION
+   ===================================================== */
+.page-stack {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  overflow: visible;
+  transform: rotateX(0deg);
+  /* Ensure 3D context is established */
+  perspective: inherit;
+  /* Z-fighting prevention */
+  --page-z-spacing: 10px; /* Configurable spacing between pages */
+  --page-z-offset: 0px; /* Base offset for micro-adjustments */
+}
+
+.page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: end;
+  aspect-ratio: var(--page-aspect-ratio);
+  transform-origin: var(--transform-origin-x, 50%) var(--transform-origin-y, 0%) 0;
+  transform-style: preserve-3d;
+  backface-visibility: visible;
+  /* Shared border radius for consistent shadow shape - fixed consistent radius */
+  border-radius: 0.5em;
+  /* Enhanced performance optimization */
+  will-change: transform, filter, opacity;
+  /* Initial 3D positioning - enhanced with z-fighting prevention */
+  transform: translateZ(calc(5px + var(--page-z-offset, 0px)));
+  /* Prevent flashing during transforms */
+  opacity: 1;
+  transition: 
+    opacity 150ms cubic-bezier(0.4, 0.0, 0.2, 1),
+    filter 100ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
+  /* Enhanced motion blur effects applied via JavaScript */
+  filter: var(--motion-blur-filter, none);
+  
+  /* Allow tabs to extend beyond page boundaries */
+  overflow: visible;
+  
+  /* Z-fighting prevention via micro-offsets */
+  --page-micro-offset: calc(var(--page-index, 0) * 0.001px);
+}
+
+/* Page Front Face - contains all visible content */
+.page-front {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: end;
+  backface-visibility: hidden;
+  /* Inherit border radius from parent and hide overflow for clean edges */
+  border-radius: inherit;
+  overflow: hidden;
+  background-color: var(--page-color, #f5f5f5);
+  background-image:
+    url('./assets/background-assets/paper-holes.webp'), linear-gradient(231deg, #aca9a3a1, #0000);
+  background-position:
+    50% -14%,
+    0 0;
+  background-repeat: no-repeat, repeat;
+  background-size:
+    100% auto,
+    auto;
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.04),
+    0 8px 16px rgba(0, 0, 0, 0.03),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+  /* Aggressive performance optimizations */
+  isolation: isolate;
+  transform: translateZ(0);
+  transform-style: preserve-3d;
+}
+
+/* Colored pages - use custom page color */
+.page--colored .page-front {
+  background-color: var(--page-color);
+}
+
+/* Colored pages back face */
+.page--colored .page-back {
+  background: var(--page-color);
+}
+
+/* Page Back Face - ORIGINAL RESTORED */
+.page-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  /* Inherit border radius from parent for consistency */
+  border-radius: inherit;
+  overflow: hidden;
+  /* RESTORED: Original simple background */
+  background: var(--backface-color, #f5f5f5);
+  transform: rotateX(180deg) translateZ(-1px);
+}
+
+/* RESTORED: Enhanced shadow gradient overlay with hardware acceleration */
+.page-back::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* MUCH DARKER: Enhanced diagonal shadow gradient for dramatic depth */
+  background: linear-gradient(
+    to bottom right,
+    rgba(0, 0, 0, 0.325) 0%,
+    rgba(0, 0, 0, 0.455) 50%,
+    rgba(0, 0, 0, 0.65) 100%
+  );
+  /* RESTORED: Dynamic opacity controlled by rotation animation */
+  opacity: var(--backface-shadow-opacity, 0.4);
+  border-radius: inherit;
+  pointer-events: none;
+  /* Hardware-accelerated transitions for smooth animation */
+  will-change: opacity;
+  transform: translateZ(0); /* Force GPU layer */
+  transition: opacity 120ms ease-out;
+}
+
+.page-content {
+  position: relative;
+  width: 100%;
+  overflow: hidden; /* Allow tabs to extend beyond page boundaries */
+  backface-visibility: visible;
+  padding: 2%;
+  box-sizing: border-box;
+  /* Ensure content fades appropriately during flip */
+  transition: opacity 150ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  border-radius: 0.5em ;
+}
+
+/* Removed duplicate .page rule - overflow handled in main .page definition */
+
+.page-content__inner {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  backface-visibility: hidden;
+}
+
+.page-holes {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--safe-zone-height);
+  background-image: url('./assets/background-assets/paper-holes.webp');
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: 100% auto;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* =====================================================
+   8. COVER SYSTEM
+   ===================================================== */
+.cover {
+  border-radius: var(--cover-radius);
+  transform-origin: 50% -1%;
+  background-image: url('./assets/background-assets/images/cardboard.jpg');
+  background-position: 0 0;
+  background-size: auto;
+  width: 101%;
+  height: 101%;
+  position: absolute;
+  top: -0.5%;
+  left: -0.5%;
+}
+
+/* Front cover styling */
+.page-front.cover.cover--front {
+  z-index: auto !important;
+  /* Ensure cover inherits border radius and hides overflow */
+  border-radius: inherit;
+  overflow: hidden;
+  background-image: url('./assets/portfolio-pages/folio-cover/cover-front.webp');
+  background-position: center bottom;
+  background-size: cover;
+  background-repeat: no-repeat;
+  box-shadow:
+    inset 0 3px 2px #c29154,
+    inset 0 -2px 3px 2px #664620,
+    0 0 #0000,
+    -0.2px 0.4px #0000000e,
+    -0.4px 0.9px 0.1px #0001,
+    -0.7px 1.6px 0.5px #00000013,
+    -1.2px 2.8px 1.3px #00000014,
+    -2.1px 5px 2.9px #00000015,
+    -3.8px 8.9px 6.2px #00000015,
+    -7.1px 16.7px 13px #00000016,
+    -14.9px 35.1px 29.5px #00000018,
+    0 2px 4px rgba(0, 0, 0, 0.12),
+    0 4px 8px rgba(0, 0, 0, 0.08),
+    0 8px 16px rgba(0, 0, 0, 0.06);
+  position: relative;
+}
+
+/* Back cover styling */
+.page-front.cover.cover--back {
+  z-index: auto !important;
+  /* Ensure cover inherits border radius and hides overflow */
+  border-radius: inherit;
+  overflow: hidden;
+  background-image: url('./assets/portfolio-pages/folio-cover/cover-default.webp');
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  box-shadow:
+    inset 0 3px 2px #c29154,
+    inset 0 -2px 3px 2px #664620,
+    0 0 #0000,
+    -0.2px 0.4px #0000000e,
+    -0.4px 0.9px 0.1px #0001,
+    -0.7px 1.6px 0.5px #00000013,
+    -1.2px 2.8px 1.3px #00000014,
+    -2.1px 5px 2.9px #00000015,
+    -3.8px 8.9px 6.2px #00000015,
+    -7.1px 16.7px 13px #00000016,
+    -14.9px 35.1px 29.5px #00000018,
+    0 2px 4px rgba(0, 0, 0, 0.12),
+    0 4px 8px rgba(0, 0, 0, 0.08),
+    0 8px 16px rgba(0, 0, 0, 0.06);
+  position: relative;
+}
+
+/* Add paper holes to covers - positioned on top of cardboard texture */
+.page-front.cover.cover--back::before,
+.page-front.cover.cover--front::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--safe-zone-height);
+  background-image: url('./assets/background-assets/paper-holes.webp');
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: 100% auto;
+  z-index: 10;
+  pointer-events: none;
+  transform: translateZ(1px);
+}
+
+.page-front.cover.cover--front {
+  transform-style: preserve-3d;
+  position: absolute;
+}
+
+/* Cover back faces - backside of covers when flipped */
+.cover.cover--front .page-back {
+  background-image: url('./assets/portfolio-pages/folio-cover/cover-default.webp');
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.cover.cover--back .page-back {
+  background-image: url('./assets/portfolio-pages/folio-cover/cover-default.webp');
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.cover-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #664620;
+  z-index: 10;
+  display: none;
+}
+
+.cover-title h1,
+.cover-title p,
+.cover-title span {
+  display: none;
+}
+
+/* =====================================================
+   9. RING SYSTEM
+   ===================================================== */
+.rings-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transform-style: preserve-3d;
+  transform: translateY(-8.5%);
+  opacity: 1;
+  z-index: 1000;
+}
+
+.rings {
+  position: absolute;
+  width: 100% !important;
+  min-width: 100%;
+  max-width: 100%;
+  height: auto;
+  top: 0;
+  left: 0;
+  right: 0;
+  transform-origin: center center;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 120ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-sizing: border-box;
+  opacity: 1;
+  display: block;
+}
+
+.rings--front {
+  top: 0;
+  opacity: 1 !important;
+  display: block !important;
+  transform: translateY(-14%) scale(1.02);
+  z-index: 1001;
+}
+
+.rings--back {
+  top: 0;
+  opacity: 0.8 !important;
+  display: block !important;
+  transform: translateY(-14%) scale(1.02);
+  z-index: 999;
+}
+
+/* Ensure ring images load properly */
+.rings img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+/* =====================================================
+   10. SHADOW SYSTEMS
+   ===================================================== */
+.notebook__shadow {
+  position: absolute;
+  width: 98%;
+  height: 98%;
+  aspect-ratio: 16/11;
+  pointer-events: none;
+  z-index: 0;
+  box-sizing: border-box;
+  border-radius: 0.5em;
+  box-shadow:
+    0px 10px 15px -3px hsla(0, 5%, 0%, 0.1),
+    0px 30px 30px -10px hsla(0, 5%, 0%, 0.15),
+    0px 60px 50px -15px hsla(0, 5%, 0%, 0.2);
+  box-shadow:
+    0px 10px 15px -3px color(display-p3 0.013 0.013 0.013 / 0.1),
+    0px 30px 30px -10px color(display-p3 0.013 0.013 0.013 / 0.15),
+    0px 60px 50px -15px color(display-p3 0.013 0.013 0.013 / 0.2);
+}
+
+.notebook__layered-shadow {
+  position: absolute;
+  inset: -20px;
+  pointer-events: none;
+  transform-style: preserve-3d;
+  box-shadow:
+    calc(var(--shadow-x-offset)) var(--shadow-y-offset) var(--shadow-blur) var(--shadow-spread)
+      var(--shadow-color),
+    calc(var(--shadow-x-offset) * 1.5) calc(var(--shadow-y-offset) * 2) calc(var(--shadow-blur) * 2)
+      calc(var(--shadow-spread) * 2) var(--shadow-color),
+    calc(var(--shadow-x-offset) * 2) calc(var(--shadow-y-offset) * 3) calc(var(--shadow-blur) * 3)
+      calc(var(--shadow-spread) * 3) var(--shadow-color);
+  transition: var(--shadow-transition);
+  will-change: transform;
+}
+
+/* =====================================================
+   11. BACKGROUND & SCENE
+   ===================================================== */
+.notebook-background {
+  z-index: -200;
+  aspect-ratio: 1;
+  background-image: url('./assets/background-assets/images/portfolio-background.jpg');
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  justify-content: center;
+  align-items: center;
+  width: 232%;
+  display: block;
+  position: absolute;
+  transform: translate3d(0, 4vh, -1px) scale(var(--background-zoom-scale));
+  transition: transform var(--zoom-duration) var(--zoom-easing);
+}
+
+.notebook--focused .notebook-background {
+  transform: translate3d(0, 4vh, -1px) scale(var(--background-zoom-focused-scale));
+}
+
+.pixel-screen {
+  width: 11%;
+  height: 5.5%;
+  font-size: 70%;
+  position: absolute;
+  top: 67.5%;
+  left: 29%;
+}
+
+.pixel-screen__text {
+  color: #fefdfb;
+  letter-spacing: 0.05ch;
+  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: #77d8ff;
+  text-shadow: 0 0 0.5em #2ea5df;
+  word-break: break-all;
+  padding: 0.5em;
+  font-family: 'Tiny5', monospace !important;
+  font-size: calc(clamp(1.1em, 1.5vw - 0.092em, 2.7em));
+  line-height: 1.3;
+  overflow: hidden;
+}
+
+.phone-screen {
+  z-index: 2;
+  opacity: 1;
+  width: 11.3%;
+  height: 22.64%;
+  position: absolute;
+  top: 54.1%;
+  left: 79.5%;
+  overflow: hidden;
+}
+
+.phone-screen__video {
+  z-index: 1;
+  height: 98%;
+  position: absolute;
+  inset: 1%;
+}
+
+.phone-screen__cover {
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0%;
+}
+
+.notebook-background,
+.notebook,
+.notebook-inner {
+  z-index: -100 !important;
+}
+
+.w-background-video,
+.background-video-wrap,
+.section {
+  z-index: -50 !important;
+}
+
+/* =====================================================
+   12. COMMENTARY & UI ELEMENTS
+   ===================================================== */
+.heading-wrapper {
+  z-index: 100;
+  grid-column-gap: 3em;
+  grid-row-gap: 3em;
+  text-align: center;
+  flex-flow: column;
+  justify-content: center;
+  align-items: center;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  position: absolute;
+  top: -18vh;
+}
+
+.flex-block {
+  flex-flow: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.divider {
+  background-color: var(--dark-1);
+  width: 50%;
+  height: 1px;
+}
+
+h1 {
+  margin-top: 0;
+  margin-bottom: 0;
+  font-size: 1.5em;
+  font-weight: 700;
+  font-family: 'Geist', system-ui, sans-serif;
+}
+
+h2 {
+  margin-top: 0;
+  margin-bottom: 0;
+  font-size: 1.5em;
+  font-weight: 400;
+  line-height: 36px;
+  font-family: 'Geist', system-ui, sans-serif;
+}
+
+.commentary {
+  position: absolute;
+  bottom: 2rem;
+  width: 100%;
+  text-align: center;
+  font-style: italic;
+  pointer-events: none;
+  color: var(--browser-text-secondary);
+  font-size: 0.9rem;
+  text-shadow: 0 1px 2px var(--browser-button-outline);
+  z-index: 101;
+  transform: translateZ(0.2px);
+  font-family: 'Tiny5', monospace !important;
+  transition: 
+    opacity 300ms cubic-bezier(0.4, 0.0, 0.2, 1),
+    transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.commentary-overlay.visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  transition: 
+    opacity 200ms cubic-bezier(0.4, 0.0, 0.2, 1),
+    transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.page-tab {
+  position: absolute;
+  z-index: 10000;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Geist', system-ui, sans-serif;
+  font-weight: 600;
+  color: transparent !important;
+  text-align: center;
+  transition: 
+    transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    opacity 150ms cubic-bezier(0.4, 0.0, 0.2, 1),
+    filter 100ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    box-shadow 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  background: #fff;
+  pointer-events: auto;
+  filter: none !important;
+  opacity: 1 !important;
+  overflow: hidden;
+  border-radius: 4px 4px 10px 10px;
+  box-sizing: border-box;
+  transform-style: flat;
+  /* Remove any transform to keep tabs straight */
+  transform: none;
+  /* Safe area padding handled in JavaScript positioning */
+  
+  /* Prevent text selection and highlighting */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Tab hover effect - move down by 5% */
+.page-tab:hover {
+  transform: translateY(5%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Tab active/click effect for immediate feedback */
+.page-tab:active {
+  transform: translateY(7%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: 
+    transform 100ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    box-shadow 100ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Subtle tab focus style for accessibility (override only when absolutely needed) */
+.page-tab:focus-visible {
+  box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.5);
+  transform: translateY(2%);
+}
+
+.tab-with-image {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  padding: 8px;
+  backface-visibility: hidden;
+}
+
+.overlay--rotate {
+  z-index: 999;
+  grid-column-gap: 0.5em;
+  grid-row-gap: 0.5em;
+  text-align: center;
+  background-color: #b9bcbd;
+  flex-flow: column;
+  justify-content: center;
+  align-items: center;
+  display: none;
+  position: fixed;
+  inset: 0%;
+}
+
+.code-embed {
+  width: 32px;
+  height: 32px;
+}
+
+.text-block {
+  margin: 0;
+  padding: 0;
+}
+
+/* =====================================================
+   13. RESPONSIVE & MEDIA QUERIES
+   ===================================================== */
+@media (max-width: 768px) {
+  .commentary-overlay {
+    width: 90%;
+    font-size: 1rem;
+    padding: 1rem;
+    bottom: 1rem;
+  }
+}
+
+@media screen and (max-width: 991px) {
+  .body {
+    font-size: 9px;
+  }
+
+  .code-embed {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+@media screen and (max-width: 479px) {
+  .overlay--rotate {
+    display: flex;
+  }
+
+  .text-block {
+    text-align: center;
+  }
+
+  .code-embed {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+/* Performance Media Queries */
+@media (--quality-scale < 0.8) {
+  .page {
+    box-shadow: var(--shadow-quality, none);
+  }
+}
+
+@media (--quality-scale < 0.7) {
+  .page-content {
+    filter: blur(var(--blur-quality, 0px));
+  }
+}
+
+/* =====================================================
+   14. UTILITY CLASSES
+   ===================================================== */
+.page-holes--styled {
+  height: 50px;
+}
+
+.page-content__media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  backface-visibility: hidden !important;
+}
+
+.page-content__media--video,
+.page-content video {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  backface-visibility: hidden !important;
+  display: block;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ensure videos respect container boundaries */
+.page-content__inner.page-content__media--video {
+  max-height: calc(100% - 4%); /* Account for page-content padding */
+  object-fit: contain;
+  object-position: center;
+}
+
+/* Video container: 16:9 aspect ratio mask for all content */
+.page-content--video-container {
+  aspect-ratio: 16 / 9 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  align-self: center !important;
+  position: relative !important;
+  background: #000; /* Optional: black bars for letterboxing */
+}
+
+.page--video-page {
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Video fills the 16:9 container completely */
+.page-content__media--video.page-content__inner {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important; /* Fill the container, crop if needed */
+  object-position: center !important;
+  display: block !important;
+}
+
+/* Ensure video containers have no padding that interferes */
+.page-content--video-container.page-content--bottom,
+.page-content--video-container.page-content--center,
+.page-content--video-container.page-content--top {
+  padding: 0 !important;
+}
+
+/* Cover content styles moved to utility section */
+
+.cover-title h1 {
+  font-size: 2.5em;
+  font-weight: 700;
+}
+
+.cover-title p {
+  font-size: 1.2em;
+  font-weight: 400;
+  margin: 0 0 0.3em 0;
+  opacity: 0.9;
+}
+
+.cover-title span {
+  font-size: 1em;
+  font-weight: 300;
+  opacity: 0.8;
+  font-style: italic;
+}
+
+.page--positioned {
+  transform-origin: 50% -1%;
+}
+
+.page--visible {
+  display: flex !important;
+  opacity: 1 !important;
+  transition: opacity 300ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.page--fading {
+  display: flex !important;
+  opacity: var(--fade-opacity, 0.5) !important;
+  transition: opacity 400ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.page--hidden {
+  display: none !important;
+  opacity: 0 !important;
+}
+
+.page-content--bottom {
+  align-self: bottom;
+}
+
+.page-content--center {
+  align-self: center;
+}
+
+.page-content--top {
+  align-self: top;
+}
+
+.gpu-accelerated {
+  will-change: transform;
+  backface-visibility: visible;
+}
+
+.page-content--hidden {
+  display: none !important; /* Use display:none instead of opacity for better performance */
+}
+
+.page-content--fading {
+  opacity: var(--content-fade-opacity, 0.5) !important;
+  transition: opacity 200ms ease-out; /* Simplified transition */
+}
+
+/* PERFORMANCE: Optimize backface hiding */
+.page--showing-backface .page-front {
+  display: none !important; /* Use display:none for maximum performance */
+}
+
+.page--showing-backface .page-front *,
+.page--showing-backface .page-front img,
+.page--showing-backface .page-front video {
+  display: none !important; /* Completely remove from rendering */
+}
+
+/* Test change Sun Jun 22 19:23:23 BST 2025 */
+/* Another test change Sun Jun 22 19:24:22 BST 2025 */
+/* Fixed watcher test Sun Jun 22 19:25:38 BST 2025 */
+
+
+
+/* =====================================================
+   15. RGB NOISE SYSTEM (CSS-based, high performance)
+   ===================================================== */
+
+/* Apply SVG noise texture to the body using configurable background */
+body::before {
+  content: '';
+  position: fixed;
+  /* 120% size, centered with 10% margin on all sides for movement range */
+  top: -10vh;
+  left: -10vw;
+  width: 120vw;
+  height: 120vh;
+  pointer-events: none;
+  z-index: 99999;
+  opacity: var(--noise-opacity);
+  mix-blend-mode: var(--noise-blend-mode);
+  
+  /* SVG noise texture as repeating background - dynamically generated */
+  background-image: var(--noise-svg-url, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' version='1.1' xmlns:xlink='http://www.w3.org/1999/xlink' xmlns:svgjs='http://svgjs.dev/svgjs' viewBox='0 0 700 700' width='700' height='700'%3E%3Cdefs%3E%3Cfilter id='nnnoise-filter' x='-20%25' y='-20%25' width='140%25' height='140%25' filterUnits='objectBoundingBox' primitiveUnits='userSpaceOnUse' color-interpolation-filters='linearRGB'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.134' numOctaves='4' seed='15' stitchTiles='stitch' x='0%25' y='0%25' width='100%25' height='100%25' result='turbulence'%3E%3C/feTurbulence%3E%3CfeSpecularLighting surfaceScale='7' specularConstant='0.8' specularExponent='20' lighting-color='%235a657e' x='0%25' y='0%25' width='100%25' height='100%25' in='turbulence' result='specularLighting'%3E%3CfeDistantLight azimuth='3' elevation='62'%3E%3C/feDistantLight%3E%3C/feSpecularLighting%3E%3CfeColorMatrix type='saturate' values='0' x='0%25' y='0%25' width='100%25' height='100%25' in='specularLighting' result='colormatrix'%3E%3C/feColorMatrix%3E%3C/filter%3E%3C/defs%3E%3Crect width='700' height='700' fill='transparent'%3E%3C/rect%3E%3Crect width='700' height='700' fill='%235a657e' filter='url(%23nnnoise-filter)'%3E%3C/rect%3E%3C/svg%3E"));
+  background-size: var(--noise-size);
+  background-repeat: repeat;
+  
+  /* Constantly moving grain effect in steps of 20px every 0.5s */
+  animation: grainMovement 0.5s infinite steps(1, end);
+}
+
+/* Film grain effect - constantly jumping in large steps every 0.5s */
+@keyframes grainMovement {
+  0% { transform: translate(0px, 0px); }
+  10% { transform: translate(20px, -15px); }
+  20% { transform: translate(-25px, 10px); }
+  30% { transform: translate(15px, 25px); }
+  40% { transform: translate(-20px, -8px); }
+  50% { transform: translate(25px, 18px); }
+  60% { transform: translate(-10px, -25px); }
+  70% { transform: translate(18px, 5px); }
+  80% { transform: translate(-25px, 20px); }
+  90% { transform: translate(8px, -22px); }
+  100% { transform: translate(-18px, 12px); }
+}
+
+/* Keep noise visible on mobile */
+@media (max-width: 768px) {
+  body::before {
+    --noise-opacity: 0.4;
+    --noise-size: 80px;
+    /* Slower grain movement on mobile for better performance */
+    animation-duration: 0.8s;
+  }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+    transform: translate(0, 0);
+    /* Still show noise, just no movement */
+    --noise-opacity: 0.3;
+  }
+}
+
+/* High contrast mode - still keep noise visible */
+@media (prefers-contrast: high) {
+  body::before {
+    --noise-opacity: 0.2;
+  }
+}
+
+/* ================================================
+   PRELOADER SYSTEM (large progress bar)
+   ================================================ */
+
+.preloader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at center, #fafafa 0%, #f0f0f0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+  opacity: 1;
+  transition: opacity 400ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.preloader__progress-bar-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.preloader__progress-bar {
+  width: 50vw;
+  height: 14vh;
+  background: #f8f8f8;
+  border: 4px solid #000000;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  animation: progressBarGlow 3s ease-in-out infinite;
+}
+
+.preloader__progress-fill {
+  height: 100%;
+  width: 18%;
+  background: linear-gradient(
+    45deg,
+    #00ff41 0%,
+    #39ff14 15%,
+    #00ff88 30%,
+    #39ff14 45%,
+    #00ff41 60%,
+    #39ff14 75%,
+    #00ff88 90%,
+    #00ff41 100%
+  );
+  background-size: 400% 400%;
+  animation: progressGradientMove 1s linear infinite;
+  transition: width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform, background-position;
+  transform: translateZ(0);
+  position: relative;
+  border-radius: 4px;
+}
+
+.preloader__progress-fill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  animation: progressShine 1.8s ease-in-out infinite;
+  border-radius: inherit;
+}
+
+@keyframes progressGradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 100% 50%;
+  }
+  50% {
+    background-position: 200% 50%;
+  }
+  75% {
+    background-position: 300% 50%;
+  }
+  100% {
+    background-position: 400% 50%;
+  }
+}
+
+@keyframes progressShine {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Hide all page content initially during preload */
+body.preloader-active .page-wrapper,
+body.preloader-active .notebook,
+body.preloader-active .page-stack,
+body.preloader-active .rings-wrapper,
+body.preloader-active .notebook-background,
+body.preloader-active .heading-wrapper {
+  opacity: 0;
+  transition: opacity 400ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* Show all content together when preloader is done */
+body.preloader-done .page-wrapper,
+body.preloader-done .notebook,
+body.preloader-done .page-stack,
+body.preloader-done .rings-wrapper,
+body.preloader-done .notebook-background,
+body.preloader-done .heading-wrapper {
+  opacity: 1;
+}
+
+/* ================================================
+   PAGE SHADOW OVERLAY (new implementation)
+   ================================================ */
+.page-shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 130%; /* Taller shadow for better visibility when page above starts flipping */
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0;
+  /* Inherit border radius from parent page */
+  border-radius: inherit;
+  /* Updated gradient with configurable angle (170° = 10° tilt to bottom-left) */
+  background: linear-gradient(var(--page-shadow-angle, 170deg), var(--page-shadow-start, rgba(0,0,0,0.8)) 0%, var(--page-shadow-mid, rgba(0,0,0,0.5)) var(--shadow-mid-stop, 90%), var(--page-shadow-end, rgba(0,0,0,0)) 100%);
+  will-change: transform, opacity;
+  transform: translateZ(2px);
+  /* Smooth transitions for elegant shadow movement */
+  transition: 
+    transform 80ms cubic-bezier(0.33, 1, 0.68, 1),
+    opacity 80ms cubic-bezier(0.33, 1, 0.68, 1);
+  /* Transform origin at top-left for skewing and height scaling */
+  transform-origin: 0% 0%;
+}
+
+.page-shadow-wrapper {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 5; /* same as shadow layer */
+  transform: translateZ(2px);
+}
+
+/* Container blur for high-velocity motion */
+.page-stack--motion-blur {
+  filter: blur(var(--motion-blur-radius, 0px));
+  transition: filter var(--motion-blur-duration, 300ms) var(--motion-blur-easing, cubic-bezier(0.16, 1, 0.3, 1));
+  will-change: filter;
+}
+
+/* === Figma Heading Group Styles === */
+.heading-group {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.heading-main {
+  color: var(--dark-1, #1E1E1E);
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: 1.5rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 100%;
+  letter-spacing: 0.0375rem;
+  text-transform: uppercase;
+  font-variant-numeric: lining-nums proportional-nums;
+}
+.heading-sub {
+  color: var(--dark-1, #1E1E1E);
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: 1.5rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 100%;
+  letter-spacing: 0.0375rem;
+  text-transform: uppercase;
+  font-variant-numeric: lining-nums proportional-nums;
+  margin-top: 0.75rem;
+}
+.heading-wrapper .divider { display: none; }
+
+/* Blinking caret for typewriter effect */
+.commentary-caret {
+  display: inline-block;
+  width: 0.6ch;
+  height: 1em;
+  background-color: currentColor;
+  margin-left: 1px;
+  vertical-align: baseline;
+  animation: commentary-caret-blink 1s steps(1) infinite;
+}
+
+@keyframes commentary-caret-blink {
+  0%, 60% { opacity: 1; }
+  61%, 100% { opacity: 0; }
+}
+
+/* =============================================================================
+   16. OVERLAY HINTS SYSTEM
+============================================================================= */
+
+/* Overlay container */
+.overlay--hints {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--overlay-bg, rgba(0, 0, 0, 0.5));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 90000; /* Below noise (99999) but above everything else */
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+  pointer-events: none;
+}
+
+.overlay--hints--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Inner container for flexbox centering */
+.overlay--hints__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* Content container */
+.overlay--hints__content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 160px;
+}
+
+/* Animation wrapper */
+.overlay--hints__wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  width: 200px;
+}
+
+/* Animation containers */
+.overlay--hints__animation {
+  width: 200px;
+  height: 200px;
+  position: relative;
+}
+
+/* Label styles - Using Geist font */
+.overlay--hints__label {
+  font-family: 'Geist', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.15;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-align: center;
+}
+
+/* =============================================================================
+   16.1 EXPANDING CIRCLES ANIMATION (Click to Zoom)
+============================================================================= */
+
+.overlay--hints__animation--circles {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.overlay--hints__svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Circle animations with GPU acceleration */
+@keyframes animation_node_3_2_flow_1 {
+  from {
+    r: 60.5px;
+    opacity: 0.3;
+  }
+  to {
+    r: 84.5px;
+    opacity: 0;
+  }
+}
+
+@keyframes animation_node_3_2_flow_2 {
+  from {
+    r: 84.5px;
+    opacity: 0;
+  }
+  to {
+    r: 60.5px;
+    opacity: 0.3;
+  }
+}
+
+@keyframes animation_node_2_3_flow_1 {
+  from {
+    r: 25.5px;
+    opacity: 1;
+  }
+  to {
+    r: 60.5px;
+    opacity: 0.3;
+  }
+}
+
+@keyframes animation_node_2_3_flow_2 {
+  from {
+    r: 60.5px;
+    opacity: 0.3;
+  }
+  to {
+    r: 25.5px;
+    opacity: 1;
+  }
+}
+
+@keyframes animation_node_1_4_flow_1 {
+  from {
+    r: 18.5px;
+    opacity: 0;
+  }
+  to {
+    r: 25.5px;
+    opacity: 1;
+  }
+}
+
+@keyframes animation_node_1_4_flow_2 {
+  from {
+    r: 25.5px;
+    opacity: 1;
+  }
+  to {
+    r: 18.5px;
+    opacity: 0;
+  }
+}
+
+#overlay-node_3_2 {
+  animation: animation_node_3_2_flow_1 0.75s cubic-bezier(0.27, 0.12, 0.25, 0.99) 0s forwards, 
+             animation_node_3_2_flow_2 0s linear 1.05s forwards;
+  will-change: opacity;
+}
+
+#overlay-node_2_3 {
+  animation: animation_node_2_3_flow_1 0.75s cubic-bezier(0.27, 0.12, 0.25, 0.99) 0s forwards, 
+             animation_node_2_3_flow_2 0s linear 1.05s forwards;
+  will-change: opacity;
+}
+
+#overlay-node_1_4 {
+  animation: animation_node_1_4_flow_1 0.75s cubic-bezier(0.27, 0.12, 0.25, 0.99) 0s forwards, 
+             animation_node_1_4_flow_2 0s linear 1.05s forwards;
+  will-change: opacity;
+}
+
+/* =============================================================================
+   16.2 MOVING LINES ANIMATION (Scroll to Flip)
+============================================================================= */
+
+.overlay--hints__animation--lines {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Line animations with GPU acceleration */
+@keyframes animation_Line07_2_flow_1 {
+  from {
+    opacity: 0;
+    d: path("M42 195 L 158 195");
+  }
+  to {
+    opacity: 0.5;
+    d: path("M42 168 L 158 168");
+  }
+}
+
+@keyframes animation_Line07_2_flow_2 {
+  from {
+    opacity: 0.5;
+    d: path("M42 168 L 158 168");
+  }
+  to {
+    opacity: 0;
+    d: path("M42 195 L 158 195");
+  }
+}
+
+@keyframes animation_Line06_3_flow_1 {
+  from {
+    opacity: 0.5;
+    d: path("M42 168 L 158 168");
+  }
+  to {
+    opacity: 1;
+    d: path("M42 141 L 158 141");
+  }
+}
+
+@keyframes animation_Line06_3_flow_2 {
+  from {
+    opacity: 1;
+    d: path("M42 141 L 158 141");
+  }
+  to {
+    opacity: 0.5;
+    d: path("M42 168 L 158 168");
+  }
+}
+
+@keyframes animation_Line05_4_flow_1 {
+  from {
+    d: path("M42 141 L 158 141");
+  }
+  to {
+    d: path("M42 114 L 158 114");
+  }
+}
+
+@keyframes animation_Line05_4_flow_2 {
+  from {
+    d: path("M42 114 L 158 114");
+  }
+  to {
+    d: path("M42 141 L 158 141");
+  }
+}
+
+@keyframes animation_Line04_5_flow_1 {
+  from {
+    d: path("M42 114 L 158 114");
+  }
+  to {
+    d: path("M42 87 L 158 87");
+  }
+}
+
+@keyframes animation_Line04_5_flow_2 {
+  from {
+    d: path("M42 87 L 158 87");
+  }
+  to {
+    d: path("M42 114 L 158 114");
+  }
+}
+
+@keyframes animation_Line03_6_flow_1 {
+  from {
+    d: path("M42 87 L 158 87");
+  }
+  to {
+    d: path("M42 60 L 158 60");
+  }
+}
+
+@keyframes animation_Line03_6_flow_2 {
+  from {
+    d: path("M42 60 L 158 60");
+  }
+  to {
+    d: path("M42 87 L 158 87");
+  }
+}
+
+@keyframes animation_Line02_7_flow_1 {
+  from {
+    opacity: 1;
+    d: path("M42 60 L 158 60");
+  }
+  to {
+    opacity: 0.5;
+    d: path("M42 33 L 158 33");
+  }
+}
+
+@keyframes animation_Line02_7_flow_2 {
+  from {
+    opacity: 0.5;
+    d: path("M42 33 L 158 33");
+  }
+  to {
+    opacity: 1;
+    d: path("M42 60 L 158 60");
+  }
+}
+
+@keyframes animation_Line01_8_flow_1 {
+  from {
+    opacity: 0.5;
+    d: path("M42 33 L 158 33");
+  }
+  to {
+    opacity: 0;
+    d: path("M42 6 L 158 6");
+  }
+}
+
+@keyframes animation_Line01_8_flow_2 {
+  from {
+    opacity: 0;
+    d: path("M42 6 L 158 6");
+  }
+  to {
+    opacity: 0.5;
+    d: path("M42 33 L 158 33");
+  }
+}
+
+#overlay-Line07_2 {
+  animation: animation_Line07_2_flow_1 0.75s cubic-bezier(0.27, 0.12, 0.25, 0.99) 0s forwards, 
+             animation_Line07_2_flow_2 0s linear 1.05s forwards;
+  will-change: opacity;
+}
+
+#overlay-Line06_3 {
+  animation: animation_Line06_3_flow_1 0.75s cubic-bezier(0.27, 0.12, 0.25, 0.99) 0s forwards, 
+             animation_Line06_3_flow_2 0s linear 1.05s forwards;
+  will-change: opacity;
+}
+
+#overlay-Line05_4 {
+  animation: animation_Line05_4_flow_1 0.75s cubic-bezier(0.27, 0.12, 0.25, 0.99) 0s forwards, 
+             animation_Line05_4_flow_2 0s linear 1.05s forwards;
+  will-change: auto;
+}
+
+#overlay-Line04_5 {
+  animation: animation_Line04_5_flow_1 0.75s cubic-bezier(0.27, 0.12, 0.25, 0.99) 0s forwards, 
+             animation_Line04_5_flow_2 0s linear 1.05s forwards;
+  will-change: auto;
+}
+
+#overlay-Line03_6 {
+  animation: animation_Line03_6_flow_1 0.75s cubic-bezier(0.27, 0.12, 0.25, 0.99) 0s forwards, 
+             animation_Line03_6_flow_2 0s linear 1.05s forwards;
+  will-change: auto;
+}
+
+#overlay-Line02_7 {
+  animation: animation_Line02_7_flow_1 0.75s cubic-bezier(0.27, 0.12, 0.25, 0.99) 0s forwards, 
+             animation_Line02_7_flow_2 0s linear 1.05s forwards;
+  will-change: opacity;
+}
+
+#overlay-Line01_8 {
+  animation: animation_Line01_8_flow_1 0.75s cubic-bezier(0.27, 0.12, 0.25, 0.99) 0s forwards, 
+             animation_Line01_8_flow_2 0s linear 1.05s forwards;
+  will-change: opacity;
+}
+
+/* =============================================================================
+   16.3 MOBILE RESPONSIVE STYLES
+============================================================================= */
+
+@media (max-width: 768px) {
+  /* Stack animations vertically on mobile */
+  .overlay--hints__content {
+    flex-direction: column;
+    gap: 60px;
+  }
+  
+  /* Slightly smaller animations on mobile */
+  .overlay--hints__animation {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .overlay--hints__wrapper {
+    width: 150px;
+    gap: 30px;
+  }
+  
+  /* Adjust label size */
+  .overlay--hints__label {
+    font-size: 18px;
+  }
+  
+  /* SVG animations scale automatically with container */
+  .overlay--hints__svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* =============================================================================
+   17. HEAD BOBBLE WRAPPER
+============================================================================= */
+
+.head-bobble-wrapper {
+  /* Ensure wrapper takes full height minus nav */
+  min-height: 100vh;
+  width: 100%;
+  /* Set transform origin for natural head movement */
+  transform-origin: 50% 0;
+  /* Promote to its own layer for better performance */
+  will-change: transform;
+  /* Ensure smooth animations */
+  transition: none;
+  /* Add top padding to account for fixed navigation */
+  padding-top: 80px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .head-bobble-wrapper {
+    padding-top: 60px;
+  }
+}
+
+/* =============================================================================
+   18. TOP NAVIGATION BAR
+============================================================================= */
+
+.top-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 80px;
+  background: transparent;
+  z-index: 95000; /* Below noise (99999) and hints overlay (90000) but above everything else */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  box-sizing: border-box;
+  pointer-events: auto;
+  
+  /* Ensure navigation doesn't react to zoom transforms */
+  transform: none !important;
+  transform-style: flat !important;
+}
+
+.top-nav__left {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.top-nav__link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.top-nav__icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.top-nav__icon svg {
+  width: 100%;
+  height: 100%;
+  fill: #000000;
+  transition: fill 0.2s ease;
+  display: block;
+  color: #000000;
+}
+
+
+
+.top-nav__link--mail:hover svg {
+  fill: #17f484;
+  color: #17f484;
+}
+
+
+.top-nav__link--linkedin:hover svg {
+  fill: #104f84;
+  color: #104f84;
+}
+
+
+.top-nav__link--instagram:hover svg {
+  fill: #e4405f;
+  color: #e4405f;
+}
+
+.top-nav__cv {
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1;
+  color: #000000;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  padding: 0px 8px;
+}
+
+.top-nav__cv:hover {
+  text-decoration: underline;
+  color: #000000;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .top-nav {
+    height: 60px;
+    padding: 0 20px;
+  }
+  
+  .top-nav__left {
+    gap: 8px;
+  }
+  
+  .top-nav__link {
+    padding: 6px;
+  }
+  
+  .top-nav__icon {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .top-nav__cv {
+    font-size: 28px;
+  }
+}

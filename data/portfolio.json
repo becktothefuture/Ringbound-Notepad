@@ -1,0 +1,413 @@
+{
+  "projects": [
+    {
+      "id": "chapter-0",
+      "title": "Chapter 0",
+      "pages": [
+        {
+          "asset": "chapter-0-1.jpg",
+          "type": "image",
+          "commentary": "Welcome to the portfolio. This is a placeholder commentary that will help visualize the styling of the commentary overlay. You can edit this text in the portfolio.json file."
+        },
+        {
+          "asset": "chapter-0-2.jpg",
+          "type": "image",
+          "commentary": "The commentary overlay appears at the bottom of the screen and provides context for each page. It's designed to be readable but not intrusive."
+        }
+      ]
+    },
+    {
+      "id": "chapter-1",
+      "title": "Chapter 1",
+      "tabImage": "sandp.png",
+      "color": "coral",
+      "pages": [
+        {
+          "asset": "chapter-1-1.jpg",
+          "type": "image",
+          "commentary": "This is a longer piece of placeholder text to test how the commentary overlay handles multiple lines of text. The overlay should adjust its height automatically while maintaining readability."
+        },
+        {
+          "asset": "chapter-1-10.jpg",
+          "type": "image",
+          "commentary": "Project image 10"
+        },
+        {
+          "asset": "chapter-1-11.jpg",
+          "type": "image",
+          "commentary": "Project image 11"
+        },
+        {
+          "asset": "chapter-1-11.mp4",
+          "type": "video",
+          "commentary": "Video demonstration 11"
+        },
+        {
+          "asset": "chapter-1-12.jpg",
+          "type": "image",
+          "commentary": "Project image 12"
+        },
+        {
+          "asset": "chapter-1-13.jpg",
+          "type": "image",
+          "commentary": "Project image 13"
+        },
+        {
+          "asset": "chapter-1-14.jpg",
+          "type": "image",
+          "commentary": "Project image 14"
+        },
+        {
+          "asset": "chapter-1-15.jpg",
+          "type": "image",
+          "commentary": "Project image 15"
+        },
+        {
+          "asset": "chapter-1-2.jpg",
+          "type": "image",
+          "commentary": "The commentary is styled with a semi-transparent background and subtle blur effect for better readability against any background."
+        },
+        {
+          "asset": "chapter-1-3.jpg",
+          "type": "image",
+          "commentary": "You can customize the commentary for each page individually. This allows for detailed explanations of your work."
+        },
+        {
+          "asset": "chapter-1-4.jpg",
+          "type": "image",
+          "commentary": "Project image 4"
+        },
+        {
+          "asset": "chapter-1-5.jpg",
+          "type": "image",
+          "commentary": "Project image 5"
+        },
+        {
+          "asset": "chapter-1-6.jpg",
+          "type": "image",
+          "commentary": "Project image 6"
+        },
+        {
+          "asset": "chapter-1-7.jpg",
+          "type": "image",
+          "commentary": "Project image 7"
+        },
+        {
+          "asset": "chapter-1-8.jpg",
+          "type": "image",
+          "commentary": "Project image 8"
+        },
+        {
+          "asset": "chapter-1-9.jpg",
+          "type": "image",
+          "commentary": "Project image 9"
+        }
+      ]
+    },
+    {
+      "id": "chapter-2",
+      "title": "Chapter 2",
+      "tabImage": "bentley.png",
+      "color": "peach",
+      "pages": [
+        {
+          "asset": "chapter-2-1.jpg",
+          "type": "image",
+          "commentary": "Project image 1"
+        },
+        {
+          "asset": "chapter-2-10.jpg",
+          "type": "image",
+          "commentary": "Project image 10"
+        },
+        {
+          "asset": "chapter-2-11.jpg",
+          "type": "image",
+          "commentary": "Project image 11"
+        },
+        {
+          "asset": "chapter-2-12.jpg",
+          "type": "image",
+          "commentary": "Project image 12"
+        },
+        {
+          "asset": "chapter-2-13.jpg",
+          "type": "image",
+          "commentary": "Project image 13"
+        },
+        {
+          "asset": "chapter-2-14.jpg",
+          "type": "image",
+          "commentary": "Project image 14"
+        },
+        {
+          "asset": "chapter-2-15.jpg",
+          "type": "image",
+          "commentary": "Project image 15"
+        },
+        {
+          "asset": "chapter-2-16.jpg",
+          "type": "image",
+          "commentary": "Project image 16"
+        },
+        {
+          "asset": "chapter-2-17.jpg",
+          "type": "image",
+          "commentary": "Project image 17"
+        },
+        {
+          "asset": "chapter-2-18.jpg",
+          "type": "image",
+          "commentary": "Project image 18"
+        },
+        {
+          "asset": "chapter-2-19.jpg",
+          "type": "image",
+          "commentary": "Project image 19"
+        },
+        {
+          "asset": "chapter-2-2.jpg",
+          "type": "image",
+          "commentary": "Project image 2"
+        },
+        {
+          "asset": "chapter-2-20.jpg",
+          "type": "image",
+          "commentary": "Project image 20"
+        },
+        {
+          "asset": "chapter-2-3.jpg",
+          "type": "image",
+          "commentary": "Project image 3"
+        },
+        {
+          "asset": "chapter-2-4.jpg",
+          "type": "image",
+          "commentary": "Project image 4"
+        },
+        {
+          "asset": "chapter-2-5.jpg",
+          "type": "image",
+          "commentary": "Project image 5"
+        },
+        {
+          "asset": "chapter-2-6.jpg",
+          "type": "image",
+          "commentary": "Project image 6"
+        },
+        {
+          "asset": "chapter-2-7.jpg",
+          "type": "image",
+          "commentary": "Project image 7"
+        },
+        {
+          "asset": "chapter-2-8.jpg",
+          "type": "image",
+          "commentary": "Project image 8"
+        },
+        {
+          "asset": "chapter-2-9.jpg",
+          "type": "image",
+          "commentary": "Project image 9"
+        }
+      ]
+    },
+    {
+      "id": "chapter-3",
+      "title": "Chapter 3",
+      "tabImage": "yoti.png",
+      "color": "lavender",
+      "pages": [
+        {
+          "asset": "chapter-3-1.jpg",
+          "type": "image",
+          "commentary": "Project image 1"
+        },
+        {
+          "asset": "chapter-3-10.jpg",
+          "type": "image",
+          "commentary": "Project image 10"
+        },
+        {
+          "asset": "chapter-3-11.jpg",
+          "type": "image",
+          "commentary": "Project image 11"
+        },
+        {
+          "asset": "chapter-3-2.jpg",
+          "type": "image",
+          "commentary": "Project image 2"
+        },
+        {
+          "asset": "chapter-3-3.jpg",
+          "type": "image",
+          "commentary": "Project image 3"
+        },
+        {
+          "asset": "chapter-3-4.jpg",
+          "type": "image",
+          "commentary": "Project image 4"
+        },
+        {
+          "asset": "chapter-3-5.jpg",
+          "type": "image",
+          "commentary": "Project image 5"
+        },
+        {
+          "asset": "chapter-3-6.jpg",
+          "type": "image",
+          "commentary": "Project image 6"
+        },
+        {
+          "asset": "chapter-3-7.jpg",
+          "type": "image",
+          "commentary": "Project image 7"
+        },
+        {
+          "asset": "chapter-3-8.jpg",
+          "type": "image",
+          "commentary": "Project image 8"
+        },
+        {
+          "asset": "chapter-3-9.jpg",
+          "type": "image",
+          "commentary": "Project image 9"
+        }
+      ]
+    },
+    {
+      "id": "chapter-4",
+      "title": "Chapter 4",
+      "tabImage": "sunexpress.png",
+      "color": "mint",
+      "pages": [
+        {
+          "asset": "chapter-4-1.jpg",
+          "type": "image",
+          "commentary": "Project image 1"
+        },
+        {
+          "asset": "chapter-4-2.jpg",
+          "type": "image",
+          "commentary": "Project image 2"
+        },
+        {
+          "asset": "chapter-4-3.jpg",
+          "type": "image",
+          "commentary": "Project image 3"
+        },
+        {
+          "asset": "chapter-4-4.jpg",
+          "type": "image",
+          "commentary": "Project image 4"
+        },
+        {
+          "asset": "chapter-4-5.jpg",
+          "type": "image",
+          "commentary": "Project image 5"
+        },
+        {
+          "asset": "chapter-4-6.jpg",
+          "type": "image",
+          "commentary": "Project image 6"
+        },
+        {
+          "asset": "chapter-4-7.jpg",
+          "type": "image",
+          "commentary": "Project image 7"
+        },
+        {
+          "asset": "chapter-4-8.jpg",
+          "type": "image",
+          "commentary": "Project image 8"
+        }
+      ]
+    },
+    {
+      "id": "chapter-5",
+      "title": "Chapter 5",
+      "tabImage": "spacialweb.png",
+      "color": "lemon",
+      "pages": [
+        {
+          "asset": "chapter-5-1.jpg",
+          "type": "image",
+          "commentary": "Project image 1"
+        },
+        {
+          "asset": "chapter-5-2.jpg",
+          "type": "image",
+          "commentary": "Project image 2"
+        },
+        {
+          "asset": "chapter-5-3.jpg",
+          "type": "image",
+          "commentary": "Project image 3"
+        },
+        {
+          "asset": "chapter-5-4.jpg",
+          "type": "image",
+          "commentary": "Project image 4"
+        },
+        {
+          "asset": "chapter-5-5.jpg",
+          "type": "image",
+          "commentary": "Project image 5"
+        },
+        {
+          "asset": "chapter-5-6.jpg",
+          "type": "image",
+          "commentary": "Project image 6"
+        },
+        {
+          "asset": "chapter-5-7.jpg",
+          "type": "image",
+          "commentary": "Project image 7"
+        }
+      ]
+    },
+    {
+      "id": "chapter-6",
+      "title": "Chapter 6",
+      "tabImage": "aboutme.png",
+      "color": "rose",
+      "pages": [
+        {
+          "asset": "chapter-6-1.jpg",
+          "type": "image",
+          "commentary": "Project image 1"
+        },
+        {
+          "asset": "chapter-6-2.jpg",
+          "type": "image",
+          "commentary": "Project image 2"
+        },
+        {
+          "asset": "chapter-6-3.jpg",
+          "type": "image",
+          "commentary": "Project image 3"
+        },
+        {
+          "asset": "chapter-6-4.jpg",
+          "type": "image",
+          "commentary": "Project image 4"
+        },
+        {
+          "asset": "chapter-6-5.jpg",
+          "type": "image",
+          "commentary": "Project image 5"
+        },
+        {
+          "asset": "chapter-6-6.jpg",
+          "type": "image",
+          "commentary": "Project image 6"
+        },
+        {
+          "asset": "chapter-6-7.jpg",
+          "type": "image",
+          "commentary": "Project image 7"
+        }
+      ]
+    }
+  ]
+}

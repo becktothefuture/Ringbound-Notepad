@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Overlay Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 40px;
+      font-family: 'Geist', sans-serif;
+      background: #dfdcd8;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .info {
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .status {
+      text-align: center;
+      margin: 20px 0;
+      font-weight: bold;
+    }
+    .waiting {
+      color: orange;
+    }
+    .ready {
+      color: green;
+    }
+  </style>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500;600;700;800;900&display=swap">
+</head>
+<body>
+  <h1>Overlay Hints Test Page</h1>
+  
+  <div class="info">
+    <p>This page tests the overlay hints functionality.</p>
+    <p class="status waiting">Overlay should appear in 3 seconds...</p>
+    <ul>
+      <li>The overlay should show immediately on page load</li>
+      <li>It will auto-hide after 3 seconds</li>
+      <li>Click anywhere or try to scroll to dismiss it early</li>
+      <li>Background should have a blur effect</li>
+      <li>Two animations should be visible: ripple (click to zoom) and scroll lines (scroll to flip)</li>
+    </ul>
+  </div>
+  
+  <script>
+    // Simple test to show overlay status
+    setTimeout(() => {
+      const status = document.querySelector('.status');
+      status.textContent = 'Overlay should have auto-hidden by now';
+      status.className = 'status ready';
+    }, 3500);
+    
+    // Log interactions
+    document.addEventListener('click', () => {
+      console.log('Click detected - overlay should hide');
+    });
+    
+    window.addEventListener('wheel', (e) => {
+      console.log('Wheel event detected - overlay should hide');
+    });
+  </script>
+</body>
+</html> 

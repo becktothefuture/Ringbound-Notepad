@@ -1,0 +1,19 @@
+{
+  "name": "Zoom-Relative Text",
+  "id": "zoom-relative-text-plugin",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "documentAccess": "dynamic-page",
+  "editorType": ["figma"],
+  "networkAccess": {
+    "allowedDomains": ["none"]
+  },
+  "menu": [
+    {
+      "name": "Add Zoom-Relative Text",
+      "command": "add-text"
+    }
+  ]
+}
+
