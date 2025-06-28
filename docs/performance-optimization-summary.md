@@ -2,16 +2,16 @@
 
 ## 🚀 Performance Optimizations Implemented
 
-### Scene Tilting Optimizations
+### Animation Performance Optimizations
 
 **1. Smart Update Frequency**
-- Reduced from 60fps to 30fps maximum updates
+- Reduced from 60fps to 30fps maximum updates for non-critical animations
 - Dormant mode: 5fps when minimal movement detected
 - Frame skipping for performance balance
 
 **2. Transform Caching**
 - Caches computed transform strings (100 entry limit)
-- Avoids string generation for repeated tilt values
+- Avoids string generation for repeated values
 - ~40-60% cache hit rate typical
 
 **3. Precision Reduction** 
@@ -25,7 +25,7 @@
 - Optional CSS transitions for smoother motion
 
 **5. Dormant Mode System**
-- Automatically detects when scene is idle
+- Automatically detects when animations are idle
 - Reduces update rate to 5fps during idle periods
 - Returns to active mode when significant movement occurs
 
@@ -63,4 +63,4 @@ window.perfMonitor.getSummary()
 - Reduced precision (faster string ops)
 - Smart dormant mode (80% reduction when idle)
 
-**Net Result:** ~60-70% reduction in scene tilting CPU overhead while maintaining identical visual quality. 
+**Net Result:** ~60-70% reduction in animation CPU overhead while maintaining identical visual quality. 

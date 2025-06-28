@@ -566,15 +566,7 @@ class VirtualScrollEngine {
   }
 }
 
-// Legacy compatibility exports
-let engineInstance = null;
 
-export function initScrollEngine(container, pageCount = 0) {
-  engineInstance = new VirtualScrollEngine();
-  engineInstance.setMaxPages(pageCount);
-  engineInstance.initializeEventListeners(container);
-  return engineInstance;
-}
 
 export function subscribe(callback) {
   if (!engineInstance) throw new Error('ScrollEngine not initialized');

@@ -639,14 +639,26 @@ main:not(.page-wrapper) {
   background-position: center center;
   background-size: cover;
   background-repeat: no-repeat;
+  border-radius: inherit;
+  overflow: hidden;
+  box-shadow:
+    inset 0 3px 2px #c29154,
+    inset 0 -2px 3px 2px #664620,
+    0 0 #0000,
+    -0.2px 0.4px #0000000e,
+    -0.4px 0.9px 0.1px #0001,
+    -0.7px 1.6px 0.5px #00000013,
+    -1.2px 2.8px 1.3px #00000014,
+    -2.1px 5px 2.9px #00000015,
+    -3.8px 8.9px 6.2px #00000015,
+    -7.1px 16.7px 13px #00000016,
+    -14.9px 35.1px 29.5px #00000018,
+    0 2px 4px rgba(0, 0, 0, 0.12),
+    0 4px 8px rgba(0, 0, 0, 0.08),
+    0 8px 16px rgba(0, 0, 0, 0.06);
 }
 
-.cover.cover--back .page-back {
-  background-image: url('./assets/portfolio-pages/folio-cover/cover-default.webp');
-  background-position: center center;
-  background-size: cover;
-  background-repeat: no-repeat;
-}
+/* Back cover back side removed - never visible since it's the last page */
 
 .cover-content {
   position: absolute;
@@ -1208,9 +1220,7 @@ h2 {
   display: none !important; /* Completely remove from rendering */
 }
 
-/* Test change Sun Jun 22 19:23:23 BST 2025 */
-/* Another test change Sun Jun 22 19:24:22 BST 2025 */
-/* Fixed watcher test Sun Jun 22 19:25:38 BST 2025 */
+
 
 
 

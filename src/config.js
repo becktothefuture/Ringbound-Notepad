@@ -138,8 +138,8 @@ export const GLOBAL_CONFIG = {
   RINGS: {
     // Ring positioning - individual control for front and back rings
     front: {
-      offsetZ: -25,                       // px - distance in front of top page
-      offsetY: -14,                       // % - vertical offset from page center
+      offsetZ: -15,                       // px - distance in front of top page
+      offsetY: -10,                       // % - vertical offset from page center
       scaleX: 1.02,                       // horizontal scale factor
       scaleY: 1.3,                        // vertical scale factor
       rotationUnflipped: 20,              // degrees - rotation when stack is unflipped
@@ -164,14 +164,7 @@ export const GLOBAL_CONFIG = {
     yPositionUnflipped: -14,              // % - Y position when stack is unflipped
     yPositionFlipped: -4,                 // % - Y position when stack is fully flipped
     
-    // Legacy compatibility (deprecated - use front/back specific settings)
-    rotationRange: 60,                    // degrees - max rotation in each direction
-    rotationUnflipped: 20,                // degrees - rotation when stack is unflipped (deprecated)
-    rotationFlipped: -20,                 // degrees - rotation when stack is fully flipped (deprecated)
-    offsetY: -9,                          // % - vertical offset for ring positioning (deprecated)
-    offsetZ: -25,                         // px - clearance offset from top page position (deprecated)
-    scaleX: 1.02,                         // horizontal scale factor (deprecated)
-    scaleY: 1.3,                          // vertical scale factor (deprecated)
+
   },
 
   /**

@@ -304,16 +304,7 @@ function createCoverPage(type, commentary, globalIndex) {
   return coverEl;
 }
 
-/**
- * Create cover content with proper styling
- * @returns {HTMLElement} Cover content element
- */
-function createCoverContent() {
-  // This function is no longer used - covers should have no text content
-  const content = document.createElement('div');
-  content.className = 'cover-content';
-  return content;
-}
+
 
 /**
  * Generate pages from portfolio data with full validation
@@ -415,24 +406,7 @@ export function createPagesFromPortfolioData(container, portfolioData) {
   return pages;
 }
 
-/**
- * Legacy compatibility function
- * @param {HTMLElement} container - Container element
- * @param {Array} manifest - Legacy manifest format
- * @returns {HTMLElement[]} Array of created page elements
- */
-export function createPagesFromManifest(container, manifest) {
-  console.warn(
-    '⚠️ Using legacy createPagesFromManifest. Consider migrating to createPagesFromPortfolioData.'
-  );
 
-  // Convert manifest to portfolio data format for validation
-  const portfolioData = {
-    projects: manifest || [],
-  };
-
-  return createPagesFromPortfolioData(container, portfolioData);
-}
 
 /**
  * Runtime portfolio loader for preview mode

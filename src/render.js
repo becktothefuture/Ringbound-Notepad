@@ -360,10 +360,7 @@ export function initializeRenderingContext(totalPages = 0) {
   root.style.setProperty('--rings-y-unflipped', `${ringsCfg.yPositionUnflipped}%`);
   root.style.setProperty('--rings-y-flipped', `${ringsCfg.yPositionFlipped}%`);
   
-  // Legacy compatibility (deprecated)
-  root.style.setProperty('--rings-offset-y', `${ringsCfg.offsetY}%`);
-  root.style.setProperty('--rings-scale-x', ringsCfg.scaleX);
-  root.style.setProperty('--rings-scale-y', ringsCfg.scaleY);
+
 
   // Apply page shadow settings from config
   const shadowCfg = GLOBAL_CONFIG.SHADOW;
@@ -613,7 +610,7 @@ function verifyPerspectiveApplication() {
 let ringUpdateCounter = 0;
 
 /**
- * Update ring rotations and Y position based on overall flip progress - DISABLED FOR SAFARI
+ * Update ring rotations and Y position based on overall flip progress
  * @param {number} scrollPosition - Current scroll position
  * @param {number} totalPages - Total number of pages
  */
@@ -624,25 +621,55 @@ function updateRingRotations(scrollPosition, totalPages) {
     return;
   }
   
-  // DISABLED: Keep rings in their CSS-defined positions for Safari compatibility
-  // The rings will maintain their static positioning defined in CSS
+  if (totalPages <= 0) return;
   
+  const ringsCfg = GLOBAL_CONFIG.RINGS;
   const overallProgress = Math.min(Math.max(scrollPosition / totalPages, 0), 1);
   
-  // Only log progress, don't modify transforms
-  if (scrollPosition % 10 === 0) {
-    console.log(`🔗 Ring progress: ${(overallProgress * 100).toFixed(1)}% (transforms disabled for Safari compatibility)`);
+  // Calculate interpolated values for both rings
+  const frontRotation = lerp(ringsCfg.front.rotationUnflipped, ringsCfg.front.rotationFlipped, overallProgress);
+  const backRotation = lerp(ringsCfg.back.rotationUnflipped, ringsCfg.back.rotationFlipped, overallProgress);
+  const yPosition = lerp(ringsCfg.yPositionUnflipped, ringsCfg.yPositionFlipped, overallProgress);
+  
+  // Apply transforms to ring elements
+  const frontRings = document.querySelectorAll('.rings--front');
+  const backRings = document.querySelectorAll('.rings--back');
+  
+  frontRings.forEach(ring => {
+    const ringsFrontZ = calculateRingsFrontPosition(totalPages) + ringsCfg.front.offsetZ;
+    ring.style.transform = `translateZ(${ringsFrontZ}px) translateY(${yPosition}%) scaleX(${ringsCfg.front.scaleX}) scaleY(${ringsCfg.front.scaleY}) rotateX(${frontRotation}deg)`;
+  });
+  
+  backRings.forEach(ring => {
+    ring.style.transform = `translateZ(${ringsCfg.back.offsetZ}px) translateY(${yPosition}%) scaleX(${ringsCfg.back.scaleX}) scaleY(${ringsCfg.back.scaleY}) rotateX(${backRotation}deg)`;
+  });
+  
+  // Debug logging (reduced frequency)
+  if (Math.floor(scrollPosition * 10) % 50 === 0) {
+    console.log(`🔗 Ring progress: ${(overallProgress * 100).toFixed(1)}% - Front: ${frontRotation.toFixed(1)}°, Back: ${backRotation.toFixed(1)}°, Y: ${yPosition.toFixed(1)}%`);
   }
 }
 
 /**
- * Initialize ring rotations, Y position, and scale to their default state - DISABLED FOR SAFARI
+ * Initialize ring rotations, Y position, and scale to their default state
  */
 function initializeRingRotations() {
-  // DISABLED: Let CSS handle all ring positioning for Safari compatibility
-  // Rings will use their static CSS transforms only
+  const ringsCfg = GLOBAL_CONFIG.RINGS;
   
-  console.log('🔗 Ring initialization disabled - using CSS-only positioning for Safari compatibility');
+  // Set initial ring positions to unflipped state
+  const frontRings = document.querySelectorAll('.rings--front');
+  const backRings = document.querySelectorAll('.rings--back');
+  
+  frontRings.forEach(ring => {
+    const ringsFrontZ = calculateRingsFrontPosition(1) + ringsCfg.front.offsetZ; // Use default Z position
+    ring.style.transform = `translateZ(${ringsFrontZ}px) translateY(${ringsCfg.yPositionUnflipped}%) scaleX(${ringsCfg.front.scaleX}) scaleY(${ringsCfg.front.scaleY}) rotateX(${ringsCfg.front.rotationUnflipped}deg)`;
+  });
+  
+  backRings.forEach(ring => {
+    ring.style.transform = `translateZ(${ringsCfg.back.offsetZ}px) translateY(${ringsCfg.yPositionUnflipped}%) scaleX(${ringsCfg.back.scaleX}) scaleY(${ringsCfg.back.scaleY}) rotateX(${ringsCfg.back.rotationUnflipped}deg)`;
+  });
+  
+  console.log('🔗 Ring rotations initialized - Front:', ringsCfg.front.rotationUnflipped + '°', 'Back:', ringsCfg.back.rotationUnflipped + '°');
 }
 
 /**

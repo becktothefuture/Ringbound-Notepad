@@ -1,8 +1,8 @@
-# Scene Realism & Enhanced Physical Feedback Guide
+# Ring Animation & Enhanced Physical Feedback Guide
 
 ## Overview
 
-The scene realism system transforms the 3D notebook from a static digital interface into a living, breathing document that responds naturally to user interaction. By adding subtle scene tilting, parallax effects, and ambient motion, users feel genuinely connected to the notebook as if they were handling a physical book.
+The scene realism system transforms the 3D notebook from a static digital interface into a living, breathing document that responds naturally to user interaction. By adding realistic ring animations, parallax effects, and ambient motion, users feel genuinely connected to the notebook as if they were handling a physical book.
 
 ## Core Philosophy
 
@@ -12,29 +12,29 @@ The realism system is designed around the principle that users should feel a tan
 
 ## Key Features
 
-### 1. Dynamic Scene Tilting
+### 1. Dynamic Ring Animations
 
-The entire 3D scene subtly rotates around the X-axis during page flips, simulating the natural motion of tilting a notebook while turning pages.
+The ring binding system responds naturally to page flips and scrolling, with realistic physics-based movement that enhances the notebook feel.
 
-#### Tilt Behaviors
+#### Ring Behaviors
 
-- **Flip Progress Tilting**: Scene tilts more as pages flip over (0° → 2.5° max)
-- **Velocity-Responsive Tilting**: Faster scrolling creates more dramatic tilts
-- **Momentum Integration**: Extra tilting during momentum scrolling for realism
+- **Flip Progress Response**: Rings rotate subtly as pages flip over
+- **Velocity-Responsive Movement**: Faster scrolling creates more dynamic ring motion
+- **Momentum Integration**: Enhanced ring animation during momentum scrolling
 - **Spring Physics**: Smooth, natural movement with realistic settling
 
 #### Configuration
 
 ```javascript
-// Tilt intensity settings
-maxTiltDegrees: 2.5,          // Maximum tilt angle (subtle but noticeable)
-velocityTiltScale: 15,        // Velocity responsiveness
-progressTiltScale: 1.2,       // Flip progress influence
+// Ring animation settings
+rotationRange: 40,            // Maximum rotation angle (subtle but noticeable)
+velocityScale: 0.8,           // Velocity responsiveness
+progressScale: 1.0,           // Flip progress influence
 
 // Physics parameters
-springDamping: 0.15,          // Oscillation control
-springStiffness: 0.08,        // Response speed
-velocityDecay: 0.92,          // Smoothing factor
+animationSmoothing: 0.08,     // Movement smoothing
+transitionDuration: 120,      // Animation duration in ms
+easingTransition: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Easing function
 ```
 
 ### 2. Enhanced Parallax Effects
@@ -65,37 +65,39 @@ When the notebook is idle, a barely perceptible breathing motion keeps the scene
 ```
 .page-wrapper (main container)
 └── .notebook (zoom container)
-    └── .notebook-inner (TILTING TARGET) ← Scene tilting applied here
+    └── .notebook-inner (3D container)
         ├── .page-stack (3D pages)
-        ├── .rings-wrapper (binding rings)
+        ├── .rings-wrapper (ANIMATION TARGET) ← Ring animations applied here
         └── .notebook-background (parallax target)
 ```
 
 ### Transform Application
 
-The scene tilting system applies transforms to `.notebook-inner`:
+The ring animation system applies transforms to `.rings-wrapper` and individual `.rings`:
 
 ```css
-.notebook-inner {
-  transform: rotateX(2.1deg); /* Example tilt */
+.rings-wrapper {
+  transform: translateY(-14%) translateZ(400px);
   transform-style: preserve-3d;
   will-change: transform;
 }
+
+.rings--front {
+  transform: rotateZ(15deg) scaleX(1.02) scaleY(1.3);
+}
 ```
 
-### Spring Physics Model
+### Animation Model
 
-The tilting uses a realistic spring-damper system:
+Ring animations use smooth CSS transitions with configurable easing:
 
 ```javascript
-// Spring force calculation
-displacement = targetTilt - currentTilt;
-springForce = displacement * stiffness;
-dampingForce = velocity * damping;
+// Ring rotation calculation
+const rotationAngle = scrollProgress * rotationRange;
+const yPosition = lerp(yPositionUnflipped, yPositionFlipped, scrollProgress);
 
-// Velocity and position updates
-velocity += (springForce - dampingForce) * deltaTime;
-position += velocity * deltaTime;
+// Apply transforms with CSS transitions
+ring.style.transform = `rotateZ(${rotationAngle}deg) translateY(${yPosition}%)`;
 ```
 
 ## User Experience Goals
@@ -127,14 +129,14 @@ position += velocity * deltaTime;
 ### Runtime Adjustment
 
 ```javascript
-// Adjust tilt intensity
-window.sceneRealism.setTiltIntensity(1.5); // 0 = off, 1 = normal, 2 = dramatic
+// Adjust ring animation intensity
+window.notebook.rings.setIntensity(1.5); // 0 = off, 1 = normal, 2 = dramatic
 
-// Adjust responsiveness
-window.sceneRealism.setResponsiveness(1.2); // 0.5 = sluggish, 2 = very responsive
+// Adjust ring responsiveness
+window.notebook.rings.setResponsiveness(1.2); // 0.5 = sluggish, 2 = very responsive
 
 // Get debug information
-console.log(window.sceneRealism.getDebugInfo());
+console.log(window.notebook.rings.getDebugInfo());
 ```
 
 ### Fine-Tuning Parameters
@@ -189,7 +191,7 @@ Target Performance:
 
 ```javascript
 // Performance stats logged every 5 seconds
-🎯 Scene tilting performance: 22.4 transforms/sec, current tilt: 1.84°
+🎯 Ring animation performance: 22.4 transforms/sec, current rotation: 15.2°
 ```
 
 ## Integration with Other Systems
@@ -219,14 +221,12 @@ The realism system receives scroll state updates and responds to:
 ### Creating Custom Effects
 
 ```javascript
-// Access the tilting manager directly
-import { sceneTilting } from './src/sceneTilting.js';
+// Access the ring animation system directly
+import { GLOBAL_CONFIG } from './src/config.js';
 
-// Custom tilt behavior
-sceneTilting.updateConfig({
-  maxTiltDegrees: 4.0,      // More dramatic tilting
-  springStiffness: 0.12,    // Faster response
-});
+// Custom ring behavior
+GLOBAL_CONFIG.RINGS.front.rotationFlipped = -30; // More dramatic rotation
+GLOBAL_CONFIG.RINGS.transitionDuration = 80;     // Faster response
 ```
 
 ### Device-Specific Tuning
@@ -238,27 +238,27 @@ const isLowEnd = navigator.hardwareConcurrency < 4;
 
 if (isMobile) {
   // Reduce effects for mobile
-  window.sceneRealism.setTiltIntensity(0.7);
-  window.sceneRealism.setResponsiveness(0.8);
+  window.notebook.rings.setIntensity(0.7);
+  window.notebook.rings.setResponsiveness(0.8);
 }
 
 if (isLowEnd) {
   // Minimal effects for low-end devices
-  window.sceneRealism.setTiltIntensity(0.3);
+  window.notebook.rings.setIntensity(0.3);
 }
 ```
 
 ### Animation Curve Customization
 
 ```javascript
-// Custom spring parameters for different feels
+// Custom animation parameters for different feels
 const configs = {
-  gentle: { springStiffness: 0.06, springDamping: 0.2 },
-  snappy: { springStiffness: 0.12, springDamping: 0.1 },
-  dramatic: { maxTiltDegrees: 4.0, velocityTiltScale: 25 }
+  gentle: { transitionDuration: 200, animationSmoothing: 0.12 },
+  snappy: { transitionDuration: 80, animationSmoothing: 0.06 },
+  dramatic: { rotationFlipped: -30, rotationUnflipped: 25 }
 };
 
-sceneTilting.updateConfig(configs.gentle);
+Object.assign(GLOBAL_CONFIG.RINGS.front, configs.gentle);
 ```
 
 ## Debugging and Troubleshooting
@@ -267,50 +267,50 @@ sceneTilting.updateConfig(configs.gentle);
 
 ```javascript
 // Get comprehensive state information
-const debugInfo = window.sceneRealism.getDebugInfo();
+const debugInfo = window.notebook.rings.getDebugInfo();
 console.log(debugInfo);
 
 // Output example:
 {
-  tilting: {
-    currentTilt: 1.84,
-    targetTilt: 2.1,
-    tiltVelocity: 0.03,
-    isActive: true,
+  rings: {
+    frontRotation: 15.2,
+    backRotation: 12.8,
+    yPosition: -9.4,
+    isAnimating: true,
     updateCount: 1247
   },
   config: { /* full configuration */ },
-  effectsInitialized: true
+  systemInitialized: true
 }
 ```
 
 ### Common Issues
 
-#### Tilting Not Visible
+#### Ring Animations Not Visible
 
-**Symptoms**: No scene movement during page flips
+**Symptoms**: No ring movement during page flips
 **Solutions**:
-1. Check if `.notebook-inner` element exists
+1. Check if `.rings-wrapper` element exists
 2. Verify `transform-style: preserve-3d` is maintained
 3. Ensure no CSS conflicts override transforms
-4. Check if tilt intensity is set too low
+4. Check if animation intensity is set too low
 
 #### Performance Issues
 
-**Symptoms**: Choppy tilting, low FPS
+**Symptoms**: Choppy ring animations, low FPS
 **Solutions**:
-1. Reduce tilt intensity: `setTiltIntensity(0.5)`
+1. Reduce animation intensity: `setIntensity(0.5)`
 2. Lower responsiveness: `setResponsiveness(0.7)`
 3. Check for CSS conflicts causing layout thrashing
 4. Verify hardware acceleration is enabled
 
 #### Excessive Motion
 
-**Symptoms**: Tilting feels overwhelming or nauseating
+**Symptoms**: Ring animations feel overwhelming or distracting
 **Solutions**:
-1. Reduce maximum tilt: `maxTiltDegrees: 1.5`
-2. Increase damping: `springDamping: 0.2`
-3. Lower velocity sensitivity: `velocityTiltScale: 10`
+1. Reduce rotation range: `rotationFlipped: -15`
+2. Increase transition duration: `transitionDuration: 200`
+3. Lower animation smoothing: `animationSmoothing: 0.12`
 
 ### Browser Compatibility
 
@@ -364,4 +364,4 @@ console.log(debugInfo);
 - **Shadows**: Dynamic shadows that follow scene tilting
 - **Wind Effects**: Gentle page corner lifting during fast scrolls
 
-The scene realism system represents a significant step toward making digital interfaces feel truly physical and connected. By carefully balancing subtlety with effectiveness, it creates an emotional bond between users and the digital notebook that goes far beyond traditional flat interfaces. 
+The ring animation system represents a significant step toward making digital interfaces feel truly physical and connected. By carefully balancing subtlety with effectiveness, it creates an emotional bond between users and the digital notebook that goes far beyond traditional flat interfaces. 
