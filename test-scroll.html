@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scroll Test - Ring-Bound Notebook</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: system-ui, sans-serif;
+            background: #f0f0f0;
+            height: 200vh; /* Make page scrollable to test our custom scroll handling */
+        }
+        
+        .test-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 10000;
+        }
+        
+        .scroll-anywhere {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            font-size: 24px;
+            color: #333;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        #notebook-container {
+            width: 800px;
+            height: 600px;
+            margin: 50px auto;
+            position: relative;
+            background: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        /* Import the main styles */
+        @import url('./src/style.css');
+    </style>
+</head>
+<body>
+    <div class="test-info">
+        <div>Scroll Position: <span id="scroll-pos">0</span></div>
+        <div>Page: <span id="current-page">0</span></div>
+        <div>Rotation: <span id="rotation">0°</span></div>
+        <div>Flipped Pages: <span id="flipped-count">0</span></div>
+    </div>
+    
+    <div class="scroll-anywhere">
+        <h2>🎯 Scroll Test</h2>
+        <p>Try scrolling anywhere on this page!</p>
+        <p>The notebook should respond to your scroll input.</p>
+        <p>Flipped pages should remain visible as a stack on top.</p>
+    </div>
+    
+        <div id="notebook-container">
+      <div id="notebook" class="notebook-inner">
+                                 <!-- Pages will be dynamically generated -->
+         </div>
+     </div>
+
+    <script type="module">
+        import { VirtualScrollEngine } from './src/scrollEngine.js';
+        import { render } from './src/render.js';
+        import { GLOBAL_CONFIG } from './src/config.js';
+        
+        // Create test pages
+        function createTestPages(count = 10) {
+            const container = document.getElementById('notebook');
+            const pages = [];
+            
+            for (let i = 0; i < count; i++) {
+                const page = document.createElement('div');
+                page.className = 'page';
+                page.style.backgroundColor = `hsl(${i * 36}, 70%, 90%)`;
+                page.innerHTML = `
+                    <div class="page-content">
+                        <div class="page-content__inner">
+                            <h3>Page ${i + 1}</h3>
+                            <p>This is test content for page ${i + 1}</p>
+                            <p>Scroll anywhere on the browser window to flip pages!</p>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(page);
+                pages.push(page);
+            }
+            
+            return pages;
+        }
+        
+        // Initialize test
+        const pages = createTestPages(10);
+        const scrollEngine = new VirtualScrollEngine();
+        scrollEngine.setMaxPages(pages.length);
+        
+        // Bind to entire document (this is the key fix)
+        scrollEngine.initializeEventListeners(document.getElementById('notebook'));
+        
+        // Update UI with scroll state
+        scrollEngine.addObserver((scrollState) => {
+            // Update info display
+            document.getElementById('scroll-pos').textContent = scrollState.scroll.toFixed(2);
+            document.getElementById('current-page').textContent = scrollState.page;
+            document.getElementById('rotation').textContent = scrollState.rotation.toFixed(1) + '°';
+            document.getElementById('flipped-count').textContent = scrollState.page;
+            
+            // Render pages
+            render(pages, scrollState);
+        });
+        
+        console.log('🧪 Scroll test initialized');
+        console.log('📋 Test checklist:');
+        console.log('  ✅ Scroll anywhere on page should work');
+        console.log('  ✅ Flipped pages should remain visible');
+        console.log('  ✅ Z-index should stack properly');
+    </script>
+</body>
+</html> 
