@@ -332,6 +332,22 @@ export function initializeRenderingContext(totalPages = 0) {
   root.style.setProperty('--page-aspect-ratio', GLOBAL_CONFIG.LAYOUT.pageAspectRatio);
   root.style.setProperty('--safe-zone-height', `${GLOBAL_CONFIG.LAYOUT.safeZoneHeight}px`);
 
+  // Apply cover sizing settings from config
+  const frontCoverCfg = GLOBAL_CONFIG.LAYOUT.frontCover;
+  const backCoverCfg = GLOBAL_CONFIG.LAYOUT.backCover;
+  
+  // Front cover sizing variables
+  root.style.setProperty('--front-cover-width-multiplier', frontCoverCfg.widthMultiplier);
+  root.style.setProperty('--front-cover-height-multiplier', frontCoverCfg.heightMultiplier);
+  root.style.setProperty('--front-cover-left-offset', frontCoverCfg.leftOffset);
+  root.style.setProperty('--front-cover-top-offset', frontCoverCfg.topOffset);
+  
+  // Back cover sizing variables
+  root.style.setProperty('--back-cover-width-multiplier', backCoverCfg.widthMultiplier);
+  root.style.setProperty('--back-cover-height-multiplier', backCoverCfg.heightMultiplier);
+  root.style.setProperty('--back-cover-left-offset', backCoverCfg.leftOffset);
+  root.style.setProperty('--back-cover-top-offset', backCoverCfg.topOffset);
+
   // Apply transform origin settings from config
   root.style.setProperty('--transform-origin-x', GLOBAL_CONFIG.SCENE.transformOriginX);
   root.style.setProperty('--transform-origin-y', GLOBAL_CONFIG.SCENE.transformOriginY);
@@ -339,21 +355,29 @@ export function initializeRenderingContext(totalPages = 0) {
   // Apply rings settings from config - NEW INDIVIDUAL RING CONTROL
   const ringsCfg = GLOBAL_CONFIG.RINGS;
   
-  // Front ring settings
-  root.style.setProperty('--rings-front-offset-z', `${ringsCfg.front.offsetZ}px`);
-  root.style.setProperty('--rings-front-offset-y', `${ringsCfg.front.offsetY}%`);
-  root.style.setProperty('--rings-front-scale-x', ringsCfg.front.scaleX);
-  root.style.setProperty('--rings-front-scale-y', ringsCfg.front.scaleY);
-  root.style.setProperty('--rings-front-rotation-unflipped', `${ringsCfg.front.rotationUnflipped}deg`);
-  root.style.setProperty('--rings-front-rotation-flipped', `${ringsCfg.front.rotationFlipped}deg`);
+  // Front ring settings (start and end values)
+  root.style.setProperty('--rings-front-offset-z-start', `${ringsCfg.front.offsetZStart}px`);
+  root.style.setProperty('--rings-front-offset-z-end', `${ringsCfg.front.offsetZEnd}px`);
+  root.style.setProperty('--rings-front-offset-y-start', `${ringsCfg.front.offsetYStart}%`);
+  root.style.setProperty('--rings-front-offset-y-end', `${ringsCfg.front.offsetYEnd}%`);
+  root.style.setProperty('--rings-front-scale-x-start', ringsCfg.front.scaleXStart);
+  root.style.setProperty('--rings-front-scale-x-end', ringsCfg.front.scaleXEnd);
+  root.style.setProperty('--rings-front-scale-y-start', ringsCfg.front.scaleYStart);
+  root.style.setProperty('--rings-front-scale-y-end', ringsCfg.front.scaleYEnd);
+  root.style.setProperty('--rings-front-rotation-start', `${ringsCfg.front.rotationStart}deg`);
+  root.style.setProperty('--rings-front-rotation-end', `${ringsCfg.front.rotationEnd}deg`);
   
-  // Back ring settings  
-  root.style.setProperty('--rings-back-offset-z', `${ringsCfg.back.offsetZ}px`);
-  root.style.setProperty('--rings-back-offset-y', `${ringsCfg.back.offsetY}%`);
-  root.style.setProperty('--rings-back-scale-x', ringsCfg.back.scaleX);
-  root.style.setProperty('--rings-back-scale-y', ringsCfg.back.scaleY);
-  root.style.setProperty('--rings-back-rotation-unflipped', `${ringsCfg.back.rotationUnflipped}deg`);
-  root.style.setProperty('--rings-back-rotation-flipped', `${ringsCfg.back.rotationFlipped}deg`);
+  // Back ring settings (start and end values)
+  root.style.setProperty('--rings-back-offset-z-start', `${ringsCfg.back.offsetZStart}px`);
+  root.style.setProperty('--rings-back-offset-z-end', `${ringsCfg.back.offsetZEnd}px`);
+  root.style.setProperty('--rings-back-offset-y-start', `${ringsCfg.back.offsetYStart}%`);
+  root.style.setProperty('--rings-back-offset-y-end', `${ringsCfg.back.offsetYEnd}%`);
+  root.style.setProperty('--rings-back-scale-x-start', ringsCfg.back.scaleXStart);
+  root.style.setProperty('--rings-back-scale-x-end', ringsCfg.back.scaleXEnd);
+  root.style.setProperty('--rings-back-scale-y-start', ringsCfg.back.scaleYStart);
+  root.style.setProperty('--rings-back-scale-y-end', ringsCfg.back.scaleYEnd);
+  root.style.setProperty('--rings-back-rotation-start', `${ringsCfg.back.rotationStart}deg`);
+  root.style.setProperty('--rings-back-rotation-end', `${ringsCfg.back.rotationEnd}deg`);
   
   // Shared animation settings
   root.style.setProperty('--rings-perspective', `${ringsCfg.perspective}px`);
@@ -435,12 +459,12 @@ export function updateRingsPosition(totalPages) {
     const root = document.documentElement;
     const ringsCfg = GLOBAL_CONFIG.RINGS;
     
-    // Calculate front ring position dynamically
-    const ringsFrontZ = calculateRingsFrontPosition(totalPages) + ringsCfg.front.offsetZ;
+    // Calculate front ring position dynamically using start offset
+    const ringsFrontZ = calculateRingsFrontPosition(totalPages) + ringsCfg.front.offsetZStart;
 
     // Set CSS variables for both rings (as backup)
     root.style.setProperty('--rings-front-position', `${ringsFrontZ}px`);
-    root.style.setProperty('--rings-back-position', `${ringsCfg.back.offsetZ}px`);
+    root.style.setProperty('--rings-back-position', `${ringsCfg.back.offsetZStart}px`);
 
     // Verify the variables were set
     const frontValue = getComputedStyle(root).getPropertyValue('--rings-front-position');
@@ -448,7 +472,7 @@ export function updateRingsPosition(totalPages) {
 
     console.log(`🔗 Rings position updated for ${totalPages} pages:`);
     console.log(`  - Front ring: ${ringsFrontZ}px (CSS: ${frontValue})`);
-    console.log(`  - Back ring: ${ringsCfg.back.offsetZ}px (CSS: ${backValue})`);
+    console.log(`  - Back ring: ${ringsCfg.back.offsetZStart}px (CSS: ${backValue})`);
 
     // Force style recalculation on ring elements with explicit values for Safari
     const frontRings = document.querySelectorAll('.rings--front');
@@ -456,14 +480,19 @@ export function updateRingsPosition(totalPages) {
     
     frontRings.forEach(ring => {
       // Use explicit Z value instead of CSS variable for Safari compatibility
-      ring.style.transform = `translateZ(${ringsFrontZ}px) translateY(${ringsCfg.yPositionUnflipped}%) scaleX(${ringsCfg.front.scaleX}) scaleY(${ringsCfg.front.scaleY}) rotateX(${ringsCfg.front.rotationUnflipped}deg)`;
+      // Use start values for initialization (unflipped state)
+      const frontYPosition = ringsCfg.yPositionUnflipped + ringsCfg.front.offsetYStart;
+      const frontZPosition = ringsFrontZ + ringsCfg.front.offsetZStart;
+      ring.style.transform = `translateZ(${frontZPosition}px) translateY(${frontYPosition}%) scaleX(${ringsCfg.front.scaleXStart}) scaleY(${ringsCfg.front.scaleYStart}) rotateX(${ringsCfg.front.rotationStart}deg)`;
       ring.style.opacity = '1';
       ring.style.display = 'block';
     });
     
     backRings.forEach(ring => {
       // Use explicit Z value for back ring
-      ring.style.transform = `translateZ(${ringsCfg.back.offsetZ}px) translateY(${ringsCfg.yPositionUnflipped}%) scaleX(${ringsCfg.back.scaleX}) scaleY(${ringsCfg.back.scaleY}) rotateX(${ringsCfg.back.rotationUnflipped}deg)`;
+      // Use start values for initialization (unflipped state)
+      const backYPosition = ringsCfg.yPositionUnflipped + ringsCfg.back.offsetYStart;
+      ring.style.transform = `translateZ(${ringsCfg.back.offsetZStart}px) translateY(${backYPosition}%) scaleX(${ringsCfg.back.scaleXStart}) scaleY(${ringsCfg.back.scaleYStart}) rotateX(${ringsCfg.back.rotationStart}deg)`;
       ring.style.opacity = '0.8';
       ring.style.display = 'block';
     });
@@ -626,9 +655,9 @@ function updateRingRotations(scrollPosition, totalPages) {
   const ringsCfg = GLOBAL_CONFIG.RINGS;
   const overallProgress = Math.min(Math.max(scrollPosition / totalPages, 0), 1);
   
-  // Calculate interpolated values for both rings
-  const frontRotation = lerp(ringsCfg.front.rotationUnflipped, ringsCfg.front.rotationFlipped, overallProgress);
-  const backRotation = lerp(ringsCfg.back.rotationUnflipped, ringsCfg.back.rotationFlipped, overallProgress);
+  // Calculate interpolated values for both rings using new start/end system
+  const frontRotation = lerp(ringsCfg.front.rotationStart, ringsCfg.front.rotationEnd, overallProgress);
+  const backRotation = lerp(ringsCfg.back.rotationStart, ringsCfg.back.rotationEnd, overallProgress);
   const yPosition = lerp(ringsCfg.yPositionUnflipped, ringsCfg.yPositionFlipped, overallProgress);
   
   // Apply transforms to ring elements
@@ -636,12 +665,26 @@ function updateRingRotations(scrollPosition, totalPages) {
   const backRings = document.querySelectorAll('.rings--back');
   
   frontRings.forEach(ring => {
-    const ringsFrontZ = calculateRingsFrontPosition(totalPages) + ringsCfg.front.offsetZ;
-    ring.style.transform = `translateZ(${ringsFrontZ}px) translateY(${yPosition}%) scaleX(${ringsCfg.front.scaleX}) scaleY(${ringsCfg.front.scaleY}) rotateX(${frontRotation}deg)`;
+    // Calculate all interpolated front ring values
+    const frontOffsetZ = lerp(ringsCfg.front.offsetZStart, ringsCfg.front.offsetZEnd, overallProgress);
+    const frontOffsetY = lerp(ringsCfg.front.offsetYStart, ringsCfg.front.offsetYEnd, overallProgress);
+    const frontScaleX = lerp(ringsCfg.front.scaleXStart, ringsCfg.front.scaleXEnd, overallProgress);
+    const frontScaleY = lerp(ringsCfg.front.scaleYStart, ringsCfg.front.scaleYEnd, overallProgress);
+    
+    const ringsFrontZ = calculateRingsFrontPosition(totalPages) + frontOffsetZ;
+    const frontYPosition = yPosition + frontOffsetY;
+    ring.style.transform = `translateZ(${ringsFrontZ}px) translateY(${frontYPosition}%) scaleX(${frontScaleX}) scaleY(${frontScaleY}) rotateX(${frontRotation}deg)`;
   });
   
   backRings.forEach(ring => {
-    ring.style.transform = `translateZ(${ringsCfg.back.offsetZ}px) translateY(${yPosition}%) scaleX(${ringsCfg.back.scaleX}) scaleY(${ringsCfg.back.scaleY}) rotateX(${backRotation}deg)`;
+    // Calculate all interpolated back ring values
+    const backOffsetZ = lerp(ringsCfg.back.offsetZStart, ringsCfg.back.offsetZEnd, overallProgress);
+    const backOffsetY = lerp(ringsCfg.back.offsetYStart, ringsCfg.back.offsetYEnd, overallProgress);
+    const backScaleX = lerp(ringsCfg.back.scaleXStart, ringsCfg.back.scaleXEnd, overallProgress);
+    const backScaleY = lerp(ringsCfg.back.scaleYStart, ringsCfg.back.scaleYEnd, overallProgress);
+    
+    const backYPosition = yPosition + backOffsetY;
+    ring.style.transform = `translateZ(${backOffsetZ}px) translateY(${backYPosition}%) scaleX(${backScaleX}) scaleY(${backScaleY}) rotateX(${backRotation}deg)`;
   });
   
   // Debug logging (reduced frequency)
@@ -661,15 +704,19 @@ function initializeRingRotations() {
   const backRings = document.querySelectorAll('.rings--back');
   
   frontRings.forEach(ring => {
-    const ringsFrontZ = calculateRingsFrontPosition(1) + ringsCfg.front.offsetZ; // Use default Z position
-    ring.style.transform = `translateZ(${ringsFrontZ}px) translateY(${ringsCfg.yPositionUnflipped}%) scaleX(${ringsCfg.front.scaleX}) scaleY(${ringsCfg.front.scaleY}) rotateX(${ringsCfg.front.rotationUnflipped}deg)`;
+    // Use start values for initialization (unflipped state)
+    const ringsFrontZ = calculateRingsFrontPosition(1) + ringsCfg.front.offsetZStart;
+    const frontYPosition = ringsCfg.yPositionUnflipped + ringsCfg.front.offsetYStart;
+    ring.style.transform = `translateZ(${ringsFrontZ}px) translateY(${frontYPosition}%) scaleX(${ringsCfg.front.scaleXStart}) scaleY(${ringsCfg.front.scaleYStart}) rotateX(${ringsCfg.front.rotationStart}deg)`;
   });
   
   backRings.forEach(ring => {
-    ring.style.transform = `translateZ(${ringsCfg.back.offsetZ}px) translateY(${ringsCfg.yPositionUnflipped}%) scaleX(${ringsCfg.back.scaleX}) scaleY(${ringsCfg.back.scaleY}) rotateX(${ringsCfg.back.rotationUnflipped}deg)`;
+    // Use start values for initialization (unflipped state)
+    const backYPosition = ringsCfg.yPositionUnflipped + ringsCfg.back.offsetYStart;
+    ring.style.transform = `translateZ(${ringsCfg.back.offsetZStart}px) translateY(${backYPosition}%) scaleX(${ringsCfg.back.scaleXStart}) scaleY(${ringsCfg.back.scaleYStart}) rotateX(${ringsCfg.back.rotationStart}deg)`;
   });
   
-  console.log('🔗 Ring rotations initialized - Front:', ringsCfg.front.rotationUnflipped + '°', 'Back:', ringsCfg.back.rotationUnflipped + '°');
+  console.log('🔗 Ring rotations initialized - Front:', ringsCfg.front.rotationStart + '°', 'Back:', ringsCfg.back.rotationStart + '°');
 }
 
 /**

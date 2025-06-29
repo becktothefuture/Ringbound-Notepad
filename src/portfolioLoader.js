@@ -153,6 +153,23 @@ function validatePortfolioSchema(data) {
 }
 
 /**
+ * Add consistent page holes to both front and back sides of a page element
+ * @param {HTMLElement} frontElement - The page-front element
+ * @param {HTMLElement} backElement - The page-back element
+ */
+function addPageHoles(frontElement, backElement) {
+  // Add holes to front side
+  const frontHolesContainer = document.createElement('div');
+  frontHolesContainer.className = 'page-holes page-holes--styled';
+  frontElement.appendChild(frontHolesContainer);
+  
+  // Add holes to back side (same implementation for consistency)
+  const backHolesContainer = document.createElement('div');
+  backHolesContainer.className = 'page-holes page-holes--styled page-holes--back';
+  backElement.appendChild(backHolesContainer);
+}
+
+/**
  * Create individual page element with clean CSS class-based styling
  * @param {Object} pageData - Page data object
  * @param {string} chapterId - Chapter identifier
@@ -178,10 +195,12 @@ function createPageElement(pageData, chapterId, pageIndex, globalIndex) {
   const pageFront = document.createElement('div');
   pageFront.className = 'page-front';
 
-  // Add ring holes container (safe zone) - using CSS class
-  const holesContainer = document.createElement('div');
-  holesContainer.className = 'page-holes page-holes--styled';
-  pageFront.appendChild(holesContainer);
+  // Create page-back container
+  const pageBack = document.createElement('div');
+  pageBack.className = 'page-back';
+
+  // Add consistent holes to both front and back sides
+  addPageHoles(pageFront, pageBack);
 
   // Add content container with CSS class alignment
   const content = document.createElement('div');
@@ -210,10 +229,6 @@ function createPageElement(pageData, chapterId, pageIndex, globalIndex) {
 
   shadowWrapper.appendChild(shadowDiv);
   pageFront.appendChild(shadowWrapper);
-
-  // Create page-back container
-  const pageBack = document.createElement('div');
-  pageBack.className = 'page-back';
 
   // Add both front and back to the page
   pageEl.appendChild(pageFront);
@@ -279,6 +294,10 @@ function createCoverPage(type, commentary, globalIndex) {
   const coverFront = document.createElement('div');
   coverFront.className = 'page-front';
 
+  // Create cover back container
+  const coverBack = document.createElement('div');
+  coverBack.className = 'page-back';
+
   if (type === 'front') {
     coverEl.className = 'page cover cover--front gpu-accelerated';
     coverEl.dataset.deckNumber = 'front';
@@ -293,9 +312,8 @@ function createCoverPage(type, commentary, globalIndex) {
 
   coverEl.dataset.commentary = commentary;
 
-  // Create cover back container
-  const coverBack = document.createElement('div');
-  coverBack.className = 'page-back';
+  // Add consistent holes to both front and back sides (same as regular pages)
+  addPageHoles(coverFront, coverBack);
 
   // Add both front and back to the cover
   coverEl.appendChild(coverFront);
@@ -303,8 +321,6 @@ function createCoverPage(type, commentary, globalIndex) {
 
   return coverEl;
 }
-
-
 
 /**
  * Generate pages from portfolio data with full validation
@@ -405,8 +421,6 @@ export function createPagesFromPortfolioData(container, portfolioData) {
   console.log(`📄 Generated ${pages.length} pages from ${portfolioData.projects.length} projects`);
   return pages;
 }
-
-
 
 /**
  * Runtime portfolio loader for preview mode

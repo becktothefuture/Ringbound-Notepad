@@ -27,7 +27,16 @@
   /* Layout Settings */
   --page-aspect-ratio: calc(4 / 3);
   --safe-zone-height: 50px;
-  --cover-size-multiplier: 1.01;
+  
+  /* Cover sizing - set dynamically from config.js */
+  --front-cover-width-multiplier: 1.01;
+  --front-cover-height-multiplier: 1.01;
+  --front-cover-left-offset: -0.5;
+  --front-cover-top-offset: -0.5;
+  --back-cover-width-multiplier: 1.01;
+  --back-cover-height-multiplier: 1.01;
+  --back-cover-left-offset: -0.5;
+  --back-cover-top-offset: -0.5;
 
   /* 3D Settings - Sync with config.js */
   --perspective-distance: 10000px;
@@ -85,7 +94,7 @@
   --noise-elevation: 55; /* Lower elevation for softer shadows */
   --noise-opacity: 0.45; /* Lower opacity for subtler effect */
   --noise-blend-mode: overlay; /* Overlay blending for better integration */
-  --noise-size: 600px; /* Larger size for less obvious tiling */
+  --noise-size: 1200px; /* 200% larger size (600px -> 1200px) for less obvious tiling */
 
   /* Page Shadow Settings */
   --page-shadow-start: rgba(0,0,0,0.8);
@@ -538,6 +547,14 @@ main:not(.page-wrapper) {
   pointer-events: none;
 }
 
+/* Back side holes - same positioning but on page-back elements */
+.page-holes--back {
+  /* Inherit all styles from .page-holes */
+  /* Position on the inner spine side (same as front) for consistency */
+  z-index: 15; /* Higher z-index to appear above page-back background */
+  transform: translateZ(1px); /* Ensure holes appear above the page surface */
+}
+
 /* =====================================================
    8. COVER SYSTEM
    ===================================================== */
@@ -547,11 +564,23 @@ main:not(.page-wrapper) {
   background-image: url('./assets/background-assets/images/cardboard.jpg');
   background-position: 0 0;
   background-size: auto;
-  width: 101%;
-  height: 101%;
   position: absolute;
-  top: -0.5%;
-  left: -0.5%;
+}
+
+/* Front cover sizing - uses config variables */
+.cover--front {
+  width: calc(var(--front-cover-width-multiplier, 1.01) * 100%);
+  height: calc(var(--front-cover-height-multiplier, 1.01) * 100%);
+  top: calc(var(--front-cover-top-offset, -0.5) * 1%);
+  left: calc(var(--front-cover-left-offset, -0.5) * 1%);
+}
+
+/* Back cover sizing - uses config variables */
+.cover--back {
+  width: calc(var(--back-cover-width-multiplier, 1.01) * 100%);
+  height: calc(var(--back-cover-height-multiplier, 1.01) * 100%);
+  top: calc(var(--back-cover-top-offset, -0.5) * 1%);
+  left: calc(var(--back-cover-left-offset, -0.5) * 1%);
 }
 
 /* Front cover styling */
@@ -610,23 +639,7 @@ main:not(.page-wrapper) {
   position: relative;
 }
 
-/* Add paper holes to covers - positioned on top of cardboard texture */
-.page-front.cover.cover--back::before,
-.page-front.cover.cover--front::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--safe-zone-height);
-  background-image: url('./assets/background-assets/paper-holes.webp');
-  background-repeat: no-repeat;
-  background-position: center top;
-  background-size: 100% auto;
-  z-index: 10;
-  pointer-events: none;
-  transform: translateZ(1px);
-}
+/* Paper holes are now consistently added via JavaScript to both front and back sides */
 
 .page-front.cover.cover--front {
   transform-style: preserve-3d;
@@ -1270,7 +1283,7 @@ body::before {
 @media (max-width: 768px) {
   body::before {
     --noise-opacity: 0.4;
-    --noise-size: 80px;
+    --noise-size: 160px; /* 200% of 80px mobile size */
     /* Slower grain movement on mobile for better performance */
     animation-duration: 0.8s;
   }
@@ -1293,6 +1306,60 @@ body::before {
   }
 }
 
+/* =====================================================
+   16. VIDEO OVERLAY SYSTEM
+   ===================================================== */
+
+/* Video overlay covering entire viewport with overlay blend mode */
+.video-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 98000; /* Below noise (99999) and preloader (999999) but above everything else */
+  mix-blend-mode: multiply;
+  opacity: 1;
+  overflow: hidden;
+  /* Ensure no gaps by extending slightly beyond viewport */
+  margin: -1px;
+  width: calc(100vw + 2px);
+  height: calc(100vh + 2px);
+}
+
+.video-overlay__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  /* Ensure video fills container completely */
+  min-width: 100%;
+  min-height: 100%;
+}
+
+/* Ensure video plays smoothly */
+.video-overlay__video {
+  will-change: auto;
+  backface-visibility: hidden;
+}
+
+/* Mobile optimizations for video overlay */
+@media (max-width: 768px) {
+  .video-overlay {
+    /* Slightly reduce opacity on mobile for better performance */
+    opacity: 0.8;
+  }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .video-overlay {
+    display: none;
+  }
+}
+
 /* ================================================
    PRELOADER SYSTEM (large progress bar)
    ================================================ */
@@ -1303,7 +1370,7 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(ellipse at center, #fafafa 0%, #f0f0f0 100%);
+  background: radial-gradient(ellipse at center, #01000a 50%, #1a1a1c 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1322,10 +1389,10 @@ body::before {
 
 .preloader__progress-bar {
   width: 50vw;
-  height: 14vh;
-  background: #f8f8f8;
-  border: 4px solid #000000;
-  border-radius: 12px;
+  max-width: 340px;
+  height: 5px;
+  background: #0c2813;
+  border-radius: 2px;
   overflow: hidden;
   position: relative;
   animation: progressBarGlow 3s ease-in-out infinite;
@@ -1336,22 +1403,17 @@ body::before {
   width: 18%;
   background: linear-gradient(
     45deg,
-    #00ff41 0%,
-    #39ff14 15%,
-    #00ff88 30%,
-    #39ff14 45%,
-    #00ff41 60%,
-    #39ff14 75%,
-    #00ff88 90%,
-    #00ff41 100%
+    #35c539 0%,
+    #289a2c  50%,
+    #35c539   100%
   );
   background-size: 400% 400%;
-  animation: progressGradientMove 1s linear infinite;
+  animation: progressGradientMove 2s linear infinite;
   transition: width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   will-change: transform, background-position;
   transform: translateZ(0);
   position: relative;
-  border-radius: 4px;
+
 }
 
 .preloader__progress-fill::before {
@@ -1364,7 +1426,7 @@ body::before {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.3) 50%,
+    rgba(156, 255, 171, 0.288) 50%,
     transparent 100%
   );
   animation: progressShine 1.8s ease-in-out infinite;
@@ -1375,17 +1437,8 @@ body::before {
   0% {
     background-position: 0% 50%;
   }
-  25% {
-    background-position: 100% 50%;
-  }
-  50% {
-    background-position: 200% 50%;
-  }
-  75% {
-    background-position: 300% 50%;
-  }
   100% {
-    background-position: 400% 50%;
+    background-position: 100% 50%;
   }
 }
 

@@ -472,6 +472,94 @@ window.addEventListener('resize', () => {
 // === GLOBAL RUNTIME UTILITIES ===
 // Expose ring control utilities for runtime adjustment
 window.notebook = window.notebook || {};
+
+// Cover sizing utilities
+window.notebook.covers = {
+  /**
+   * Update front cover sizing settings
+   * @param {Object} settings - Front cover sizing settings
+   */
+  updateFront(settings) {
+    const frontCoverCfg = GLOBAL_CONFIG.LAYOUT.frontCover;
+    Object.assign(frontCoverCfg, settings);
+    
+    console.log('📖 Front cover settings updated:', settings);
+    
+    // Apply changes immediately
+    const root = document.documentElement;
+    if (settings.widthMultiplier !== undefined) {
+      root.style.setProperty('--front-cover-width-multiplier', settings.widthMultiplier);
+    }
+    if (settings.heightMultiplier !== undefined) {
+      root.style.setProperty('--front-cover-height-multiplier', settings.heightMultiplier);
+    }
+    if (settings.leftOffset !== undefined) {
+      root.style.setProperty('--front-cover-left-offset', settings.leftOffset);
+    }
+    if (settings.topOffset !== undefined) {
+      root.style.setProperty('--front-cover-top-offset', settings.topOffset);
+    }
+  },
+  
+  /**
+   * Update back cover sizing settings
+   * @param {Object} settings - Back cover sizing settings
+   */
+  updateBack(settings) {
+    const backCoverCfg = GLOBAL_CONFIG.LAYOUT.backCover;
+    Object.assign(backCoverCfg, settings);
+    
+    console.log('📖 Back cover settings updated:', settings);
+    
+    // Apply changes immediately
+    const root = document.documentElement;
+    if (settings.widthMultiplier !== undefined) {
+      root.style.setProperty('--back-cover-width-multiplier', settings.widthMultiplier);
+    }
+    if (settings.heightMultiplier !== undefined) {
+      root.style.setProperty('--back-cover-height-multiplier', settings.heightMultiplier);
+    }
+    if (settings.leftOffset !== undefined) {
+      root.style.setProperty('--back-cover-left-offset', settings.leftOffset);
+    }
+    if (settings.topOffset !== undefined) {
+      root.style.setProperty('--back-cover-top-offset', settings.topOffset);
+    }
+  },
+  
+  /**
+   * Get current cover sizing settings
+   */
+  getSettings() {
+    return {
+      front: { ...GLOBAL_CONFIG.LAYOUT.frontCover },
+      back: { ...GLOBAL_CONFIG.LAYOUT.backCover },
+    };
+  },
+  
+  /**
+   * Reset covers to default sizing
+   */
+  reset() {
+    // Reset to default values
+    this.updateFront({
+      widthMultiplier: 1.01,
+      heightMultiplier: 1.01,
+      leftOffset: -0.5,
+      topOffset: -0.5,
+    });
+    
+    this.updateBack({
+      widthMultiplier: 1.01,
+      heightMultiplier: 1.01,
+      leftOffset: -0.5,
+      topOffset: -0.5,
+    });
+    
+    console.log('📖 Cover sizing reset to defaults');
+  },
+};
+
 window.notebook.rings = {
   /**
    * Update front ring settings and apply immediately
@@ -551,12 +639,16 @@ window.notebook.rings = {
     
     if (frontRing) {
       const ringsCfg = GLOBAL_CONFIG.RINGS;
-      frontRing.style.transform = `translateZ(var(--rings-front-position)) translateY(${ringsCfg.yPositionUnflipped}%) scaleX(${ringsCfg.front.scaleX}) scaleY(${ringsCfg.front.scaleY}) rotateX(${ringsCfg.front.rotationUnflipped}deg)`;
+      // Use start values for reset (unflipped state)
+      const frontYPosition = ringsCfg.yPositionUnflipped + ringsCfg.front.offsetYStart;
+      frontRing.style.transform = `translateZ(var(--rings-front-position)) translateY(${frontYPosition}%) scaleX(${ringsCfg.front.scaleXStart}) scaleY(${ringsCfg.front.scaleYStart}) rotateX(${ringsCfg.front.rotationStart}deg)`;
     }
     
     if (backRing) {
       const ringsCfg = GLOBAL_CONFIG.RINGS;
-      backRing.style.transform = `translateZ(${ringsCfg.back.offsetZ}px) translateY(${ringsCfg.yPositionUnflipped}%) scaleX(${ringsCfg.back.scaleX}) scaleY(${ringsCfg.back.scaleY}) rotateX(${ringsCfg.back.rotationUnflipped}deg)`;
+      // Use start values for reset (unflipped state)
+      const backYPosition = ringsCfg.yPositionUnflipped + ringsCfg.back.offsetYStart;
+      backRing.style.transform = `translateZ(${ringsCfg.back.offsetZStart}px) translateY(${backYPosition}%) scaleX(${ringsCfg.back.scaleXStart}) scaleY(${ringsCfg.back.scaleYStart}) rotateX(${ringsCfg.back.rotationStart}deg)`;
     }
     
     console.log('🔗 Rings reset to default positions');
@@ -691,7 +783,7 @@ window.notebook.headBobble = {
   }
 };
 
-console.log(`\n🔗 RING CONTROL UTILITIES READY\nUse these commands to adjust ring positioning:\n\n// Update front ring\nwindow.notebook.rings.updateFront({\n  offsetZ: -30,        // Z distance from top page\n  rotationUnflipped: 25,  // Rotation when unflipped\n  rotationFlipped: -25,   // Rotation when flipped\n  scaleX: 1.1,           // Horizontal scale\n  scaleY: 1.4            // Vertical scale\n});\n\n// Update back ring\nwindow.notebook.rings.updateBack({\n  offsetZ: -15,        // Z position behind pages\n  rotationUnflipped: 20,  // Rotation when unflipped\n  rotationFlipped: -20,   // Rotation when flipped\n});\n\n// View current settings\nwindow.notebook.rings.getSettings();\n\n// Reset to defaults\nwindow.notebook.rings.reset();\n\n// Debug ring visibility (Safari troubleshooting)\nwindow.notebook.rings.debugRings();\n\n🎭 HEAD BOBBLE UTILITIES:\n\n// Toggle head bobble on/off\nwindow.notebook.headBobble.toggle();\n\n// Apply presets\nwindow.notebook.headBobble.applyPreset('subtle');     // Barely perceptible movement\nwindow.notebook.headBobble.applyPreset('normal');     // Natural human breathing with gentle tilt\nwindow.notebook.headBobble.applyPreset('relaxed');    // Slower, deeper breathing with more tilt\nwindow.notebook.headBobble.applyPreset('focused');    // Controlled, steady breathing\nwindow.notebook.headBobble.applyPreset('chilled');    // Very slow, relaxed breathing with natural tilt\nwindow.notebook.headBobble.applyPreset('mechanical'); // Simple sine wave (old style)\nwindow.notebook.headBobble.applyPreset('disabled');   // Turn off\n\n// Custom organic settings with head tilt\nwindow.notebook.headBobble.updateSettings({\n  amplitude: 3,              // px up/down movement\n  pitchDeg: 1.5,             // degrees forward/back rotation\n  tiltDeg: 1.0,              // degrees left/right head tilt\n  frequency: 0.12,           // cycles per second (very slow)\n  organicIntensity: 1.0,     // 0-2, organic variation strength\n  breathingVariation: 0.8,   // 0-1, breathing irregularity\n  microMovements: true       // enable micro-movements\n});\n\n// Get current status\nwindow.notebook.headBobble.getStatus();\n`);
+console.log(`\n📖 COVER SIZING UTILITIES READY\nUse these commands to adjust cover sizing:\n\n// Update front cover\nwindow.notebook.covers.updateFront({\n  widthMultiplier: 1.02,   // Width relative to page (1.02 = 2% larger)\n  heightMultiplier: 1.02,  // Height relative to page\n  leftOffset: -1.0,        // Left position offset (%)\n  topOffset: -1.0          // Top position offset (%)\n});\n\n// Update back cover (fix shifting)\nwindow.notebook.covers.updateBack({\n  widthMultiplier: 1.01,   // Width relative to page\n  heightMultiplier: 1.01,  // Height relative to page\n  leftOffset: -0.3,        // Adjust left offset to fix shifting\n  topOffset: -0.5          // Top position offset (%)\n});\n\n// View current settings\nwindow.notebook.covers.getSettings();\n\n// Reset to defaults\nwindow.notebook.covers.reset();\n\n🔗 RING CONTROL UTILITIES:\n\n// Update front ring\nwindow.notebook.rings.updateFront({\n  offsetZStart: 0,         // Z distance when unflipped\n  offsetZEnd: 0,           // Z distance when flipped\n  offsetYStart: 4,         // Y position when unflipped\n  offsetYEnd: 32,          // Y position when flipped\n  scaleXStart: 1.02,       // Scale when unflipped\n  scaleXEnd: 1.02,         // Scale when flipped\n  rotationStart: 20,       // Rotation when unflipped\n  rotationEnd: -45         // Rotation when flipped\n});\n\n// Update back ring\nwindow.notebook.rings.updateBack({\n  offsetZStart: 3,         // Z position when unflipped\n  offsetZEnd: 3,           // Z position when flipped\n  offsetYStart: -30,       // Y position when unflipped\n  offsetYEnd: -30,         // Y position when flipped\n  rotationStart: 0,        // Rotation when unflipped\n  rotationEnd: 0           // Rotation when flipped\n});\n\n// View current settings\nwindow.notebook.rings.getSettings();\n\n// Reset to defaults\nwindow.notebook.rings.reset();\n\n🎭 HEAD BOBBLE UTILITIES:\n\n// Toggle head bobble on/off\nwindow.notebook.headBobble.toggle();\n\n// Apply presets\nwindow.notebook.headBobble.applyPreset('subtle');     // Barely perceptible movement\nwindow.notebook.headBobble.applyPreset('normal');     // Natural human breathing with gentle tilt\nwindow.notebook.headBobble.applyPreset('relaxed');    // Slower, deeper breathing with more tilt\nwindow.notebook.headBobble.applyPreset('focused');    // Controlled, steady breathing\nwindow.notebook.headBobble.applyPreset('chilled');    // Very slow, relaxed breathing with natural tilt\nwindow.notebook.headBobble.applyPreset('mechanical'); // Simple sine wave (old style)\nwindow.notebook.headBobble.applyPreset('disabled');   // Turn off\n\n// Get current status\nwindow.notebook.headBobble.getStatus();\n`);
 
 // === APPLICATION ENTRY POINT ===
 

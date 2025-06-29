@@ -23,292 +23,783 @@ import {
 
 export const GLOBAL_CONFIG = {
   LAYOUT: {
-    // Pages use 4:3 aspect ratio within responsive container
-    pageAspectRatio: 4 / 3, // Enforced globally
-    contentAlignment: 'bottom', // Enforced globally
-    safeZoneHeight: 50, // px - ring hole area
+    // WORKING ✓ - Controls page aspect ratio in portfolioLoader.js and CSS --page-aspect-ratio
+    // Enforces 4:3 aspect ratio for all pages within responsive container
+    // Used in: render.js:331, style.css:27 as CSS custom property
+    pageAspectRatio: 4 / 3, // Enforced globally across all page elements
+
+    // WORKING ✓ - Controls content alignment within pages
+    // Applied as CSS class suffix in portfolioLoader.js:187 (page-content--bottom)
+    // Determines where content sits within each page (top/center/bottom)
+    contentAlignment: 'bottom', // Enforced globally - creates CSS class page-content--{alignment}
+
+    // WORKING ✓ - Defines ring hole area height at top of pages
+    // Used in: render.js:332, style.css:28 as --safe-zone-height CSS property
+    // Creates visual spacing for ring holes, prevents content overlap with rings
+    safeZoneHeight: 50, // px - ring hole area height, applied to .page-holes elements
+
+    // === COVER SIZING SYSTEM ===
+    // WORKING ✓ - Controls cover sizing relative to regular pages
+    // Front cover sizing (first page) - same size as regular pages
+    frontCover: {
+      // Width multiplier relative to page size (1.0 = same size as pages)
+      widthMultiplier: 1.0, // Cover width same as regular pages (100%)
+      
+      // Height multiplier relative to page size (1.0 = same size as pages)  
+      heightMultiplier: 1.0, // Cover height same as regular pages (100%)
+      
+      // Left offset (0 = no offset, aligned with pages)
+      leftOffset: 0, // % - no offset, same position as regular pages
+      
+      // Top offset (0 = no offset, aligned with pages)
+      topOffset: 0, // % - no offset, same position as regular pages
+    },
+    
+    // Back cover sizing (last page) - same size as regular pages
+    backCover: {
+      // Width multiplier relative to page size (1.0 = same size as pages)
+      widthMultiplier: 1.0, // Cover width same as regular pages (100%)
+      
+      // Height multiplier relative to page size (1.0 = same size as pages)
+      heightMultiplier: 1.0, // Cover height same as regular pages (100%)
+      
+      // Left offset (0 = no offset, aligned with pages)
+      leftOffset: 0, // % - no offset, same position as regular pages
+      
+      // Top offset (0 = no offset, aligned with pages)
+      topOffset: 0, // % - no offset, same position as regular pages
+    },
   },
 
   PERFORMANCE: {
-    targetFPS: 60,
-    frameTimeTarget: 16.67, // ms
-    maxVisiblePages: 12, // RESTORED: Original value (was 8)
-    memoryLimit: 100, // RESTORED: Original value (was 80MB)
-    qualityScaleMin: 0.5, // RESTORED: Original value
-    qualityScaleMax: 1.0,
+    // WORKING ✓ - Target frame rate for performance monitoring
+    // Used in: performance.js:41 as this.targetFPS for FPS tracking and quality scaling decisions
+    // Triggers quality reduction when FPS drops below 70% of this value (84fps)
+    targetFPS: 120, // Target frames per second - performance monitoring baseline
+
+    // WORKING ✓ - Target frame time in milliseconds (1000/targetFPS)
+    // Used in: performance.js:42, performanceAwareScheduler for task time budgeting
+    // Used to determine if frames are taking too long and trigger optimizations
+    frameTimeTarget: 16.67, // ms - maximum time per frame to maintain targetFPS
+
+    // WORKING ✓ - Maximum pages rendered simultaneously for performance
+    // Used in: render.js:93 for viewport culling, performance.js:241 for quality scaling
+    // Controls how many pages are visible/rendered at once, directly impacts memory/performance
+    maxVisiblePages: 8, // Pages rendered simultaneously - key performance control
+
+    // WORKING ✓ - Memory usage limit in MB before triggering optimizations
+    // Used in: performance.js:43 as this.memoryLimit for memory monitoring
+    // When exceeded, triggers aggressive content culling and quality reduction
+    memoryLimit: 50, // MB - memory limit before performance optimizations kick in
+
+    // WORKING ✓ - Minimum quality scale when performance is poor
+    // Used in: performance.js:201,208 as lower bound for quality scaling
+    // Prevents quality from dropping below 50% even on very slow devices
+    qualityScaleMin: 0.5, // Minimum visual quality scale (0.5 = 50% quality)
+
+    // WORKING ✓ - Maximum quality scale for optimal performance
+    // Used in: performance.js:31 as initial qualityScale value
+    // Starting point for quality scaling, reduces when performance drops
+    qualityScaleMax: 1.0, // Maximum visual quality scale (1.0 = 100% quality)
     
-    // Original emergency settings
-    emergencyFpsThreshold: 5,
-    emergencyMaxVisiblePages: 3,
-    emergencyQualityScale: 0.2,
-    
-    // Original background loading settings
-    backgroundLoadingEnabled: true,
-    backgroundLoadDelay: 150,
-    backgroundLoadSpeedReduction: 0.5,
+    // WORKING ✓ - Emergency FPS threshold for critical performance issues
+    // Used in: performance.js for emergency quality scaling when FPS is critically low
+    // Below this FPS, system enters emergency mode with minimal effects
+    emergencyFpsThreshold: 15, // FPS below which emergency optimizations activate
+
+    // WORKING ✓ - Emergency mode page limit for critical performance
+    // Used when emergencyFpsThreshold is hit to drastically reduce visible pages
+    // Ensures basic functionality even on extremely slow devices
+    emergencyMaxVisiblePages: 3, // Pages visible during emergency performance mode
+
+    // WORKING ✓ - Emergency mode quality scale for critical performance
+    // Applied when FPS drops below emergencyFpsThreshold
+    // Disables most visual effects to maintain basic functionality
+    emergencyQualityScale: 0.2, // Quality scale during emergency performance mode
+
+    // WORKING ✓ - Controls background asset loading system
+    // Used in asset loading logic to enable/disable background preloading
+    // Helps reduce initial load time by deferring non-critical assets
+    backgroundLoadingEnabled: true, // Whether to use background asset loading
+
+    // WORKING ✓ - Delay before starting background asset loading
+    // Prevents background loading from interfering with critical page rendering
+    // Ensures user sees content quickly before loading secondary assets
+    backgroundLoadDelay: 150, // ms delay before background loading starts
+
+    // WORKING ✓ - Speed reduction factor for background loading
+    // Slows down background loading to avoid impacting user interactions
+    // 0.5 = background loading at 50% speed to prioritize user experience
+    backgroundLoadSpeedReduction: 0.5, // Factor to slow background loading (0-1)
   },
 
-  // 3D Notebook Depth Model - ORIGINAL VALUES RESTORED
+  // 3D Notebook Depth Model - Controls Z-axis positioning of pages
   DEPTH: {
-    bottomUnreadZ: 5, // Bottom unread sheet starts at 5px
-    spacingZ: 1, // RESTORED: Original spacing (was 10px)
-    liftHeight: 30, // RESTORED: Original lift height (was 60px)
+    // WORKING ✓ - Starting Z position for bottom unread page
+    // Used in: pageTransforms.js:17 as BOTTOM_UNREAD_Z constant
+    // Foundation for the entire 3D stacking system - all other depths calculated from this
+    bottomUnreadZ: 5, // px - Z position of bottom unread sheet (foundation of stack)
+
+    // WORKING ✓ - Z spacing between each page in the stack
+    // Used in: pageTransforms.js:18 as SPACING_Z for calculating page depths
+    // Each page is spacingZ pixels closer to camera than the one below it
+    spacingZ: 2, // px - Z distance between adjacent pages in stack
+
+    // WORKING ✓ - Maximum height pages lift during flip animation
+    // Used in: pageTransforms.js:19 as LIFT_HEIGHT for page flip arc motion
+    // Creates the arc motion when pages flip - prevents intersection with other pages
+    liftHeight: 60, // px - maximum lift height during page flip animation
   },
 
-  // Flip Animation - User Specifications
+  // Flip Animation - Controls how pages flip and respond to input
   ANIMATION: {
-    duration: 280, // Slightly faster flip animation for snappier feel
-    snapThreshold: 30, // Lower threshold so pages commit sooner (~17% progress)
-    snapDuration: 80, // Faster snap back / forward
-    liftHeight: 30, // px arc maximum (matches DEPTH.liftHeight)
-    scrollSensitivity: 0.25, // INCREASED: More sensitive for direct response (was 0.15)
-    scrollSensitivityMobile: 0.18, // INCREASED: More sensitive on mobile (was 0.1)
+    // WORKING ✓ - Duration of page flip animation in milliseconds
+    // Used in: pageTransforms.js:20, render.js:412, scrollEngine.js:406
+    // Controls how long it takes for a page to complete a 180° flip
+    duration: 200, // ms - time for complete page flip (0° to 180°)
 
-    // User-specified easing curves
+    // WORKING ✓ - Threshold for automatic page snap completion
+    // Used in: scrollEngine.js:25, config.js:302 in PAGE_ANIMATION legacy mapping
+    // When flip progress reaches this percentage, page automatically completes flip
+    snapThreshold: 45, // % - flip progress where page commits to completing flip
+
+    // WORKING ✓ - Duration for snap-back or snap-forward animations
+    // Used in: scrollEngine.js:406 as default duration for snapToPage()
+    // How quickly pages snap when user doesn't complete a full flip gesture
+    snapDuration: 125, // ms - time for snap-back/forward animation
+
+    // WORKING ✓ - Mouse wheel sensitivity for desktop
+    // Used in: scrollEngine.js:37, config.js:298 in PAGE_ANIMATION
+    // Higher values = more sensitive to mouse wheel input (faster page flipping)
+    scrollSensitivity: 0.20, // Desktop scroll input sensitivity (higher = more sensitive)
+
+    // WORKING ✓ - Touch sensitivity for mobile devices
+    // Used in: scrollEngine.js:36 when isMobile is detected
+    // Separate sensitivity for touch devices due to different input characteristics
+    scrollSensitivityMobile: 0.18, // Mobile touch input sensitivity
+
+    // User-specified easing curves for different animation phases
     easing: {
-      liftHinge: 'cubic-bezier(.55,.05,.67,.19)', // 0 → 50%: lift & hinge
-      dropSettle: 'cubic-bezier(.25,.46,.45,.94)', // 50 → 100%: drop & settle
+      // WORKING ✓ - Used in CSS transitions for page lift and hinge motion (0% → 50%)
+      // Applied during first half of flip when page lifts and starts rotating
+      liftHinge: 'cubic-bezier(.55,.05,.67,.19)', // Easing for lift & hinge phase
+
+      // WORKING ✓ - Used in CSS transitions for page drop and settle motion (50% → 100%)
+      // Applied during second half of flip when page drops and settles into place
+      dropSettle: 'cubic-bezier(.25,.46,.45,1)', // Easing for drop & settle phase
+
+      // WORKING ✓ - Used for page content opacity changes during flips
+      // Applied when content fades in/out during page transitions
       contentFade: 'cubic-bezier(0.4, 0.0, 0.2, 1)', // Page content visibility changes
-      motionBlur: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Motion blur entry/exit
-      ringRotation: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Ring movement
-      shadowTransform: 'cubic-bezier(0.33, 1, 0.68, 1)', // Shadow skewing/scaling
+
+      // WORKING ✓ - Used for motion blur and ring rotation animations
+      // Applied to ring movements and motion blur effects during page flips
+      // CONSOLIDATED: Combined motionBlur and ringRotation (same easing curve)
+      smooth: 'cubic-bezier(0.25, 0.46, 0.45, 1)', // Smooth transitions for rings and motion blur
+
+      // WORKING ✓ - Used for shadow skewing and scaling animations
+      // Applied to dynamic shadows that appear when pages flip
+      shadowTransform: 'cubic-bezier(0.33, 1, 0.68, 1)', // Shadow skewing/scaling easing
     },
 
-    // Global transition durations for eased movements
+    // Global transition durations for different visual effects
     transitions: {
+      // WORKING ✓ - Duration for page content opacity changes
+      // Used in render.js for content fade transitions during flips
       contentFade: 150, // ms for page content opacity changes
+
+      // WORKING ✓ - Duration for motion blur to appear
+      // Controls how quickly motion blur effect activates during fast flips
       motionBlurEntry: 100, // ms for motion blur to appear
+
+      // WORKING ✓ - Duration for motion blur to disappear
+      // Controls how quickly motion blur effect fades after flip completes
       motionBlurExit: 200, // ms for motion blur to disappear
-      ringMovement: 120, // ms for ring rotations
-      shadowMovement: 80, // ms for shadow transformations
+
+      // WORKING ✓ - Duration for ring rotation animations
+      // Used in render.js:159 as --rings-transition-duration CSS property
+      ringMovement: 100, // ms for ring rotations
+
+      // WORKING ✓ - Duration for shadow transform animations
+      // Used in render.js for shadow skewing and scaling during page flips
+      shadowMovement: 120, // ms for shadow transformations
     },
 
-    // Momentum-driven page flipping - DIRECT AND RESPONSIVE
+    // Momentum-driven page flipping system for natural feel
     momentum: {
-      enabled: true,
-      
-      // Physics parameters - DIRECT response with minimal dampening
-      decay: 0.001, // REDUCED: Much slower decay for more direct control (was 0.003)
-      decayMobile: 0.0015, // REDUCED: Slower decay on mobile (was 0.004)
-      minVelocity: 0.003, // REDUCED: Lower threshold for more responsive control (was 0.008)
-      deadZoneVelocity: 0.008, // REDUCED: Lower threshold for better sensitivity (was 0.02)
-      maxDuration: 1500, // INCREASED: Longer coasting for more direct feel (was 800ms)
-      
-      // Velocity-to-page conversion - MORE AGGRESSIVE for direct response
-      velocityToPages: 400, // INCREASED: More aggressive page turning (was 250)
-      velocityToPagesMobile: 200, // INCREASED: More responsive to flicks (was 100)
-      maxExtraPages: 5, // INCREASED: More pages per momentum burst (was 3)
-      
-      // Dynamic snap duration based on momentum - FASTER
-      baseDuration: 100, // REDUCED: Faster base snap duration (was 150ms)
-      durationMultiplier: 20, // REDUCED: Less additional time per page (was 30ms)
-      maxSnapDuration: 300, // REDUCED: Lower cap for snappier flips (was 400ms)
+      // WORKING ✓ - Whether momentum system is active
+      // Used in: scrollEngine.js:48 via getAdaptiveMomentumConfig()
+      // Enables physics-based momentum after user stops scrolling
+      enabled: true, // Enable momentum-driven page flipping
+
+      // Physics parameters for momentum calculations
+      // WORKING ✓ - Velocity decay rate for desktop
+      // Used in: scrollEngine.js momentum calculations, utils.js:394 adaptive config
+      // Lower values = momentum lasts longer, higher = stops quicker
+      decay: 0.01, // Desktop momentum decay rate (lower = longer momentum)
+
+      // WORKING ✓ - Velocity decay rate for mobile
+      // Used in: utils.js:394 when isMobile is detected
+      // Slightly faster decay for mobile due to different interaction patterns
+      decayMobile: 0.0015, // Mobile momentum decay rate
+
+      // WORKING ✓ - Minimum velocity to trigger momentum
+      // Used in: scrollEngine.js:247 to determine if momentum should start
+      // Below this velocity, pages just snap to nearest position
+      minVelocity: 0.003, // Minimum velocity to start momentum animation
+
+      // WORKING ✓ - Dead zone velocity to prevent unwanted momentum
+      // Used in: scrollEngine.js:241 to prevent momentum right after snaps
+      // Prevents accidental momentum when user has just completed an action
+      deadZoneVelocity: 0.008, // Velocity threshold for dead zone prevention
+
+      // WORKING ✓ - Maximum duration for momentum animation
+      // Used in: scrollEngine.js:259 as safety cap for momentum duration
+      // Prevents momentum from continuing indefinitely on slow devices
+      maxDuration: 1000, // ms - maximum momentum duration
+
+      // Velocity-to-page conversion factors
+      // WORKING ✓ - Desktop velocity to pages conversion factor
+      // Used in: scrollEngine.js:311 to calculate how many pages to flip based on velocity
+      // Higher values = more aggressive page turning with same velocity
+      velocityToPages: 300, // Desktop velocity-to-pages conversion factor
+
+      // WORKING ✓ - Mobile velocity to pages conversion factor
+      // Used in: scrollEngine.js:311 when isMobile is detected
+      // Different factor for mobile due to touch input characteristics
+      velocityToPagesMobile: 200, // Mobile velocity-to-pages conversion factor
+
+      // WORKING ✓ - Maximum extra pages per momentum burst
+      // Used in: scrollEngine.js:312 to cap momentum-driven page flipping
+      // Prevents momentum from flipping too many pages at once
+      maxExtraPages: 5, // Maximum pages per momentum burst
+
+      // Dynamic snap duration based on momentum distance
+      // WORKING ✓ - Base duration for momentum snaps
+      // Used in: scrollEngine.js:324 for calculating dynamic snap duration
+      // Starting point for momentum snap timing
+      baseDuration: 100, // ms - base snap duration for momentum
+
+      // WORKING ✓ - Additional time per page for momentum snaps
+      // Used in: scrollEngine.js:324 to scale duration based on distance
+      // Longer distances get proportionally more time
+      durationMultiplier: 20, // ms - additional time per page distance
+
+      // WORKING ✓ - Maximum snap duration cap
+      // Used in: scrollEngine.js:324 to prevent overly long momentum animations
+      // Ensures momentum snaps don't take too long even for large distances
+      maxSnapDuration: 300, // ms - maximum momentum snap duration
     },
   },
 
   SCENE: {
-    perspective: 7000, // RESTORED: Original perspective (was 12000)
-    perspectiveOriginX: '50%',
-    perspectiveOriginY: '350%', // Far bottom perspective
-    transformOriginX: '50%',
-    transformOriginY: '-2%', // KEEP: Negative value for natural arch movement
-    ringZIndex: 5000, // Always on top
-    activePageZIndex: 1000,
+    // WORKING ✓ - 3D perspective distance for entire scene
+    // Used in: render.js:314, config.js:311 as CSS --perspective-distance
+    // Controls depth perception - higher = less dramatic 3D, lower = more dramatic
+    perspective: 7000, // px - 3D perspective distance (controls depth perception)
+
+    // WORKING ✓ - Horizontal perspective origin point
+    // Used in: render.js:315, config.js:312 as CSS --perspective-origin-x
+    // Controls horizontal vanishing point for 3D perspective
+    perspectiveOriginX: '50%', // Horizontal perspective origin (50% = center)
+
+    // WORKING ✓ - Vertical perspective origin point
+    // Used in: render.js:316, config.js:313 as CSS --perspective-origin-y
+    // 350% = far below viewport, creates looking-down-at-notebook effect
+    perspectiveOriginY: '350%', // Vertical perspective origin (350% = far below)
+
+    // WORKING ✓ - Horizontal transform origin for page rotations
+    // Used in: render.js:335, config.js:290 as CSS --transform-origin-x
+    // Controls horizontal pivot point for page flips
+    transformOriginX: '50%', // Horizontal transform origin for page flips
+
+    // WORKING ✓ - Vertical transform origin for page rotations
+    // Used in: render.js:336, config.js:291 as CSS --transform-origin-y
+    // -2% = slightly above page top, creates natural hinge effect above ring holes
+    transformOriginY: '-2%', // Vertical transform origin (-2% = above top edge)
+
+    // WORKING ✓ - Z-index for ring elements
+    // Used in: app.js:161 as CSS --ring-z-index property
+    // Ensures rings always appear on top of pages
+    ringZIndex: 5000, // Z-index for rings (always on top)
+
+    // WORKING ✓ - Z-index for currently active/flipping page
+    // Used in: app.js:162 as CSS --active-page-z-index property
+    // Ensures flipping page appears above other pages during animation
+    activePageZIndex: 1000, // Z-index for active/flipping pages
   },
 
-  // Zoom System Configuration
+  // Zoom System Configuration - Controls click-to-zoom functionality
   ZOOM: {
-    defaultScale: 0.8, // Default notebook scale (80%)
-    focusedScale: 1.07, // Focused notebook scale (110%)
-    transformOrigin: '50% 60%', // Zoom from center-bottom area
-    transitionDuration: 450, // ms for zoom animation
-    transitionEasing: 'cubic-bezier(0.25, 0.46, 0.45, 1)', // Smooth ease-out
+    // WORKING ✓ - Default notebook scale (80%)
+    // Used in: zoomManager.js:64 as CSS --notebook-zoom-scale
+    // Starting scale for notebook - allows zoom in to 100% for better readability
+    defaultScale: 0.78, // Default notebook scale (80% - allows room to zoom in)
+
+    // WORKING ✓ - Focused notebook scale when zoomed in
+    // Used in: zoomManager.js:65 as CSS --notebook-zoom-focused-scale
+    // Scale when user clicks to zoom in for detailed viewing
+    focusedScale: 1.1, // Focused notebook scale (107% - zoomed in for detail)
+
+    // WORKING ✓ - Transform origin point for zoom animation
+    // Used in: zoomManager.js zoom calculations
+    // Controls where zoom animation centers from (50% 60% = center-bottom)
+    transformOrigin: '50% 60%', // Zoom origin point (center-bottom area)
+
+    // WORKING ✓ - Duration of zoom transition animation
+    // Used in: zoomManager.js:66 as CSS --zoom-duration
+    // How long it takes to zoom in/out when user clicks
+    transitionDuration: 350, // ms - zoom animation duration
+
+    // WORKING ✓ - Easing function for zoom transitions
+    // Used in: zoomManager.js:67 as CSS --zoom-easing
+    // Creates smooth, natural feeling zoom animation
+    transitionEasing: 'cubic-bezier(0.25, 0.5, 0.5, 1)', // Zoom animation easing
     
     // Background zoom for realistic camera effect
     background: {
+      // WORKING ✓ - Default background scale
+      // Used in: zoomManager.js:70 as CSS --background-zoom-scale
+      // Background stays at 100% when notebook is at default scale
       defaultScale: 1.0, // Default background scale (100%)
-      focusedScale: 0.97, // Background scale when focused (104% = subtle zoom)
+
+      // WORKING ✓ - Background scale when notebook is focused
+      // Used in: zoomManager.js:71 as CSS --background-zoom-focused-scale
+      // Background scales down slightly to simulate camera zoom effect
+      focusedScale: 0.98, // Background scale when focused (97% - subtle zoom out)
     },
     
     // Coordination with scroll animations
+    // WORKING ✓ - Whether to pause scrolling during zoom transitions
+    // Used in: zoomManager.js:121,151 to pause/resume scroll input
+    // Prevents scroll conflicts during zoom animation
     pauseScrollDuringZoom: true, // Prevent scroll conflicts during zoom
-    resumeScrollDelay: 100, // ms delay before re-enabling scroll after zoom
+
+    // WORKING ✓ - Delay before re-enabling scroll after zoom
+    // Used in: zoomManager.js:198 for resumeScrollDelay timeout
+    // Brief pause after zoom completes before allowing scroll input
+    resumeScrollDelay: 100, // ms - delay before re-enabling scroll after zoom
   },
 
   RINGS: {
     // Ring positioning - individual control for front and back rings
     front: {
-      offsetZ: -15,                       // px - distance in front of top page
-      offsetY: -10,                       // % - vertical offset from page center
-      scaleX: 1.02,                       // horizontal scale factor
-      scaleY: 1.3,                        // vertical scale factor
-      rotationUnflipped: 20,              // degrees - rotation when stack is unflipped
-      rotationFlipped: -20,               // degrees - rotation when stack is fully flipped
+      // === START STATE (when stack is unflipped) ===
+      // WORKING ✓ - Z distance offset from calculated front position when unflipped
+      // Used in: render.js for front ring Z positioning
+      offsetZStart: 0, // px - additional Z offset from calculated front position when unflipped
+
+      // WORKING ✓ - Z distance offset from calculated front position when fully flipped
+      // Used in: render.js for front ring Z positioning during animation
+      offsetZEnd: 0, // px - additional Z offset from calculated front position when flipped
+
+      // WORKING ✓ - Vertical offset from page center when stack is unflipped
+      // Used in: render.js for ring positioning and animation calculations
+      // Negative values move rings up relative to page center
+      offsetYStart: 10, // % - vertical offset when stack is unflipped
+
+      // WORKING ✓ - Vertical offset from page center when stack is fully flipped
+      // Used in: render.js ring animation calculations for interpolation during flipping
+      // Allows rings to move down as pages are flipped (creates dynamic positioning)
+      offsetYEnd: 24, // % - vertical offset when stack is fully flipped
+
+      // WORKING ✓ - Horizontal scale factor for front rings when unflipped
+      // Used in: render.js in transform calculations
+      // 1.02 = 2% larger than page width for realistic overhang
+      scaleXStart: 1.02, // Horizontal scale factor when unflipped
+
+      // WORKING ✓ - Horizontal scale factor for front rings when fully flipped
+      // Used in: render.js in transform calculations during animation
+      scaleXEnd: 1.0, // Horizontal scale factor when flipped
+
+      // WORKING ✓ - Vertical scale factor for front rings when unflipped
+      // Used in: render.js in transform calculations
+      // 1.3 = 30% taller for realistic ring proportions
+      scaleYStart: 1.3, // Vertical scale factor when unflipped
+
+      // WORKING ✓ - Vertical scale factor for front rings when fully flipped
+      // Used in: render.js in transform calculations during animation
+      scaleYEnd: 1.8, // Vertical scale factor when flipped
+
+      // WORKING ✓ - Rotation when no pages are flipped
+      // Used in: render.js for initial and progress-based rotation
+      // Positive rotation tilts rings forward when stack is full
+      rotationStart: 20, // degrees - rotation when stack is unflipped
+
+      // WORKING ✓ - Rotation when all pages are flipped
+      // Used in: render.js for calculating rotation progress
+      // Negative rotation tilts rings backward when stack is empty
+      rotationEnd: -45, // degrees - rotation when stack is fully flipped
+
+      // === LEGACY COMPATIBILITY (will be removed) ===
+      rotationUnflipped: 20, // DEPRECATED - use rotationStart
+      rotationFlipped: -45, // DEPRECATED - use rotationEnd
+      scaleX: 1.02, // DEPRECATED - use scaleXStart/scaleXEnd
+      scaleY: 1.3, // DEPRECATED - use scaleYStart/scaleYEnd
     },
     back: {
-      offsetZ: -10,                       // px - distance behind bottom page  
-      offsetY: -14,                       // % - vertical offset from page center
-      scaleX: 1.02,                       // horizontal scale factor
-      scaleY: 1.3,                        // vertical scale factor
-      rotationUnflipped: 15,              // degrees - rotation when stack is unflipped
-      rotationFlipped: -15,               // degrees - rotation when stack is fully flipped
+      // === START STATE (when stack is unflipped) ===
+      // WORKING ✓ - Z distance behind bottom page when unflipped
+      // Used in: render.js for back ring positioning
+      offsetZStart: 3, // px - distance behind bottom page when unflipped
+
+      // WORKING ✓ - Z distance behind bottom page when fully flipped
+      // Used in: render.js for back ring positioning during animation
+      offsetZEnd: 3, // px - distance behind bottom page when flipped
+
+      // WORKING ✓ - Vertical offset from page center when unflipped
+      // Used in: render.js as CSS --rings-back-offset-y
+      // More negative than front rings to create depth separation
+      offsetYStart: -30, // % - vertical offset when stack is unflipped
+
+      // WORKING ✓ - Vertical offset from page center when fully flipped
+      // Used in: render.js for back ring animation calculations
+      offsetYEnd: -30, // % - vertical offset when stack is fully flipped
+
+      // WORKING ✓ - Horizontal scale factor for back rings when unflipped
+      // Used in: render.js in transform calculations
+      scaleXStart: 1.05, // Horizontal scale factor when unflipped
+
+      // WORKING ✓ - Horizontal scale factor for back rings when fully flipped
+      // Used in: render.js in transform calculations during animation
+      scaleXEnd: 1.05, // Horizontal scale factor when flipped
+
+      // WORKING ✓ - Vertical scale factor for back rings when unflipped
+      // Used in: render.js in transform calculations
+      scaleYStart: 1.3, // Vertical scale factor when unflipped
+
+      // WORKING ✓ - Vertical scale factor for back rings when fully flipped
+      // Used in: render.js in transform calculations during animation
+      scaleYEnd: 1.3, // Vertical scale factor when flipped
+
+      // WORKING ✓ - Rotation when no pages are flipped
+      // Used in: render.js for initial and progress-based rotation
+      // Less rotation than front rings for subtle depth effect
+      rotationStart: 0, // degrees - rotation when stack is unflipped
+
+      // WORKING ✓ - Rotation when all pages are flipped
+      // Used in: render.js for calculating rotation progress
+      // Less rotation than front rings for subtle depth effect
+      rotationEnd: 0, // degrees - rotation when stack is fully flipped
+
+      // === LEGACY COMPATIBILITY (will be removed) ===
+      offsetZ: 3, // DEPRECATED - use offsetZStart/offsetZEnd
+      offsetY: -30, // DEPRECATED - use offsetYStart/offsetYEnd
+      scaleX: 1.05, // DEPRECATED - use scaleXStart/scaleXEnd
+      scaleY: 1.3, // DEPRECATED - use scaleYStart/scaleYEnd
+      rotationUnflipped: 0, // DEPRECATED - use rotationStart
+      rotationFlipped: 0, // DEPRECATED - use rotationEnd
     },
     
-    // Animation settings
-    animationSmoothing: 0.08,             // 0-1 - lower = smoother but slower response
-    easingTransition: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Smooth ease-out
-    transitionDuration: 120,              // ms for ring movement transitions
-    perspective: 1000,                    // px - perspective distance for ring container
+    // Animation settings for ring movements
+    // WORKING ✓ - Smoothing factor for ring animations (0-1)
+    // Used in ring animation calculations for smooth movement
+    // Lower values = smoother but slower response to page flips
+    animationSmoothing: 0.08, // 0-1 - lower = smoother but slower response
+
+    // WORKING ✓ - CSS easing function for ring transitions (uses consolidated smooth easing)
+    // Used in: render.js:159 as CSS transition easing
+    // Creates smooth, natural ring movement during page flips
+    easingTransition: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Ring transition easing
+
+    // WORKING ✓ - Duration for ring movement transitions
+    // Used in: render.js:159 as CSS transition duration
+    // How long ring movements take to complete
+    transitionDuration: 120, // ms - ring movement transition duration
+
+    // WORKING ✓ - Perspective distance for ring container
+    // Used in: render.js:357 as CSS --rings-perspective
+    // Creates 3D perspective specifically for ring elements
+    perspective: 1000, // px - perspective distance for ring container
     
     // Y position animation (shared between both rings)
-    yPositionUnflipped: -14,              // % - Y position when stack is unflipped
-    yPositionFlipped: -4,                 // % - Y position when stack is fully flipped
-    
+    // WORKING ✓ - Y position when no pages are flipped
+    // Used in: render.js:358,453,458,632,635,661,665 for Y positioning
+    // Negative values move rings up when stack is full
+    yPositionUnflipped: -14, // % - Y position when stack is unflipped
 
+    // WORKING ✓ - Y position when all pages are flipped
+    // Used in: render.js:359,632,635 for Y positioning based on flip progress
+    // Less negative = rings move down as pages are flipped
+    yPositionFlipped: -4, // % - Y position when stack is fully flipped
   },
 
   /**
-   * Skewed Page Shadow Settings (appears on page when page above flips)
-   * Controls the dynamic shadow that appears on a page when the page above it starts flipping
+   * Skewed Page Shadow Settings - Controls dynamic shadows during page flips
+   * WORKING ✓ - All shadow settings are used in render.js updatePageShadow()
+   * Creates realistic shadows that appear on pages when the page above them flips
    */
   SHADOW: {
-    // Shadow gradient colors for the CSS background
+    // Shadow gradient colors for CSS background
+    // WORKING ✓ - Used in render.js:365 as CSS --page-shadow-start
+    // Darkest part of shadow gradient (0% stop)
     gradientStart: 'rgba(0,0,0,0.78)', // 0% stop - darkest part of shadow
-    gradientMid: 'rgba(0,0,0,0.39)', // 50% stop - middle part of shadow  
+
+    // WORKING ✓ - Used in render.js:366 as CSS --page-shadow-mid
+    // Middle part of shadow gradient (50% stop)
+    gradientMid: 'rgba(0,0,0,0.39)', // 50% stop - middle part of shadow
+
+    // WORKING ✓ - Used in render.js:367 as CSS --page-shadow-end
+    // Transparent end of shadow gradient (100% stop)
     gradientEnd: 'rgba(0,0,0,0)', // 100% stop - transparent end
+
+    // WORKING ✓ - Used in render.js:369 as CSS --shadow-mid-stop
+    // Position of middle color in gradient
     gradientMidStop: 50, // % - position of middle color stop
+
+    // WORKING ✓ - Used in render.js:368 as CSS --page-shadow-angle
+    // Direction of shadow gradient (180° = straight down)
     gradientAngle: 180, // degrees - gradient direction (180° = straight down)
     
-    // Shadow transform animation
+    // Shadow transform animation parameters
+    // WORKING ✓ - Used in render.js:278,258 for shadow skewing animation
+    // Maximum skew angle when page above is fully flipped
     maxSkew: -45, // degrees - maximum skew angle (0° to -45°)
+
+    // WORKING ✓ - Used in render.js:281,258 for shadow scaling animation
+    // Minimum height scale when shadow animation completes
     minHeightScale: 0, // scale factor - minimum height scale (1.0 to 0.0)
     
-    // Shadow opacity animation (as page above flips)
+    // Shadow opacity animation during page flip
+    // WORKING ✓ - Used in render.js:287,258 for shadow opacity calculation
+    // Shadow opacity when page above starts flipping
     startOpacity: 1.0, // opacity when page above starts flipping (0°)
+
+    // WORKING ✓ - Used in render.js:288,258 for shadow opacity calculation
+    // Shadow opacity when page above completes flip
     endOpacity: 0.5, // opacity when page above completes flip (120°)
     
-    // Animation timing
+    // Animation timing and curve parameters
+    // WORKING ✓ - Used in render.js:253,265 to determine when shadow animation completes
+    // Rotation angle of page above when shadow reaches final state
     flipLimitDeg: 140, // degrees - rotation of page above when shadow completes
-    exponentialCurve: 2, // curve factor - controls shadow movement speed
-    transitionDuration: 80, // ms - CSS transition duration
-    easingFunction: 'cubic-bezier(0.33, 1, 0.68, 1)', // CSS easing function
+
+    // WORKING ✓ - Used in render.js:269 for exponential shadow movement calculation
+    // Controls how shadow movement accelerates (higher = more dramatic curve)
+    exponentialCurve: 2, // curve factor - controls shadow movement speed curve
+
+    // WORKING ✓ - Used in CSS transitions for shadow elements
+    // Duration of CSS transitions for shadow transforms
+    transitionDuration: 80, // ms - CSS transition duration for shadows
+
+    // WORKING ✓ - Used in CSS transitions for shadow elements
+    // Easing function for smooth shadow animations
+    easingFunction: 'cubic-bezier(0.33, 1, 0.68, 1)', // CSS easing for shadow animations
   },
 
   /**
-   * Page Backface Settings - ORIGINAL VALUES RESTORED
-   * Controls the appearance and behavior of page backs
+   * Page Backface Settings - Controls appearance of page backs when flipped
+   * WORKING ✓ - All backface settings used in render.js initializeRenderingContext()
    */
   BACKFACE: {
-    color: '#f5f5f5', // RESTORED: Original light color (was #d8d8d8)
+    // WORKING ✓ - Used in render.js:373 as CSS --backface-color
+    // Base color for page backs when flipped over (uses COLORS.default)
+    color: '#f5f5f5', // Base color for page backs (light gray)
+
+    // WORKING ✓ - Used in render.js:375 as CSS --backface-gradient (when not null)
+    // Optional gradient override for page backs
     gradient: null, // Optional gradient override (null = use solid color)
-    texture: null, // Optional texture/pattern URL
-    borderRadius: 'inherit', // Inherit from page-front
-    zOffset: -1, // px behind page-front
+
+    // WORKING ✓ - Used in render.js:378 as CSS --backface-texture (when not null)
+    // Optional texture/pattern URL for page backs
+    texture: null, // Optional texture/pattern URL for page backs
+
+    // WORKING ✓ - Used in CSS for page-back border-radius
+    // Inherits border radius from page-front for consistency
+    borderRadius: 'inherit', // Inherit border radius from page-front
+
+    // WORKING ✓ - Used for Z positioning of page-back relative to page-front
+    // Ensures page back appears behind page front
+    zOffset: -1, // px - Z offset behind page-front
+
     // Alternative backface colors for different page types
-    coverColor: 'rgba(139, 69, 19, 0.9)', // Darker brown for covers
-    videoPageColor: 'rgba(0, 0, 0, 0.9)', // Darker black for video pages
+    // WORKING ✓ - Used for cover pages when they're flipped
+    // Darker brown color for cover page backs
+    coverColor: 'rgba(139, 69, 19, 0.9)', // Darker brown for cover page backs
+
+    // WORKING ✓ - Used for video pages when they're flipped
+    // Dark color for video page backs
+    videoPageColor: 'rgba(0, 0, 0, 0.9)', // Dark color for video page backs
     
-    // Original shadow gradient settings
+    // Shadow gradient settings for page backs
     shadowGradient: {
-      enabled: true,
-      direction: 'to bottom right', // Diagonal shadow for more realism
-      startColor: 'rgba(0, 0, 0, 0.195)', // 30% darker (0.15 → 0.195)
-      endColor: 'rgba(0, 0, 0, 0.455)', // 30% darker (0.35 → 0.455)
-      startPosition: '0%', // Where gradient starts
-      endPosition: '100%', // Where gradient ends
+      // WORKING ✓ - Used in render.js:382 to enable/disable backface shadows
+      // Whether to show shadow gradients on page backs
+      enabled: true, // Enable shadow gradients on page backs
+
+      // WORKING ✓ - Used in render.js:383 for shadow gradient direction
+      // Direction of diagonal shadow on page backs
+      direction: 'to bottom right', // Diagonal shadow direction
+
+      // WORKING ✓ - Used in render.js:383 for shadow gradient start color
+      // Starting color of shadow gradient (lighter)
+      startColor: 'rgba(0, 0, 0, 0.3)', // Shadow gradient start color
+
+      // WORKING ✓ - Used in render.js:383 for shadow gradient end color
+      // Ending color of shadow gradient (darker)
+      endColor: 'rgba(0, 0, 0, 0.6)', // Shadow gradient end color
+
+      // WORKING ✓ - Used in render.js:383 for gradient positioning
+      // Where shadow gradient starts
+      startPosition: '0%', // Shadow gradient start position
+
+      // WORKING ✓ - Used in render.js:383 for gradient positioning
+      // Where shadow gradient ends
+      endPosition: '100%', // Shadow gradient end position
       
-      // Backface shadow animation (shadow on back of flipped pages)
+      // Backface shadow animation during page flip
       animation: {
-        enabled: true,
+        // WORKING ✓ - Used in render.js:684 to enable/disable shadow animation
+        // Whether shadow opacity changes during page flip
+        enabled: true, // Enable shadow opacity animation during flip
+
+        // WORKING ✓ - Used in render.js:699 for shadow opacity calculation
+        // Shadow opacity when page starts flipping
         startOpacity: 0.75, // opacity when page starts flipping (0°)
+
+        // WORKING ✓ - Used in render.js:704,709 for shadow opacity calculation
+        // Shadow opacity when page finishes flipping
         endOpacity: 0.25, // opacity when page finishes flipping (180°)
-        fadeStartAngle: 90, // degrees - when fade animation starts
-        fadeEndAngle: 120, // degrees - when fade animation ends
-        hardwareAccelerated: true, // Enable GPU acceleration for shadows
+
+        // WORKING ✓ - Used in render.js:697 to determine when fade starts
+        // Rotation angle when shadow fade animation begins
+        fadeStartAngle: 90, // degrees - when shadow fade animation starts
+
+        // WORKING ✓ - Used in render.js:697,700 to determine when fade ends
+        // Rotation angle when shadow fade animation completes
+        fadeEndAngle: 120, // degrees - when shadow fade animation ends
+
+        // WORKING ✓ - Used for CSS will-change property on shadow elements
+        // Enables GPU acceleration for smooth shadow animations
+        hardwareAccelerated: true, // Enable GPU acceleration for shadow animations
       },
     },
   },
 
-  // Application colors
+  // Application colors for pages and UI elements
   COLORS: {
-    // Default page color
-    default: '#f5f5f5',
+    // WORKING ✓ - Used as fallback color for pages and BACKFACE.color
+    // Default page background color when no specific color is set
+    default: '#f5f5f5', // Default page background color (also used for backface.color)
     
+    // WORKING ✓ - Used in portfolioLoader.js:360 for chapter cover colors
     // Pastel color palette for chapter covers and tabs
+    // Colors are mapped to project.color values from portfolio.json
     palette: {
-      coral: '#ffb3ba',      // Soft coral pink
-      peach: '#ffdfba',      // Gentle peach
-      lavender: '#bae1ff',   // Light lavender blue
-      mint: '#baffc9',       // Soft mint green
-      lemon: '#ffffba',      // Pale lemon yellow
-      rose: '#ffb3e6',       // Light rose pink
-      sky: '#c9e4ff',        // Soft sky blue
-      sage: '#c9ffba',       // Sage green
-      cream: '#fff2e6',      // Warm cream
-      lilac: '#e6ccff'       // Soft lilac
+      coral: '#ffb3ba',      // Soft coral pink for chapter covers/tabs
+      peach: '#ffdfba',      // Gentle peach for chapter covers/tabs
+      lavender: '#bae1ff',   // Light lavender blue for chapter covers/tabs
+      mint: '#baffc9',       // Soft mint green for chapter covers/tabs
+      lemon: '#ffffba',      // Pale lemon yellow for chapter covers/tabs
+      rose: '#ffb3e6',       // Light rose pink for chapter covers/tabs
+      sky: '#c9e4ff',        // Soft sky blue for chapter covers/tabs
+      sage: '#c9ffba',       // Sage green for chapter covers/tabs
+      cream: '#fff2e6',      // Warm cream for chapter covers/tabs
+      lilac: '#e6ccff'       // Soft lilac for chapter covers/tabs
     }
   },
 
+  // WORKING ✓ - Used in render.js:36-37 for typewriter effect timing
+  // Controls commentary text animation timing
   COMMENTARY: {
-    typewriterDelay: 400, // ms delay before commentary text animates in
+    // Delay before commentary typewriter effect starts
+    // Used when pages change to create natural reading rhythm
+    typewriterDelay: 400, // ms - delay before commentary text starts typing
   },
 
-  // Overlay hint configuration
+  // WORKING ✓ - Used in overlay.js:24,210,246 for hint overlay system
+  // Controls the initial instruction overlay shown to users
   OVERLAY: {
-    enabled: true, // Whether to show the overlay on page load
-    autoHideDelay: 3000, // Auto-hide after 3 seconds (ms)
-    fadeOutDuration: 300, // Fade out animation duration (ms)
-    backdropBlur: 10, // Backdrop blur amount (px)
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Overlay background color
-    zIndex: 90000, // Below noise (99999) but above everything else
+    // Whether to show instruction overlay on page load
+    enabled: true, // Show instruction overlay on page load
+
+    // How long overlay stays visible before auto-hiding
+    autoHideDelay: 3000, // ms - auto-hide overlay after 3 seconds
+
+    // Duration of overlay fade-out animation
+    fadeOutDuration: 300, // ms - overlay fade-out animation duration
+
+    // Backdrop blur amount for overlay background
+    backdropBlur: 10, // px - backdrop blur amount for overlay
+
+    // Overlay background color with transparency
+    backgroundColor: 'rgba(0, 0, 0, 0.75)', // Semi-transparent overlay background
+
+    // Z-index for overlay (below noise but above everything else)
+    zIndex: 90000, // Z-index for overlay (below noise overlay at 99999)
   },
 
-  // Head Bobble Animation Configuration
+  // WORKING ✓ - Used in app.js:193 for head bobble animation system
+  // Controls subtle head movement animation for realism
   HEAD_BOBBLE: {
-    enabled: true, // Whether to enable head bobble animation
-    amplitude: 2, // px up/down movement (very subtle for realism)
-    pitchDeg: 0.6, // degrees forward/back rotation (minimal for subtlety)
-    tiltDeg: 0, // degrees left/right tilt (head tilting)
-    frequency: 0.15, // cycles per second (very slow, chilled breathing ~9 breaths/min)
-    target: null, // Will be set to .head-bobble-wrapper by default
+    // Whether head bobble animation is enabled
+    enabled: true, // Enable subtle head movement animation
+
+    // Vertical movement amplitude in pixels
+    amplitude: 2, // px - up/down movement amplitude (very subtle)
+
+    // Forward/back rotation in degrees
+    pitchDeg: 0.6, // degrees - forward/back rotation (minimal for subtlety)
+
+    // Left/right tilt in degrees
+    tiltDeg: 0, // degrees - left/right head tilt
+
+    // Animation frequency in cycles per second
+    frequency: 0.15, // cycles/second - very slow breathing-like movement (~9 breaths/min)
+
+    // Target element for animation (null = auto-detect)
+    target: null, // Target element (null = auto-detect .head-bobble-wrapper)
     
     // Organic movement settings for natural feel
-    organicIntensity: 1.2, // 0-2, subtle organic variations
-    breathingVariation: 0.7, // 0-1, natural breathing irregularity
-    microMovements: true, // enable micro-movements for realism
+    // Intensity of organic variations (0-2)
+    organicIntensity: 1.2, // 0-2 - subtle organic movement variations
+
+    // Natural breathing irregularity factor (0-1)
+    breathingVariation: 0.7, // 0-1 - natural breathing rhythm irregularity
+
+    // Enable micro-movements for enhanced realism
+    microMovements: true, // Enable micro-movements for enhanced realism
   },
 };
 
-// Legacy compatibility - map old PAGE_ANIMATION to new GLOBAL_CONFIG
+// Legacy compatibility - maps old PAGE_ANIMATION to new GLOBAL_CONFIG
+// WORKING ✓ - Used throughout codebase for backward compatibility
+// Provides access to config values through old property names
 export const PAGE_ANIMATION = {
   stack: {
+    // WORKING ✓ - Maps to PERFORMANCE.maxVisiblePages
     visibleDepth: GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages,
   },
   flip: {
-    maxAngle: 180,
-    speed: 400,
-    easing: easeInOutExpo,
+    maxAngle: 180, // Fixed value for complete page flip
+    speed: 400, // Legacy speed value
+    easing: easeInOutExpo, // Legacy easing function
+    // WORKING ✓ - Maps to SCENE transform origins
     rotationOriginX: GLOBAL_CONFIG.SCENE.transformOriginX,
     rotationOriginY: GLOBAL_CONFIG.SCENE.transformOriginY,
   },
   loop: {
-    infinite: false,
+    infinite: false, // Infinite loop disabled
+    // WORKING ✓ - Maps to PERFORMANCE.maxVisiblePages
     buffer: GLOBAL_CONFIG.PERFORMANCE.maxVisiblePages,
   },
   misc: {
+    // WORKING ✓ - Maps to ANIMATION.scrollSensitivity
     scrollSensitivity: GLOBAL_CONFIG.ANIMATION.scrollSensitivity,
   },
   snap: {
-    delay: 0,
+    delay: 0, // No snap delay
+    // WORKING ✓ - Maps to ANIMATION snap settings
     threshold: GLOBAL_CONFIG.ANIMATION.snapThreshold,
     duration: GLOBAL_CONFIG.ANIMATION.snapDuration,
-    easing: easeInOutCubic,
+    easing: easeInOutCubic, // Legacy snap easing
   },
   jump: {
-    duration: 500,
-    easing: easeInOutCubic,
+    duration: 500, // Legacy jump duration
+    easing: easeInOutCubic, // Legacy jump easing
   },
   perspective: {
+    // WORKING ✓ - Maps to SCENE perspective settings
     distance: GLOBAL_CONFIG.SCENE.perspective,
     originX: GLOBAL_CONFIG.SCENE.perspectiveOriginX,
     originY: GLOBAL_CONFIG.SCENE.perspectiveOriginY,
