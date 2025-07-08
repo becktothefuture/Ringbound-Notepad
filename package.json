@@ -1,45 +1,34 @@
 {
-  "name": "ring-bound-notepad",
+  "name": "ringbound-notepad",
   "version": "1.0.0",
-  "description": "A GPU-accelerated, 3D notepad effect that simulates the tactile experience of flipping through a spiral-bound notebook",
-  "main": "src/index.html",
+  "description": "Interactive 3D portfolio notebook with realistic page flipping",
+  "main": "codebase/src/index.html",
   "type": "module",
   "scripts": {
-    "start": "serve dist -l 3000",
-    "build": "node build.cjs",
-    "build:watch": "node build.cjs --watch",
-    "dev": "concurrently \"npm:build:watch\" \"live-server dist --port=3000 --wait=200 --no-cache --browser=chrome --verbose --cors --ignore-pattern='node_modules/**'\"",
-    "lint": "eslint src/js/**/*.js",
-    "format": "prettier --write \"src/**/*.{js,css,html}\"",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "build": "cd codebase && node build.cjs",
+    "serve": "live-server --port=3000 --wait=500 --no-cache --browser=chrome --verbose codebase/dist",
+    "dev": "npm run build && npm run serve",
+    "start": "npm run dev"
   },
   "keywords": [
+    "portfolio",
     "3d",
-    "animation",
+    "interactive",
     "notebook",
-    "webgl",
-    "interactive"
+    "webgl"
   ],
-  "author": "Alex Beck",
+  "author": "Alexander Beck",
   "license": "MIT",
   "devDependencies": {
-    "ajv": "^8.12.0",
-    "chokidar": "^4.0.3",
-    "concurrently": "^9.1.2",
-    "esbuild": "^0.25.5",
-    "esbuild-node-externals": "^1.4.1",
-    "eslint": "^8.56.0",
-    "eslint-config-prettier": "^9.1.0",
-    "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
+    "concurrently": "^8.2.2",
     "live-server": "^1.2.2",
-    "prettier": "^3.2.5",
-    "serve": "^14.2.1"
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   },
   "browserslist": [
-    ">0.2%",
-    "not dead",
-    "not ie <= 11",
-    "not op_mini all"
+    "defaults",
+    "not IE 11"
   ]
-}
+} 

@@ -1,0 +1,14 @@
+{
+  "name": "ringbound-notebook",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A GPU-accelerated 3D notebook portfolio.",
+  "scripts": {
+    "dev": "live-server src --port=3000 --wait=500 --no-cache --browser=chrome --verbose",
+    "build": "node build.cjs",
+    "start": "live-server dist --port=3000 --wait=500 --no-cache --browser=chrome --verbose"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+} 

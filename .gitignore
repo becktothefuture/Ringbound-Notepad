@@ -34,3 +34,12 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+
+# Design files (large binary files)
+*.psd
+*.ai
+*.sketch
+*.fig
+*.mov
+*.mp4
+design files/

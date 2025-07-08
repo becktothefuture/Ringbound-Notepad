@@ -1,0 +1,125 @@
+{
+  "projects": [
+    {
+      "id": "portfolio",
+      "title": "Portfolio",
+      "pages": [
+        {
+          "asset": "chapter-0-1.jpg",
+          "type": "image",
+          "commentary": "Welcome to the portfolio. This is a placeholder commentary that will help visualize the styling of the commentary overlay. You can edit this text in the portfolio.json file."
+        },
+        {
+          "asset": "chapter-0-1-1.jpg",
+          "type": "image",
+          "commentary": "The commentary overlay appears at the bottom of the screen and provides context for each page. It's designed to be readable but not intrusive."
+        },
+        {
+          "asset": "chapter-0-2.jpg",
+          "type": "image",
+          "commentary": "This is a longer piece of placeholder text to test how the commentary overlay handles multiple lines of text. The overlay should adjust its height automatically while maintaining readability."
+        },
+        {
+          "asset": "chapter-0-2-1.jpg",
+          "type": "image",
+          "commentary": "The commentary is styled with a semi-transparent background and subtle blur effect for better readability against any background."
+        },
+        {
+          "asset": "chapter-0-3.jpg",
+          "type": "image",
+          "commentary": "You can customize the commentary for each page individually. This allows for detailed explanations of your work."
+        },
+        {
+          "asset": "chapter-0-3-1.jpg",
+          "type": "image",
+          "commentary": "Project showcase continues with detailed visual presentations."
+        },
+        {
+          "asset": "chapter-0-3-2.jpg",
+          "type": "image",
+          "commentary": "Each page tells part of the story of your creative journey."
+        },
+        {
+          "asset": "chapter1-01.jpg",
+          "type": "image",
+          "commentary": "Chapter 1 begins with foundational work and early concepts."
+        },
+        {
+          "asset": "chapter1-02.jpg",
+          "type": "image",
+          "commentary": "Exploring different approaches and methodologies."
+        },
+        {
+          "asset": "chapter1-03.jpg",
+          "type": "image",
+          "commentary": "Development of core ideas and visual language."
+        },
+        {
+          "asset": "chapter1-04.jpg",
+          "type": "image",
+          "commentary": "Refining concepts through iterative design process."
+        },
+        {
+          "asset": "chapter1-05.jpg",
+          "type": "image",
+          "commentary": "Technical implementation and problem-solving."
+        },
+        {
+          "asset": "chapter1-06.jpg",
+          "type": "image",
+          "commentary": "User experience considerations and interface design."
+        },
+        {
+          "asset": "chapter1-07.jpg",
+          "type": "image",
+          "commentary": "Testing and validation of design decisions."
+        },
+        {
+          "asset": "chapter1-08.jpg",
+          "type": "image",
+          "commentary": "Final implementation and polishing details."
+        },
+        {
+          "asset": "chapter1-09.jpg",
+          "type": "image",
+          "commentary": "Results and outcomes of the first project phase."
+        },
+        {
+          "asset": "chapter1-10.jpg",
+          "type": "image",
+          "commentary": "Comprehensive overview of achievements and learnings."
+        },
+        {
+          "asset": "chapter1-11.jpg",
+          "type": "image",
+          "commentary": "Documentation and case study presentation."
+        },
+        {
+          "asset": "chapter1-12.jpg",
+          "type": "image",
+          "commentary": "Impact and reception of the completed work."
+        },
+        {
+          "asset": "chapter1-13.jpg",
+          "type": "image",
+          "commentary": "Reflection on process and methodology."
+        },
+        {
+          "asset": "chapter1-14.jpg",
+          "type": "image",
+          "commentary": "Lessons learned and future applications."
+        },
+        {
+          "asset": "chapter1-15.jpg",
+          "type": "image",
+          "commentary": "Evolution of skills and creative vision."
+        },
+        {
+          "asset": "chapter1-16.jpg",
+          "type": "image",
+          "commentary": "Transition to next phase of work."
+        }
+      ]
+    }
+  ]
+} 
