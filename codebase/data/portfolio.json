@@ -5,514 +5,649 @@
       "title": "Portfolio",
       "pages": [
         {
-          "asset": "chapter-0-1.jpg",
+          "asset": "chapter-0-1.webp",
           "type": "image",
           "commentary": "Welcome to the portfolio. This is a placeholder commentary that will help visualize the styling of the commentary overlay. You can edit this text in the portfolio.json file."
         },
         {
-          "asset": "chapter-0-1-1.jpg",
+          "asset": "chapter-0-2.webp",
           "type": "image",
           "commentary": "The commentary overlay appears at the bottom of the screen and provides context for each page. It's designed to be readable but not intrusive."
         },
         {
-          "asset": "chapter-0-2.jpg",
+          "asset": "chapter-0-3.webp",
           "type": "image",
           "commentary": "This is a longer piece of placeholder text to test how the commentary overlay handles multiple lines of text. The overlay should adjust its height automatically while maintaining readability."
         },
         {
-          "asset": "chapter-0-2-1.jpg",
+          "asset": "chapter-0-4.webp",
           "type": "image",
           "commentary": "The commentary is styled with a semi-transparent background and subtle blur effect for better readability against any background."
         },
         {
-          "asset": "chapter-0-3.jpg",
+          "asset": "chapter-0-5.webp",
           "type": "image",
           "commentary": "You can customize the commentary for each page individually. This allows for detailed explanations of your work."
         },
         {
-          "asset": "chapter-0-3-1.jpg",
+          "asset": "chapter-0-6.webp",
           "type": "image",
           "commentary": "Project showcase continues with detailed visual presentations."
         },
         {
-          "asset": "chapter-0-3-2.jpg",
+          "asset": "chapter-0-7.webp",
           "type": "image",
           "commentary": "Each page tells part of the story of your creative journey."
         },
         {
-          "asset": "chapter1-01.jpg",
+          "asset": "chapter-1-1.webp",
           "type": "image",
           "commentary": "Chapter 1 begins with foundational work and early concepts."
         },
         {
-          "asset": "chapter1-02.jpg",
+          "asset": "chapter-1-2.webp",
           "type": "image",
           "commentary": "Exploring different approaches and methodologies."
         },
         {
-          "asset": "chapter1-03.jpg",
+          "asset": "chapter-1-3.webp",
           "type": "image",
           "commentary": "Development of core ideas and visual language."
         },
         {
-          "asset": "chapter1-04.jpg",
+          "asset": "chapter-1-4.webp",
           "type": "image",
           "commentary": "Refining concepts through iterative design process."
         },
         {
-          "asset": "chapter1-05.jpg",
+          "asset": "chapter-1-5.webp",
           "type": "image",
           "commentary": "Technical implementation and problem-solving."
         },
         {
-          "asset": "chapter1-06.jpg",
+          "asset": "chapter-1-6.webp",
           "type": "image",
           "commentary": "User experience considerations and interface design."
         },
         {
-          "asset": "chapter1-07.jpg",
+          "asset": "chapter-1-7.webp",
           "type": "image",
           "commentary": "Testing and validation of design decisions."
         },
         {
-          "asset": "chapter1-08.jpg",
+          "asset": "chapter-1-8.webp",
           "type": "image",
           "commentary": "Final implementation and polishing details."
         },
         {
-          "asset": "chapter1-09.jpg",
+          "asset": "chapter-1-9.webp",
           "type": "image",
           "commentary": "Results and outcomes of the first project phase."
         },
         {
-          "asset": "chapter1-10.jpg",
+          "asset": "chapter-1-10.webp",
           "type": "image",
           "commentary": "Comprehensive overview of achievements and learnings."
         },
         {
-          "asset": "chapter1-11.jpg",
+          "asset": "chapter-1-11.webp",
           "type": "image",
           "commentary": "Documentation and case study presentation."
         },
         {
-          "asset": "chapter1-12.jpg",
-          "type": "image",
-          "commentary": "Impact and reception of the completed work."
-        },
-        {
-          "asset": "chapter1-13.jpg",
-          "type": "image",
-          "commentary": "Reflection on process and methodology."
-        },
-        {
-          "asset": "chapter1-14.jpg",
-          "type": "image",
-          "commentary": "Lessons learned and future applications."
-        },
-        {
-          "asset": "chapter1-15.jpg",
-          "type": "image",
-          "commentary": "Evolution of skills and creative vision."
-        },
-        {
-          "asset": "chapter1-16.jpg",
-          "type": "image",
-          "commentary": "Transition to next phase of work."
-        },
-        {
-          "asset": "chapter-2-01.jpg",
-          "type": "image",
-          "commentary": "Second project phase begins with expanded scope."
-        },
-        {
-          "asset": "chapter-2-02.jpg",
-          "type": "image",
-          "commentary": "Building on previous experience and insights."
-        },
-        {
-          "asset": "chapter-2-03.jpg",
-          "type": "image",
-          "commentary": "New challenges and creative opportunities."
-        },
-        {
-          "asset": "chapter-2-04.jpg",
-          "type": "image",
-          "commentary": "Advanced techniques and methodologies."
-        },
-        {
-          "asset": "chapter-2-05.jpg",
-          "type": "image",
-          "commentary": "Collaborative work and team dynamics."
-        },
-        {
-          "asset": "chapter-2-06.jpg",
-          "type": "image",
-          "commentary": "Innovation and experimental approaches."
-        },
-        {
-          "asset": "chapter-2-07.jpg",
-          "type": "image",
-          "commentary": "Technical excellence and attention to detail."
-        },
-        {
-          "asset": "chapter-2-08.jpg",
-          "type": "image",
-          "commentary": "User-centered design and accessibility."
-        },
-        {
-          "asset": "chapter-2-09.jpg",
-          "type": "image",
-          "commentary": "Performance optimization and scalability."
-        },
-        {
-          "asset": "chapter-2-10.jpg",
-          "type": "image",
-          "commentary": "Quality assurance and testing protocols."
-        },
-        {
-          "asset": "chapter-2-11.jpg",
-          "type": "image",
-          "commentary": "Launch preparation and deployment strategies."
-        },
-        {
-          "asset": "chapter-2-12.jpg",
-          "type": "image",
-          "commentary": "Market reception and user feedback."
-        },
-        {
-          "asset": "chapter-2-13.jpg",
-          "type": "image",
-          "commentary": "Analytics and performance metrics."
-        },
-        {
-          "asset": "chapter-2-14.jpg",
-          "type": "image",
-          "commentary": "Iterative improvements and updates."
-        },
-        {
-          "asset": "chapter-2-15.jpg",
-          "type": "image",
-          "commentary": "Long-term maintenance and support."
-        },
-        {
-          "asset": "chapter-2-16.jpg",
-          "type": "image",
-          "commentary": "Project evolution and future roadmap."
-        },
-        {
-          "asset": "chapter-2-17.jpg",
-          "type": "image",
-          "commentary": "Success metrics and achievement recognition."
-        },
-        {
-          "asset": "chapter-2-18.jpg",
-          "type": "image",
-          "commentary": "Portfolio expansion and skill development."
-        },
-        {
-          "asset": "chapter-2-19.jpg",
+          "asset": "chapter-2-19.webp",
           "type": "image",
           "commentary": "Professional growth and career advancement."
         },
         {
-          "asset": "chapter-2-20.jpg",
+          "asset": "chapter-2-20.webp",
           "type": "image",
           "commentary": "Preparation for next creative challenge."
         },
         {
-          "asset": "chapter-3-01.jpg",
+          "asset": "chapter-3-1.webp",
           "type": "image",
           "commentary": "Third project phase explores new territories."
         },
         {
-          "asset": "chapter-3-02.jpg",
+          "asset": "chapter-3-2.webp",
           "type": "image",
           "commentary": "Cross-disciplinary collaboration and learning."
         },
         {
-          "asset": "chapter-3-03.jpg",
+          "asset": "chapter-3-3.webp",
           "type": "image",
           "commentary": "Research and development initiatives."
         },
         {
-          "asset": "chapter-3-04.jpg",
+          "asset": "chapter-3-4.webp",
           "type": "image",
           "commentary": "Prototype development and testing."
         },
         {
-          "asset": "chapter-3-05.jpg",
+          "asset": "chapter-3-5.webp",
           "type": "image",
           "commentary": "User research and behavioral insights."
         },
         {
-          "asset": "chapter-3-06.jpg",
+          "asset": "chapter-3-6.webp",
           "type": "image",
           "commentary": "Design system development and documentation."
         },
         {
-          "asset": "chapter-3-07.jpg",
+          "asset": "chapter-3-7.webp",
           "type": "image",
           "commentary": "Component library and reusable patterns."
         },
         {
-          "asset": "chapter-3-08.jpg",
+          "asset": "chapter-3-8.webp",
           "type": "image",
           "commentary": "Accessibility standards and inclusive design."
         },
         {
-          "asset": "chapter-3-09.jpg",
+          "asset": "chapter-3-9.webp",
           "type": "image",
           "commentary": "Performance benchmarking and optimization."
         },
         {
-          "asset": "chapter-3-10.jpg",
+          "asset": "chapter-3-10.webp",
           "type": "image",
           "commentary": "Cross-platform compatibility and testing."
         },
         {
-          "asset": "chapter-3-11.jpg",
+          "asset": "chapter-3-11.webp",
           "type": "image",
           "commentary": "Security considerations and best practices."
         },
         {
-          "asset": "chapter-3-12.jpg",
+          "asset": "chapter-3-12.webp",
           "type": "image",
           "commentary": "Data visualization and analytics integration."
         },
         {
-          "asset": "chapter-3-13.jpg",
+          "asset": "chapter-3-13.webp",
           "type": "image",
           "commentary": "Machine learning and AI implementation."
         },
         {
-          "asset": "chapter-3-14.jpg",
+          "asset": "chapter-3-14.webp",
           "type": "image",
           "commentary": "Cloud infrastructure and deployment automation."
         },
         {
-          "asset": "chapter-3-15.jpg",
+          "asset": "chapter-3-15.webp",
           "type": "image",
           "commentary": "Monitoring and observability solutions."
         },
         {
-          "asset": "chapter-3-16.jpg",
+          "asset": "chapter-3-16.webp",
           "type": "image",
           "commentary": "Scalability planning and architecture design."
         },
         {
-          "asset": "chapter-3-17.jpg",
+          "asset": "chapter-3-17.webp",
           "type": "image",
           "commentary": "Business impact and ROI measurement."
         },
         {
-          "asset": "chapter-3-18.jpg",
+          "asset": "chapter-3-18.webp",
           "type": "image",
           "commentary": "Stakeholder communication and reporting."
         },
         {
-          "asset": "chapter-3-19.jpg",
+          "asset": "chapter-3-19.webp",
           "type": "image",
           "commentary": "Team leadership and mentorship activities."
         },
         {
-          "asset": "chapter-3-20.jpg",
+          "asset": "chapter-3-20.webp",
           "type": "image",
           "commentary": "Knowledge sharing and documentation."
         },
         {
-          "asset": "chapter-3-21.jpg",
+          "asset": "chapter-3-21.webp",
           "type": "image",
           "commentary": "Industry recognition and awards."
         },
         {
-          "asset": "chapter-3-22.jpg",
+          "asset": "chapter-3-22.webp",
           "type": "image",
           "commentary": "Conference presentations and thought leadership."
         },
         {
-          "asset": "chapter-4-01.jpg",
+          "asset": "chapter-4-1.webp",
           "type": "image",
           "commentary": "Fourth project phase focuses on innovation."
         },
         {
-          "asset": "chapter-4-02.jpg",
+          "asset": "chapter-4-2.webp",
           "type": "image",
           "commentary": "Emerging technologies and future trends."
         },
         {
-          "asset": "chapter-4-03.jpg",
+          "asset": "chapter-4-3.webp",
           "type": "image",
           "commentary": "Experimental design and creative exploration."
         },
         {
-          "asset": "chapter-4-04.jpg",
+          "asset": "chapter-4-4.webp",
           "type": "image",
           "commentary": "Rapid prototyping and iteration cycles."
         },
         {
-          "asset": "chapter-4-05.jpg",
+          "asset": "chapter-4-5.webp",
           "type": "image",
           "commentary": "User testing and feedback integration."
         },
         {
-          "asset": "chapter-4-06.jpg",
+          "asset": "chapter-4-6.webp",
           "type": "image",
           "commentary": "Market validation and business model development."
         },
         {
-          "asset": "chapter-4-07.jpg",
+          "asset": "chapter-4-7.webp",
           "type": "image",
           "commentary": "Partnership development and collaboration."
         },
         {
-          "asset": "chapter-4-08.jpg",
+          "asset": "chapter-4-8.webp",
           "type": "image",
           "commentary": "Intellectual property and patent considerations."
         },
         {
-          "asset": "chapter-4-09.jpg",
+          "asset": "chapter-4-9.webp",
           "type": "image",
           "commentary": "Funding and investment strategies."
         },
         {
-          "asset": "chapter-4-10.jpg",
+          "asset": "chapter-4-10.webp",
           "type": "image",
           "commentary": "Go-to-market planning and execution."
         },
         {
-          "asset": "chapter-4-11.jpg",
+          "asset": "chapter-4-11.webp",
           "type": "image",
           "commentary": "Customer acquisition and retention."
         },
         {
-          "asset": "chapter-4-12.jpg",
+          "asset": "chapter-4-12.webp",
           "type": "image",
           "commentary": "Product-market fit and scaling strategies."
         },
         {
-          "asset": "chapter-4-13.jpg",
+          "asset": "chapter-4-13.webp",
           "type": "image",
           "commentary": "Competitive analysis and differentiation."
         },
         {
-          "asset": "chapter-4-14.jpg",
+          "asset": "chapter-4-14.webp",
           "type": "image",
           "commentary": "Brand development and marketing campaigns."
         },
         {
-          "asset": "chapter-4-15.jpg",
+          "asset": "chapter-4-15.webp",
           "type": "image",
           "commentary": "Community building and user engagement."
         },
         {
-          "asset": "chapter-4-16.jpg",
+          "asset": "chapter-4-16.webp",
           "type": "image",
           "commentary": "Social impact and sustainability initiatives."
         },
         {
-          "asset": "chapter-4-17.jpg",
+          "asset": "chapter-4-17.webp",
           "type": "image",
           "commentary": "Global expansion and localization."
         },
         {
-          "asset": "chapter-5-01.jpg",
+          "asset": "chapter-5-1.webp",
           "type": "image",
           "commentary": "Fifth project phase represents mastery."
         },
         {
-          "asset": "chapter-5-01-1.jpg",
+          "asset": "chapter-5-2.webp",
           "type": "image",
           "commentary": "Alternative approach and creative variation."
         },
         {
-          "asset": "chapter-5-02.jpg",
+          "asset": "chapter-5-3.webp",
           "type": "image",
           "commentary": "Advanced problem-solving and innovation."
         },
         {
-          "asset": "chapter-5-03.jpg",
+          "asset": "chapter-5-4.webp",
           "type": "image",
           "commentary": "Complex system design and architecture."
         },
         {
-          "asset": "chapter-5-04.jpg",
+          "asset": "chapter-5-5.webp",
           "type": "image",
           "commentary": "Enterprise-level solutions and scalability."
         },
         {
-          "asset": "chapter-5-05.jpg",
+          "asset": "chapter-5-6.webp",
           "type": "image",
           "commentary": "Industry standards and best practices."
         },
         {
-          "asset": "chapter-5-06.jpg",
+          "asset": "chapter-5-7.webp",
           "type": "image",
           "commentary": "Thought leadership and industry influence."
         },
         {
-          "asset": "chapter-5-07.jpg",
+          "asset": "chapter-5-8.webp",
           "type": "image",
           "commentary": "Mentorship and knowledge transfer."
         },
         {
-          "asset": "chapter-5-08.jpg",
+          "asset": "chapter-5-9.webp",
           "type": "image",
           "commentary": "Strategic planning and vision development."
         },
         {
-          "asset": "chapter-5-09.jpg",
+          "asset": "chapter-5-10.webp",
           "type": "image",
           "commentary": "Organizational transformation and change management."
         },
         {
-          "asset": "chapter-5-10.jpg",
+          "asset": "chapter-5-11.webp",
           "type": "image",
           "commentary": "Cultural impact and societal contribution."
         },
         {
-          "asset": "chapter-5-11.jpg",
+          "asset": "chapter-5-12.webp",
           "type": "image",
           "commentary": "Legacy building and long-term vision."
         },
         {
-          "asset": "chapter-5-12.jpg",
+          "asset": "chapter-5-13.webp",
           "type": "image",
           "commentary": "Continuous learning and adaptation."
         },
         {
-          "asset": "chapter-5-13.jpg",
+          "asset": "chapter-5-14.webp",
           "type": "image",
           "commentary": "Future-proofing and emerging opportunities."
         },
         {
-          "asset": "chapter-5-14.jpg",
+          "asset": "chapter-5-15.webp",
           "type": "image",
           "commentary": "Innovation ecosystem and collaboration networks."
         },
         {
-          "asset": "chapter-5-15.jpg",
+          "asset": "chapter-5-16.webp",
           "type": "image",
           "commentary": "Sustainable practices and responsible design."
         },
         {
-          "asset": "chapter-5-16.jpg",
+          "asset": "chapter-5-17.webp",
           "type": "image",
           "commentary": "Global impact and cross-cultural understanding."
         },
         {
-          "asset": "chapter-5-17.jpg",
+          "asset": "chapter-6-1.webp",
           "type": "image",
           "commentary": "Portfolio culmination and future aspirations."
         },
         {
-          "asset": "Deck 56.jpg",
+          "asset": "chapter-6-2.webp",
           "type": "image",
           "commentary": "Additional portfolio showcase material."
         },
         {
-          "asset": "Deck 61.jpg",
+          "asset": "chapter-6-3.webp",
           "type": "image",
           "commentary": "Final portfolio presentation and reflection."
+        },
+        {
+          "asset": "chapter-1-12.webp",
+          "type": "image",
+          "commentary": "Placeholder commentary for the image at chapter-1-12."
+        },
+        {
+          "asset": "chapter-1-13.webp",
+          "type": "image",
+          "commentary": "Placeholder for chapter-1-13 formatting test."
+        },
+        {
+          "asset": "chapter-1-14.webp",
+          "type": "image",
+          "commentary": "Examining the design in chapter-1-14."
+        },
+        {
+          "asset": "chapter-1-15.webp",
+          "type": "image",
+          "commentary": "Continues with improvements from chapter-1-15."
+        },
+        {
+          "asset": "chapter-1-16.webp",
+          "type": "image",
+          "commentary": "Chapter-1-16 showcases intricate detailing."
+        },
+        {
+          "asset": "chapter-1-17.webp",
+          "type": "image",
+          "commentary": "Final touches in chapter-1-17 image."
+        },
+        {
+          "asset": "chapter-2-1.webp",
+          "type": "image",
+          "commentary": "Beginning of chapter-2 with an intriguing image."
+        },
+        {
+          "asset": "chapter-2-2.webp",
+          "type": "image",
+          "commentary": "Image representing further explorations in chapter-2."
+        },
+        {
+          "asset": "chapter-2-3.webp",
+          "type": "image",
+          "commentary": "Shows advanced techniques in chapter-2-3."
+        },
+        {
+          "asset": "chapter-2-4.webp",
+          "type": "image",
+          "commentary": "Detailed explanation with image at chapter-2-4."
+        },
+        {
+          "asset": "chapter-2-5.webp",
+          "type": "image",
+          "commentary": "Digging deeper into chapter-2-5's visuals."
+        },
+        {
+          "asset": "chapter-2-6.webp",
+          "type": "image",
+          "commentary": "Artistic expression in chapter-2-6's capture."
+        },
+        {
+          "asset": "chapter-2-7.webp",
+          "type": "image",
+          "commentary": "Chapter-2-7 image exploring new horizons."
+        },
+        {
+          "asset": "chapter-2-8.webp",
+          "type": "image",
+          "commentary": "Capturing essence in chapter-2-8 imagery."
+        },
+        {
+          "asset": "chapter-2-9.webp",
+          "type": "image",
+          "commentary": "Insightful view with chapter-2-9's photo."
+        },
+        {
+          "asset": "chapter-2-10.webp",
+          "type": "image",
+          "commentary": "Creative perspective seen in chapter-2-10."
+        },
+        {
+          "asset": "chapter-2-11.webp",
+          "type": "image",
+          "commentary": "Detailed inspection in chapter-2-11 capture."
+        },
+        {
+          "asset": "chapter-2-12.webp",
+          "type": "image",
+          "commentary": "Chapter-2-12 illustrating new concepts."
+        },
+        {
+          "asset": "chapter-2-13.webp",
+          "type": "image",
+          "commentary": "Visual exploration in chapter-2-13 assets."
+        },
+        {
+          "asset": "chapter-2-14.webp",
+          "type": "image",
+          "commentary": "Chapter-2-14's design annotations."
+        },
+        {
+          "asset": "chapter-2-15.webp",
+          "type": "image",
+          "commentary": "Descriptive views seen in chapter-2-15."
+        },
+        {
+          "asset": "chapter-2-16.webp",
+          "type": "image",
+          "commentary": "Chapter-2-16 complements the ongoing narrative."
+        },
+        {
+          "asset": "chapter-2-17.webp",
+          "type": "image",
+          "commentary": "In-depth details with chapter-2-17 visual guide."
+        },
+        {
+          "asset": "chapter-2-18.webp",
+          "type": "image",
+          "commentary": "Chapter-2-18 image showing transformative ideas."
+        },
+        {
+          "asset": "chapter-2-19.webp",
+          "type": "image",
+          "commentary": "Imagery expressing thoughts in chapter-2-19."
+        },
+        {
+          "asset": "chapter-2-20.webp",
+          "type": "image",
+          "commentary": "Finale of chapter-2 with compelling visuals."
+        },
+        {
+          "asset": "chapter-2-21.webp",
+          "type": "image",
+          "commentary": "Chapter-2-21 rounding out the second sequence."
+        },
+        {
+          "asset": "chapter-3-1.webp",
+          "type": "image",
+          "commentary": "Initiating chapter-3 with a strong statement."
+        },
+        {
+          "asset": "chapter-3-2.webp",
+          "type": "image",
+          "commentary": "Visual narrative continues in chapter-3-2."
+        },
+        {
+          "asset": "chapter-3-3.webp",
+          "type": "image",
+          "commentary": "Styles converging in chapter-3-3 graphics."
+        },
+        {
+          "asset": "chapter-3-4.webp",
+          "type": "image",
+          "commentary": "Chapter-3-4 illustration leading to new paths."
+        },
+        {
+          "asset": "chapter-3-5.webp",
+          "type": "image",
+          "commentary": "Driving motivation seen in chapter-3-5 work."
+        },
+        {
+          "asset": "chapter-3-6.webp",
+          "type": "image",
+          "commentary": "Refined ideas portrayed in chapter-3-6's view."
+        },
+        {
+          "asset": "chapter-3-7.webp",
+          "type": "image",
+          "commentary": "Chapter-3-7 portrait of innovation."
+        },
+        {
+          "asset": "chapter-3-8.webp",
+          "type": "image",
+          "commentary": "Expressions realized in chapter-3-8 portrait."
+        },
+        {
+          "asset": "chapter-3-9.webp",
+          "type": "image",
+          "commentary": "Chapter-3-9 surfaces with diverse creativity."
+        },
+        {
+          "asset": "chapter-3-10.webp",
+          "type": "image",
+          "commentary": "Elements merge in chapter-3-10 creation."
+        },
+        {
+          "asset": "chapter-3-11.webp",
+          "type": "image",
+          "commentary": "Chapter-3-11 showing foundational strength in imagery."
+        },
+        {
+          "asset": "chapter-3-12.webp",
+          "type": "image",
+          "commentary": "Image for chapter-3-12 lays groundwork for new ideas."
+        },
+        {
+          "asset": "chapter-3-13.webp",
+          "type": "image",
+          "commentary": "Forward vision captured in chapter-3-13."
+        },
+        {
+          "asset": "chapter-3-14.webp",
+          "type": "image",
+          "commentary": "Future insights conceived in chapter-3-14."
+        },
+        {
+          "asset": "chapter-3-15.webp",
+          "type": "image",
+          "commentary": "Artistry unfolds in chapter-3-15 graphics."
+        },
+        {
+          "asset": "chapter-3-16.webp",
+          "type": "image",
+          "commentary": "Chapter-3-16 communicates dynamic concepts."
+        },
+        {
+          "asset": "chapter-3-17.webp",
+          "type": "image",
+          "commentary": "Graphical aspects highlighted in chapter-3-17."
+        },
+        {
+          "asset": "chapter-3-18.webp",
+          "type": "image",
+          "commentary": "Chapter-3-18's image captures innovation."
+        },
+        {
+          "asset": "chapter-3-19.webp",
+          "type": "image",
+          "commentary": "Development visualized in chapter-3-19 graphics."
+        },
+        {
+          "asset": "chapter-3-20.webp",
+          "type": "image",
+          "commentary": "Challenging perspectives in chapter-3-20."
+        },
+        {
+          "asset": "chapter-3-21.webp",
+          "type": "image",
+          "commentary": "Creative endeavors seen in chapter-3-21."
+        },
+        {
+          "asset": "chapter-3-22.webp",
+          "type": "image",
+          "commentary": "Chapter-3-22 shows artistry realized."
+        },
+        {
+          "asset": "chapter-3-23.webp",
+          "type": "image",
+          "commentary": "Completed chapter-3 narrative with great impact."
         }
       ]
     }
