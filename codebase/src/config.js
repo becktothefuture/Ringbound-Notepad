@@ -781,8 +781,15 @@ export const GLOBAL_CONFIG = {
     },
     
     // WORKING ✓ - Playhead positions in seconds for click progression
-    // 5 seconds divided into 6 positions: 0, 0.83, 1.67, 2.5, 3.33, 5
-    playheadPositions: [0, 1.533, 1.833, 2.933, 3.3, 3.967, 4.5],
+    // Timecodes represent the PAUSE points for the video.
+    // 0:00:00:21 -> 0.7s
+    // 0:00:01:14 -> 1.467s
+    // 0:00:01:29 -> 1.967s
+    // 0:00:03:02 -> 3.067s
+    // 0:00:03:12 -> 3.4s
+    // 0:00:04:01 -> 4.033s
+    // 0:00:04:23 -> 4.767s
+    playheadPositions: [0.7, 1.467, 1.967, 3.067, 3.4, 4.033, 4.767],
     
     // Interaction settings
     interaction: {

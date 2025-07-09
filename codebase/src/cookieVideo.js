@@ -97,7 +97,7 @@ export class CookieVideoController {
     this.video.loop = playback.loop;
     this.video.playbackRate = playback.speed;
     
-    // Set initial position to first playhead position (0 seconds)
+    // Set initial position to the VERY FIRST timecode.
     this.video.currentTime = this.playheadPositions[0];
     
     // Ensure video loads metadata
@@ -146,29 +146,27 @@ export class CookieVideoController {
       return;
     }
     
+    // On first click, we want to play TO the next position.
+    // Subsequent clicks advance from there.
+    const nextPosition = this.currentPosition + 1;
+
     // Check if we're at the last position
-    if (this.currentPosition >= this.playheadPositions.length - 1) {
+    if (nextPosition >= this.playheadPositions.length) {
       this.completeInteraction();
       return;
     }
     
     // Advance to next position
-    this.advanceToNextPosition();
+    this.advanceToNextPosition(nextPosition);
   }
   
   /**
    * Advance video to next playhead position
    */
-  advanceToNextPosition() {
-    if (this.currentPosition >= this.playheadPositions.length - 1) {
-      this.completeInteraction();
-      return;
-    }
-    
-    const nextPosition = this.currentPosition + 1;
+  advanceToNextPosition(nextPosition) {
     const targetTime = this.playheadPositions[nextPosition];
     
-    console.log(`Advancing from position ${this.currentPosition} to ${nextPosition} (${targetTime}s)`);
+    console.log(`Advancing from position ${this.currentPosition} to ${nextPosition} (target: ${targetTime}s)`);
     
     this.currentPosition = nextPosition;
     this.isPlaying = true;
