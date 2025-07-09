@@ -5,121 +5,536 @@
       "title": "Portfolio",
       "pages": [
         {
-          "asset": "chapter-0-1.jpg",
+          "asset": "chapter-0-1.webp",
           "type": "image",
-          "commentary": "Welcome to the portfolio. This is a placeholder commentary that will help visualize the styling of the commentary overlay. You can edit this text in the portfolio.json file."
+          "commentary": "Chapter 0, Page 1 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter-0-1-1.jpg",
+          "asset": "chapter-0-2.webp",
           "type": "image",
-          "commentary": "The commentary overlay appears at the bottom of the screen and provides context for each page. It's designed to be readable but not intrusive."
+          "commentary": "Chapter 0, Page 2 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter-0-2.jpg",
+          "asset": "chapter-0-3.webp",
           "type": "image",
-          "commentary": "This is a longer piece of placeholder text to test how the commentary overlay handles multiple lines of text. The overlay should adjust its height automatically while maintaining readability."
+          "commentary": "Chapter 0, Page 3 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter-0-2-1.jpg",
+          "asset": "chapter-0-4.webp",
           "type": "image",
-          "commentary": "The commentary is styled with a semi-transparent background and subtle blur effect for better readability against any background."
+          "commentary": "Chapter 0, Page 4 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter-0-3.jpg",
+          "asset": "chapter-0-5.webp",
           "type": "image",
-          "commentary": "You can customize the commentary for each page individually. This allows for detailed explanations of your work."
+          "commentary": "Chapter 0, Page 5 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter-0-3-1.jpg",
+          "asset": "chapter-0-6.webp",
           "type": "image",
-          "commentary": "Project showcase continues with detailed visual presentations."
+          "commentary": "Chapter 0, Page 6 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter-0-3-2.jpg",
+          "asset": "chapter-0-7.webp",
           "type": "image",
-          "commentary": "Each page tells part of the story of your creative journey."
+          "commentary": "Chapter 0, Page 7 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter1-01.jpg",
+          "asset": "chapter-1-1.webp",
           "type": "image",
-          "commentary": "Chapter 1 begins with foundational work and early concepts."
+          "commentary": "Chapter 1, Page 1 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter1-02.jpg",
+          "asset": "chapter-1-2.webp",
           "type": "image",
-          "commentary": "Exploring different approaches and methodologies."
+          "commentary": "Chapter 1, Page 2 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter1-03.jpg",
+          "asset": "chapter-1-3.webp",
           "type": "image",
-          "commentary": "Development of core ideas and visual language."
+          "commentary": "Chapter 1, Page 3 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter1-04.jpg",
+          "asset": "chapter-1-4.webp",
           "type": "image",
-          "commentary": "Refining concepts through iterative design process."
+          "commentary": "Chapter 1, Page 4 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter1-05.jpg",
+          "asset": "chapter-1-5.webp",
           "type": "image",
-          "commentary": "Technical implementation and problem-solving."
+          "commentary": "Chapter 1, Page 5 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter1-06.jpg",
+          "asset": "chapter-1-6.webp",
           "type": "image",
-          "commentary": "User experience considerations and interface design."
+          "commentary": "Chapter 1, Page 6 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter1-07.jpg",
+          "asset": "chapter-1-7.webp",
           "type": "image",
-          "commentary": "Testing and validation of design decisions."
+          "commentary": "Chapter 1, Page 7 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter1-08.jpg",
+          "asset": "chapter-1-8.webp",
           "type": "image",
-          "commentary": "Final implementation and polishing details."
+          "commentary": "Chapter 1, Page 8 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter1-09.jpg",
+          "asset": "chapter-1-9.webp",
           "type": "image",
-          "commentary": "Results and outcomes of the first project phase."
+          "commentary": "Chapter 1, Page 9 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter1-10.jpg",
+          "asset": "chapter-1-10.webp",
           "type": "image",
-          "commentary": "Comprehensive overview of achievements and learnings."
+          "commentary": "Chapter 1, Page 10 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter1-11.jpg",
+          "asset": "chapter-1-11.webp",
           "type": "image",
-          "commentary": "Documentation and case study presentation."
+          "commentary": "Chapter 1, Page 11 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter1-12.jpg",
+          "asset": "chapter-1-12.webp",
           "type": "image",
-          "commentary": "Impact and reception of the completed work."
+          "commentary": "Chapter 1, Page 12 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter1-13.jpg",
+          "asset": "chapter-1-13.webp",
           "type": "image",
-          "commentary": "Reflection on process and methodology."
+          "commentary": "Chapter 1, Page 13 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter1-14.jpg",
+          "asset": "chapter-1-14.webp",
           "type": "image",
-          "commentary": "Lessons learned and future applications."
+          "commentary": "Chapter 1, Page 14 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter1-15.jpg",
+          "asset": "chapter-1-15.webp",
           "type": "image",
-          "commentary": "Evolution of skills and creative vision."
+          "commentary": "Chapter 1, Page 15 - Portfolio content and creative work."
         },
         {
-          "asset": "chapter1-16.jpg",
+          "asset": "chapter-1-16.webp",
           "type": "image",
-          "commentary": "Transition to next phase of work."
+          "commentary": "Chapter 1, Page 16 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-1-17.webp",
+          "type": "image",
+          "commentary": "Chapter 1, Page 17 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-2-1.webp",
+          "type": "image",
+          "commentary": "Chapter 2, Page 1 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-2-2.webp",
+          "type": "image",
+          "commentary": "Chapter 2, Page 2 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-2-3.webp",
+          "type": "image",
+          "commentary": "Chapter 2, Page 3 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-2-4.webp",
+          "type": "image",
+          "commentary": "Chapter 2, Page 4 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-2-5.webp",
+          "type": "image",
+          "commentary": "Chapter 2, Page 5 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-2-6.webp",
+          "type": "image",
+          "commentary": "Chapter 2, Page 6 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-2-7.webp",
+          "type": "image",
+          "commentary": "Chapter 2, Page 7 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-2-8.webp",
+          "type": "image",
+          "commentary": "Chapter 2, Page 8 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-2-9.webp",
+          "type": "image",
+          "commentary": "Chapter 2, Page 9 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-2-10.webp",
+          "type": "image",
+          "commentary": "Chapter 2, Page 10 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-2-11.webp",
+          "type": "image",
+          "commentary": "Chapter 2, Page 11 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-2-12.webp",
+          "type": "image",
+          "commentary": "Chapter 2, Page 12 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-2-13.webp",
+          "type": "image",
+          "commentary": "Chapter 2, Page 13 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-2-14.webp",
+          "type": "image",
+          "commentary": "Chapter 2, Page 14 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-2-15.webp",
+          "type": "image",
+          "commentary": "Chapter 2, Page 15 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-2-16.webp",
+          "type": "image",
+          "commentary": "Chapter 2, Page 16 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-2-17.webp",
+          "type": "image",
+          "commentary": "Chapter 2, Page 17 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-2-18.webp",
+          "type": "image",
+          "commentary": "Chapter 2, Page 18 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-2-19.webp",
+          "type": "image",
+          "commentary": "Chapter 2, Page 19 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-2-20.webp",
+          "type": "image",
+          "commentary": "Chapter 2, Page 20 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-2-21.webp",
+          "type": "image",
+          "commentary": "Chapter 2, Page 21 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-1.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 1 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-2.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 2 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-3.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 3 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-4.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 4 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-5.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 5 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-6.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 6 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-7.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 7 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-8.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 8 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-9.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 9 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-10.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 10 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-11.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 11 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-12.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 12 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-13.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 13 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-14.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 14 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-15.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 15 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-16.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 16 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-17.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 17 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-18.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 18 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-19.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 19 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-20.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 20 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-21.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 21 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-22.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 22 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-3-23.webp",
+          "type": "image",
+          "commentary": "Chapter 3, Page 23 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-4-1.webp",
+          "type": "image",
+          "commentary": "Chapter 4, Page 1 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-4-2.webp",
+          "type": "image",
+          "commentary": "Chapter 4, Page 2 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-4-3.webp",
+          "type": "image",
+          "commentary": "Chapter 4, Page 3 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-4-4.webp",
+          "type": "image",
+          "commentary": "Chapter 4, Page 4 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-4-5.webp",
+          "type": "image",
+          "commentary": "Chapter 4, Page 5 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-4-6.webp",
+          "type": "image",
+          "commentary": "Chapter 4, Page 6 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-4-7.webp",
+          "type": "image",
+          "commentary": "Chapter 4, Page 7 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-4-8.webp",
+          "type": "image",
+          "commentary": "Chapter 4, Page 8 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-4-9.webp",
+          "type": "image",
+          "commentary": "Chapter 4, Page 9 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-4-10.webp",
+          "type": "image",
+          "commentary": "Chapter 4, Page 10 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-4-11.webp",
+          "type": "image",
+          "commentary": "Chapter 4, Page 11 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-4-12.webp",
+          "type": "image",
+          "commentary": "Chapter 4, Page 12 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-4-13.webp",
+          "type": "image",
+          "commentary": "Chapter 4, Page 13 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-4-14.webp",
+          "type": "image",
+          "commentary": "Chapter 4, Page 14 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-4-15.webp",
+          "type": "image",
+          "commentary": "Chapter 4, Page 15 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-4-16.webp",
+          "type": "image",
+          "commentary": "Chapter 4, Page 16 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-4-17.webp",
+          "type": "image",
+          "commentary": "Chapter 4, Page 17 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-4-18.webp",
+          "type": "image",
+          "commentary": "Chapter 4, Page 18 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-5-1.webp",
+          "type": "image",
+          "commentary": "Chapter 5, Page 1 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-5-2.webp",
+          "type": "image",
+          "commentary": "Chapter 5, Page 2 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-5-3.webp",
+          "type": "image",
+          "commentary": "Chapter 5, Page 3 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-5-4.webp",
+          "type": "image",
+          "commentary": "Chapter 5, Page 4 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-5-5.webp",
+          "type": "image",
+          "commentary": "Chapter 5, Page 5 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-5-6.webp",
+          "type": "image",
+          "commentary": "Chapter 5, Page 6 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-5-7.webp",
+          "type": "image",
+          "commentary": "Chapter 5, Page 7 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-5-8.webp",
+          "type": "image",
+          "commentary": "Chapter 5, Page 8 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-5-9.webp",
+          "type": "image",
+          "commentary": "Chapter 5, Page 9 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-5-10.webp",
+          "type": "image",
+          "commentary": "Chapter 5, Page 10 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-5-11.webp",
+          "type": "image",
+          "commentary": "Chapter 5, Page 11 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-5-12.webp",
+          "type": "image",
+          "commentary": "Chapter 5, Page 12 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-5-13.webp",
+          "type": "image",
+          "commentary": "Chapter 5, Page 13 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-5-14.webp",
+          "type": "image",
+          "commentary": "Chapter 5, Page 14 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-5-15.webp",
+          "type": "image",
+          "commentary": "Chapter 5, Page 15 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-5-16.webp",
+          "type": "image",
+          "commentary": "Chapter 5, Page 16 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-5-17.webp",
+          "type": "image",
+          "commentary": "Chapter 5, Page 17 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-6-1.webp",
+          "type": "image",
+          "commentary": "Chapter 6, Page 1 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-6-2.webp",
+          "type": "image",
+          "commentary": "Chapter 6, Page 2 - Portfolio content and creative work."
+        },
+        {
+          "asset": "chapter-6-3.webp",
+          "type": "image",
+          "commentary": "Chapter 6, Page 3 - Portfolio content and creative work."
         }
       ]
     }
   ]
-} 
+}
