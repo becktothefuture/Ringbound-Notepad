@@ -760,6 +760,60 @@ export const GLOBAL_CONFIG = {
     // Enable micro-movements for enhanced realism
     microMovements: true, // Enable micro-movements for enhanced realism
   },
+
+  // WORKING ✓ - Interactive Cookie Video System
+  // Controls the interactive cookie video animation in the notebook background
+  COOKIE_VIDEO: {
+    // Video file path relative to src directory
+    src: 'assets/videos/cookie-animation.webm',
+    
+    // Positioning relative to notebook background (to match static cookie image)
+    position: {
+      top: '39%',     // Distance from top of notebook background
+      right: '10%',    // Distance from right edge of notebook background
+      zIndex: 1000,      // Ensure cookie is on top of other elements
+    },
+    
+    // Size relative to notebook background (square aspect ratio to match static cookie)
+    size: {
+      width: '13%',   // Width as percentage of notebook background (much larger)
+      height: '13%',  // Height as percentage of notebook background (kept square)
+    },
+    
+    // Playhead positions in seconds for click progression
+    // 5 seconds divided into 6 positions: 0, 0.83, 1.67, 2.5, 3.33, 5
+    playheadPositions: [0, 0.83, 1.67, 2.5, 3.33, 5],
+    
+    // Interaction settings
+    interaction: {
+      // Whether cookie is clickable (disabled when reaching final position)
+      enabled: true,
+      
+      // Visual feedback during interaction
+      feedback: {
+        // Show cursor pointer when hoverable
+        cursor: 'pointer',
+        
+        // Remove cursor when video reaches end
+        cursorDisabled: 'default',
+      },
+    },
+    
+    // Video playback settings
+    playback: {
+      // Auto-pause when reaching target position
+      autopause: true,
+      
+      // Playback speed (1.0 = normal speed)
+      speed: 1.0,
+      
+      // Whether to loop the video (false for one-time progression)
+      loop: false,
+      
+      // Mute video by default
+      muted: true,
+    },
+  },
 };
 
 // Legacy compatibility - maps old PAGE_ANIMATION to new GLOBAL_CONFIG

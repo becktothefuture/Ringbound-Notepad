@@ -48,6 +48,7 @@ import { initializeDynamicNoise } from './noiseGenerator.js';
 import { overlayHints } from './overlay.js';
 import { initPreloader, cleanupPreloader } from './preloader.js';
 import { headBobble } from './headBobble.js';
+import { initializeCookieVideo } from './cookieVideo.js';
 
 // === APPLICATION STATE ===
 /**
@@ -409,7 +410,10 @@ async function bootstrap() {
     // Phase 6: Initialize overlay hints
     overlayHints.initialize(ApplicationState.scrollEngine);
 
-    // Phase 7: Finalize application
+    // Phase 7: Initialize cookie video system
+    initializeCookieVideo();
+
+    // Phase 8: Finalize application
     finalizeApplication();
 
     console.log('🎉 Application bootstrap complete!');

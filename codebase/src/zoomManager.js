@@ -281,31 +281,12 @@ class ZoomManager {
    * @returns {boolean} - True if event is scroll-related
    */
   isScrollEvent(event) {
-    // Check if event target is part of scroll-sensitive areas
     const target = event.target;
-    
-    // Only exclude specific interactive elements, allow everything else in notebook area
-    // Don't trigger zoom on rings (they have their own interaction)
-    if (target.closest('.rings') || target.closest('.rings-wrapper')) {
+
+    if (target.closest('.rings') || target.closest('.rings-wrapper') || target.closest('#interactive-cookie') || target.closest('.page-tab') || target.closest('.commentary') || target.closest('.overlay--rotate') || target.closest('.heading-wrapper') || target.closest('h1') || target.closest('h2')) {
       return true;
     }
-    
-    // Don't trigger zoom on tabs - they have their own navigation behavior
-    if (target.closest('.page-tab')) {
-      return true;
-    }
-    
-    // Don't trigger zoom on commentary overlays
-    if (target.closest('.commentary') || target.closest('.overlay--rotate')) {
-      return true;
-    }
-    
-    // Don't trigger zoom on header elements
-    if (target.closest('.heading-wrapper') || target.closest('h1') || target.closest('h2')) {
-      return true;
-    }
-    
-    // Allow zoom on everything else including pages and page content
+
     return false;
   }
 

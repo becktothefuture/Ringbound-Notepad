@@ -9,6 +9,16 @@ const OUTPUT_FILE = path.join(__dirname, 'src', 'portfolioManifest.js');
 const DIST_DIR = path.join(__dirname, 'dist');
 
 /**
+ * Clean the dist directory
+ */
+function cleanDist() {
+  if (fs.existsSync(DIST_DIR)) {
+    fs.rmSync(DIST_DIR, { recursive: true, force: true });
+    console.log('🗑️  Cleaned dist directory');
+  }
+}
+
+/**
  * Recursively walk a directory and return all files
  */
 function walkDir(dir) {
@@ -109,6 +119,7 @@ function copyRecursive(src, dest) {
 function main() {
   console.log('🔨 Building portfolio...');
   
+  cleanDist(); // Clean the dist directory before building
   buildManifest();
   copyAssets();
   

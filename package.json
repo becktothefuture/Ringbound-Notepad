@@ -6,9 +6,10 @@
   "type": "module",
   "scripts": {
     "build": "cd codebase && node build.cjs",
-    "serve": "live-server --port=3000 --wait=500 --no-cache --browser=chrome --verbose codebase/dist",
-    "dev": "npm run build && npm run serve",
-    "start": "npm run dev"
+    "serve": "live-server codebase/dist --port=3000 --no-cache",
+    "watch:build": "nodemon --watch codebase/src --ext \"js,mjs,cjs,json,html,css\" --ignore codebase/src/portfolioManifest.js --exec \"npm run build\"",
+    "dev": "concurrently \"npm:watch:build\" \"npm:serve\"",
+    "start": "npm run serve"
   },
   "keywords": [
     "portfolio",
