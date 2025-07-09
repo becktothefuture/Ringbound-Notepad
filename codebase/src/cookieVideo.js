@@ -67,7 +67,7 @@ export class CookieVideoController {
     
     console.log('Cookie video system initialized');
   }
-  
+
   /**
    * Apply configuration values to container styling
    */
@@ -134,6 +134,8 @@ export class CookieVideoController {
   
   /**
    * Handle click on cookie container
+   * Note: event.preventDefault() and event.stopPropagation() ensure this click does NOT trigger notebook zoom.
+   * This is coordinated with zoomManager.js's isScrollEvent, which also excludes #interactive-cookie from zoom triggers.
    */
   handleClick(event) {
     event.preventDefault();

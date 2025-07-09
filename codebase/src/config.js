@@ -780,9 +780,9 @@ export const GLOBAL_CONFIG = {
       height: '13%',  // Height as percentage of notebook background (kept square)
     },
     
-    // Playhead positions in seconds for click progression
+    // WORKING ✓ - Playhead positions in seconds for click progression
     // 5 seconds divided into 6 positions: 0, 0.83, 1.67, 2.5, 3.33, 5
-    playheadPositions: [0, 0.83, 1.67, 2.5, 3.33, 5],
+    playheadPositions: [0, 1.533, 1.833, 2.933, 3.3, 3.967, 4.5],
     
     // Interaction settings
     interaction: {

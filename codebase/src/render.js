@@ -147,6 +147,12 @@ export function render(pages, scrollState) {
   const currentPage = pages[clamp(currentPageIndex, 0, pageCount - 1)];
   updateCommentary(currentPage);
 
+  // Update cookie position to keep it anchored to the background
+  // const cookieController = getCookieVideoController();
+  // if (cookieController) {
+  //   cookieController.updatePosition();
+  // }
+
   // Render each page with state-driven transforms
   for (let i = 0; i < pageCount; i++) {
     const page = pages[i];
@@ -445,7 +451,46 @@ export function initializeRenderingContext(totalPages = 0) {
  * @returns {Function} Render function that accepts scroll state
  */
 export function createRenderPipeline(pages) {
-  return scrollState => render(pages, scrollState);
+  return scrollState => {
+    const { scroll, totalPages, velocity } = scrollState;
+    const pageCount = pages.length;
+
+    // Update commentary for current page
+    const currentPageIndex = Math.round(scroll);
+    const currentPage = pages[clamp(currentPageIndex, 0, pageCount - 1)];
+    updateCommentary(currentPage);
+
+    // Render each page with state-driven transforms
+    for (let i = 0; i < pageCount; i++) {
+      const page = pages[i];
+
+      // Performance optimization: visibility culling
+      if (!shouldRenderPage(page, i, scroll)) {
+        continue;
+      }
+
+      // Calculate transform using specification physics
+      const transformData = computeTransform(i, scroll, pageCount);
+
+      // Update new page shadow overlay based on page ABOVE flipping
+      updatePageShadow(page, i, scroll);
+
+      // Buffer page contents to optimize performance while all pages are visible
+      updatePageContentVisibility(page, i, scroll);
+
+      // Apply flip-specific content visibility
+      applyFlipContentVisibility(page, i, scroll);
+
+      // Apply transforms with clean CSS approach
+      applyPageTransform(page, transformData);
+
+      // Update backface shadow animation based on page rotation
+      updateBackfaceShadowAnimation(page, i, scroll);
+    }
+
+    // Update ring rotations based on overall flip progress (throttled for performance)
+    updateRingRotations(scroll, pageCount);
+  };
 }
 
 /**

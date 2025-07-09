@@ -888,19 +888,25 @@ main:not(.page-wrapper) {
    11. BACKGROUND & SCENE
    ===================================================== */
 .notebook-background {
-  z-index: -200;
+  z-index: 0;
   aspect-ratio: 1;
-  background-image: url('./assets/background-assets/images/portfolio-background.jpg');
-  background-position: 50% 50%;
-  background-repeat: no-repeat;
-  background-size: cover;
-  justify-content: center;
-  align-items: center;
   width: 232%;
   display: block;
   position: absolute;
   transform: translate3d(0, 4vh, -1px) scale(var(--background-zoom-scale));
   transition: transform var(--zoom-duration) var(--zoom-easing);
+  transform-style: preserve-3d;
+}
+
+.notebook-background::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('./assets/background-assets/images/portfolio-background.jpg');
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  transform: translateZ(-200px);
 }
 
 .notebook--focused .notebook-background {
@@ -939,6 +945,7 @@ main:not(.page-wrapper) {
   top: 54.1%;
   left: 79.5%;
   overflow: hidden;
+  transform: translateZ(40px);
 }
 
 .phone-screen__video {
@@ -2257,6 +2264,7 @@ body.preloader-done nav.top-nav {
   transition: all 0.3s ease;
   overflow: hidden; /* Ensure video doesn't overflow container */
   border-radius: 0; /* Remove border radius for clean video display */
+  transform: translateZ(50px);
 }
 
 /* Cookie video element */
