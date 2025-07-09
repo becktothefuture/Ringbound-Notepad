@@ -945,7 +945,7 @@ main:not(.page-wrapper) {
   top: 54.1%;
   left: 79.5%;
   overflow: hidden;
-  transform: translateZ(40px);
+  transform: translateZ(50px);
 }
 
 .phone-screen__video {
@@ -2254,17 +2254,17 @@ body.preloader-done nav.top-nav {
 /* Interactive cookie module overlay - positioned relative to notebook background like phone screen */
 .interactive-cookie {
   position: absolute;
-  top: 39%; /* Repositioned as requested */
-  right: 10%; /* Repositioned as requested */
-  width: 13%; /* Updated from config - much larger to match static cookie */
-  height: 13%; /* Updated from config - much larger to match static cookie */
+  top: 43%;
+  right: 12%;
+  width: 12%;
+  height: 12%;
   z-index: 10001; /* Above all other elements to ensure clickability */
   pointer-events: auto; /* Allows interaction */
   cursor: pointer; /* Show pointer cursor when clickable */
   transition: all 0.3s ease;
   overflow: hidden; /* Ensure video doesn't overflow container */
   border-radius: 0; /* Remove border radius for clean video display */
-  transform: translateZ(50px);
+  transform: translateZ(40px);
 }
 
 /* Cookie video element */

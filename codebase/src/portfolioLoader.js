@@ -206,8 +206,7 @@ function buildChaptersFromWebP(data) {
     'chapter-2-tab.webp', 
     'chapter-3-tab.webp',
     'chapter-4-tab.webp',
-    'chapter-5-tab.webp',
-    'chapter-6-tab.webp'
+    'chapter-5-tab.webp'
   ];
   
   const chapters = [];

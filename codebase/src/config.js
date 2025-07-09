@@ -769,15 +769,15 @@ export const GLOBAL_CONFIG = {
     
     // Positioning relative to notebook background (to match static cookie image)
     position: {
-      top: '39%',     // Distance from top of notebook background
-      right: '10%',    // Distance from right edge of notebook background
+      top: '43%',     // Distance from top of notebook background
+      right: '12%',    // Distance from right edge of notebook background
       zIndex: 1000,      // Ensure cookie is on top of other elements
     },
     
     // Size relative to notebook background (square aspect ratio to match static cookie)
     size: {
-      width: '13%',   // Width as percentage of notebook background (much larger)
-      height: '13%',  // Height as percentage of notebook background (kept square)
+      width: '12%',   // Width as percentage of notebook background (much larger)
+      height: '12%',  // Height as percentage of notebook background (kept square)
     },
     
     // WORKING ✓ - Playhead positions in seconds for click progression
