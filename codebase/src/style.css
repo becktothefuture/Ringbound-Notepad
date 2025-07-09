@@ -29,12 +29,12 @@
   --safe-zone-height: 50px;
   
   /* Cover sizing - set dynamically from config.js */
-  --front-cover-width-multiplier: 1.01;
-  --front-cover-height-multiplier: 1.01;
+  --front-cover-width-multiplier: 1.05;
+  --front-cover-height-multiplier: 1.05;
   --front-cover-left-offset: -0.5;
   --front-cover-top-offset: -0.5;
-  --back-cover-width-multiplier: 1.01;
-  --back-cover-height-multiplier: 1.01;
+  --back-cover-width-multiplier: 1.05;
+  --back-cover-height-multiplier: 1.05;
   --back-cover-left-offset: -0.5;
   --back-cover-top-offset: -0.5;
 
@@ -111,6 +111,112 @@
    - Geist: Primary font for all text
    - Tiny5: Commentary/pixel screen text only
 */
+
+/* Digital Font Face for DS-DIGI */
+@font-face {
+  font-family: 'DS-DIGI';
+  src: url('./assets/fonts/ds-digi-webfont.woff2') format('woff2'),
+       url('./assets/fonts/ds-digi-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* =====================================================
+   2A. COVER BAND ELEMENT
+   ===================================================== */
+
+/* Digital Band on Cover */
+.cover-band {
+  position: absolute;
+  bottom: 2%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 8%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Strap pieces */
+.cover-band__strap-left {
+  position: absolute;
+  left: -123%;
+  bottom: 0%;
+  transform: translateY(0%);
+  width: 183%;
+  height: 565%;
+  background-image: url('./assets/strap/images/strap-left.webp');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center right;
+  z-index: 1;
+}
+
+.cover-band__strap-right {
+  position: absolute;
+  right: -127%;
+  bottom: 0%;
+  transform: translateY(0%);
+  width: 183%;
+  height: 565%;
+  background-image: url('./assets/strap/images/strap-right.webp');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center left;
+  z-index: 1;
+}
+
+/* Digital screen window - positioned inside left strap */
+.cover-band__screen {
+  position: absolute;
+  bottom: 45%;
+  right: 7.5%;
+  transform: translateY(0%);
+  width: 12%;
+  height: 12%;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  box-shadow: none;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cover-band__screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  border-radius: 5px;
+  pointer-events: none;
+}
+
+.cover-band__numbers {
+  font-family: 'DS-DIGI', 'Courier New', monospace !important;
+  font-size: 1.8vw;
+  font-weight: normal;
+  color: #4da6ff;
+  text-shadow: 
+    0 0 6px rgba(77, 166, 255, 0.8),
+    0 0 12px rgba(77, 166, 255, 0.5),
+    0 0 18px rgba(77, 166, 255, 0.3);
+  letter-spacing: 0.15vw;
+  background: transparent;
+  padding: 0;
+  border-radius: 2px;
+  position: relative;
+  z-index: 10;
+  font-style: normal;
+  text-align: center;
+}
 
 /* =====================================================
    3. GLOBAL RESET & BASE STYLES
@@ -586,9 +692,9 @@ main:not(.page-wrapper) {
 /* Front cover styling */
 .page-front.cover.cover--front {
   z-index: auto !important;
-  /* Ensure cover inherits border radius and hides overflow */
+  /* Ensure cover inherits border radius and allows straps to extend beyond */
   border-radius: inherit;
-  overflow: hidden;
+  overflow: visible;
   background-image: url('./assets/portfolio-pages/folio-cover/cover-front.webp');
   background-position: center bottom;
   background-size: cover;
@@ -614,9 +720,9 @@ main:not(.page-wrapper) {
 /* Back cover styling */
 .page-front.cover.cover--back {
   z-index: auto !important;
-  /* Ensure cover inherits border radius and hides overflow */
+  /* Ensure cover inherits border radius and allows straps to extend beyond */
   border-radius: inherit;
-  overflow: hidden;
+  overflow: visible;
   background-image: url('./assets/portfolio-pages/folio-cover/cover-default.webp');
   background-position: center center;
   background-size: cover;
@@ -653,7 +759,7 @@ main:not(.page-wrapper) {
   background-size: cover;
   background-repeat: no-repeat;
   border-radius: inherit;
-  overflow: hidden;
+  overflow: visible;
   box-shadow:
     inset 0 3px 2px #c29154,
     inset 0 -2px 3px 2px #664620,
@@ -1419,34 +1525,40 @@ body::before {
 /* Video overlay covering entire viewport with overlay blend mode */
 .video-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  top: -2px;
+  left: -2px;
+  width: calc(100vw + 4px);
+  height: calc(100vh + 4px);
   pointer-events: none;
   z-index: 98000; /* Below noise (99999) and preloader (999999) but above everything else */
   mix-blend-mode: multiply;
   opacity: 1;
   overflow: hidden;
-  /* Ensure no gaps by extending slightly beyond viewport */
-  margin: -1px;
-  width: calc(100vw + 2px);
-  height: calc(100vh + 2px);
+  /* Ensure no gaps by extending beyond viewport on all sides */
+  margin: 0;
 }
 
 .video-overlay__video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  display: block;
-  /* Ensure video fills container completely */
-  min-width: 100%;
-  min-height: 100%;
-}
-
-/* Ensure video plays smoothly */
-.video-overlay__video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: fill !important;
+  object-position: center !important;
+  display: block !important;
+  /* Ensure video fills container completely - stretch to fill */
+  min-width: 100% !important;
+  min-height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  /* Additional safeguard for full coverage */
+  transform: scale(1.02);
+  /* Override any global video styles */
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: none;
+  outline: none;
+  margin: 0;
+  padding: 0;
   will-change: auto;
   backface-visibility: hidden;
 }
@@ -1707,8 +1819,8 @@ body.preloader-done nav.top-nav {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   background-color: var(--overlay-bg, rgba(0, 0, 0, 0.5));
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
