@@ -133,6 +133,32 @@ export const GLOBAL_CONFIG = {
     backgroundLoadSpeedReduction: 0.5, // Factor to slow background loading (0-1)
   },
 
+  // === LOCKED PORTFOLIO SYSTEM ===
+  LOCK: {
+    // 3-digit numeric unlock code
+    code: [1, 2, 3],
+
+    // Name of cookie storing unlocked state
+    cookieName: 'portfolioUnlocked',
+
+    // Cookie Time-to-live in seconds (1 year)
+    cookieTTL: 31536000,
+
+    // Enable persistent cookie? Set to false to always show lock (dev mode)
+    persistence: false,
+
+    // Animation parameters (adjustable)
+    strapSlideDistanceVW: 2, // How far straps move outward (vw units)
+    strapDuration: 1500,     // ms - slide duration
+    bandDuration: 1500,       // ms - lift/fade duration
+    bandLift: 80,            // px - translateZ or translateY distance
+    bandScale: 1.1,          // final scale factor
+    bandBlur: 10,             // px - blur at end
+
+    // Cover rumble effect
+    coverRumbleMaxDeg: 5,    // deg - max rotation when scroll blocked
+  },
+
   // 3D Notebook Depth Model - Controls Z-axis positioning of pages
   DEPTH: {
     // WORKING ✓ - Starting Z position for bottom unread page

@@ -442,6 +442,11 @@ class VirtualScrollEngine {
    * @param {WheelEvent} event - Wheel event
    */
   handleWheel(event) {
+    if (window?.isPortfolioLocked) {
+      // Block scroll when portfolio locked
+      event.preventDefault();
+      return;
+    }
     event.preventDefault();
     
     // Calculate wheel velocity with proper scaling
@@ -491,6 +496,10 @@ class VirtualScrollEngine {
    * @param {TouchEvent} event - Touch event
    */
   handleTouchMove(event) {
+    if (window?.isPortfolioLocked) {
+      event.preventDefault();
+      return;
+    }
     if (event.touches.length === 1 && this.lastY !== null) {
       event.preventDefault();
       const currentY = event.touches[0].clientY;

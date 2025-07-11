@@ -276,9 +276,9 @@ class ZoomManager {
   }
 
   /**
-   * Check if event is related to scrolling
-   * @param {Event} event - Event to check
-   * @returns {boolean} - True if event is scroll-related
+   * Check if event is related to scrolling or should block zoom (e.g. interactive elements)
+   * Note: Clicks on #interactive-cookie are intentionally excluded from zoom triggers, coordinated with cookieVideo.js click handler.
+   * This ensures clicking the cookie only triggers its animation, not zoom.
    */
   isScrollEvent(event) {
     const target = event.target;

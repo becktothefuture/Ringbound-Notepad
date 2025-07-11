@@ -2401,3 +2401,64 @@ body.preloader-done nav.top-nav {
 .interactive-cookie:hover {
   /* No hover effects - video animation is the feedback */
 }
+
+/* =====================================================
+   2B. LOCKED PORTFOLIO ANIMATIONS
+   ===================================================== */
+
+/* Straps slide outward */
+@keyframes lockStrapLeft {
+  0% { transform: translateX(0) translateY(0); opacity:1; }
+  80% { transform: translateX(-5vw) translateY(0); opacity:1; }
+  100% { transform: translateX(-5vw) translateY(0); opacity:0; }
+}
+@keyframes lockStrapRight {
+  0% { transform: translateX(0) translateY(0); opacity:1; }
+  80% { transform: translateX(5vw) translateY(0); opacity:1; }
+  100% { transform: translateX(5vw) translateY(0); opacity:0; }
+}
+
+/* Band lifts, scales, blurs, fades */
+@keyframes lockLiftFade {
+  0% { transform: translateZ(0) scale(1); filter: blur(0); opacity:1; }
+  20% { transform: translateZ(0) scale(1.05); filter: blur(0); opacity:1; }
+  100% { transform: translateZ(80px) scale(1.2); filter: blur(6px); opacity:0; }
+}
+
+/* Jitter notebook when locked */
+@keyframes lockJitter {
+  0% { transform: translateY(0); }
+  25% { transform: translateY(-4px); }
+  50% { transform: translateY(0); }
+  75% { transform: translateY(4px); }
+  100% { transform: translateY(0); }
+}
+.notebook--jitter {
+  animation: lockJitter 90ms linear 2;
+}
+
+/* Error flash for digits */
+@keyframes flashError {
+  0%, 100% { opacity:1; }
+  50% { opacity:0; }
+}
+.cover-band__numbers.error {
+  animation: flashError 150ms linear 3;
+}
+
+/* Ensure straps have will-change for smoother animation */
+.cover-band__strap-left,
+.cover-band__strap-right,
+.cover-band {
+  will-change: transform, filter, opacity;
+}
+
+/* Rumble only cover front */
+@keyframes lockCoverRumble {
+  0% { transform: perspective(800px) rotateX(0deg); }
+  50% { transform: perspective(800px) rotateX(var(--rumble-deg,5deg)); }
+  100% { transform: perspective(800px) rotateX(0deg); }
+}
+.cover-rumble {
+  animation: lockCoverRumble 90ms linear 2;
+}

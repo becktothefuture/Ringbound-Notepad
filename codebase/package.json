@@ -4,7 +4,7 @@
   "private": true,
   "description": "A GPU-accelerated 3D notebook portfolio.",
   "scripts": {
-    "dev": "live-server src --port=3000 --wait=500 --no-cache --browser=chrome --verbose",
+    "dev": "bash ./dev.sh",
     "build": "node build.cjs",
     "start": "live-server dist --port=3000 --wait=500 --no-cache --browser=chrome --verbose"
   },

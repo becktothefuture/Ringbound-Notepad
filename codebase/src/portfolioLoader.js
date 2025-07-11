@@ -4,6 +4,7 @@
 
 import { GLOBAL_CONFIG } from './config.js';
 import { CHAPTERS } from './chapters.js';
+import { init as initLockedPortfolio } from './lockedPortfolio.js';
 
 // ---------------------------------------------------------------------------
 // 1. SCHEMA (unchanged – trimmed for brevity)
@@ -115,6 +116,40 @@ function createCoverPage(kind, commentary, idx) {
   back.className = 'page-back';
   front.classList.add('cover', `cover--${kind}`);
   addPageHoles(front, back);
+
+  // Add digital band to front cover only
+  if (kind === 'front') {
+    const band = document.createElement('div');
+    band.className = 'cover-band';
+    
+    // Create strap pieces
+    const strapLeft = document.createElement('div');
+    strapLeft.className = 'cover-band__strap-left';
+    
+    const strapRight = document.createElement('div');
+    strapRight.className = 'cover-band__strap-right';
+    
+    // Create screen window inside left strap
+    const screen = document.createElement('div');
+    screen.className = 'cover-band__screen';
+    screen.setAttribute('role','button');
+    screen.setAttribute('aria-label','Enter 3-digit code');
+    
+    // Create numbers inside screen
+    const numbers = document.createElement('div');
+    numbers.className = 'cover-band__numbers';
+    numbers.textContent = '000';
+    
+    screen.appendChild(numbers);
+    strapLeft.appendChild(screen);
+    band.appendChild(strapLeft);
+    band.appendChild(strapRight);
+    front.appendChild(band);
+
+    // Initialize lock system once band is in DOM
+    queueMicrotask(() => initLockedPortfolio(band));
+  }
+
   cover.appendChild(front);
   cover.appendChild(back);
   return cover;
@@ -206,7 +241,8 @@ function buildChaptersFromWebP(data) {
     'chapter-2-tab.webp', 
     'chapter-3-tab.webp',
     'chapter-4-tab.webp',
-    'chapter-5-tab.webp'
+    'chapter-5-tab.webp',
+    'chapter-6-tab.webp'
   ];
   
   const chapters = [];
