@@ -100,6 +100,7 @@ assets/
 ```
 
 ## 🎯 How It Works
+The application's core logic is built around a few key systems that work together to create the final experience. For a deep dive into the guiding principles, see the [**Vision Document**](./docs/vision.md).
 
 ### 3D Depth System
 

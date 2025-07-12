@@ -52,6 +52,7 @@ function navigateToPreviousChapter() {
  * @param {Event} event - Keyboard event
  */
 function handleGlobalKeydown(event) {
+  if (window.isPortfolioLocked) return;
   if (!isInitialized || CHAPTERS.length === 0 || event.key !== 'Tab') return;
   
   const activeElement = document.activeElement;
@@ -73,6 +74,7 @@ function handleGlobalKeydown(event) {
  * @param {Event} event - Click event
  */
 function handleTabClick(event) {
+  if (window.isPortfolioLocked) return; // Disable navigation while locked
   const tab = event.target.closest('.page-tab');
   if (!tab) return;
 
@@ -97,6 +99,7 @@ function handleTabClick(event) {
  * @param {Event} event - Keyboard event
  */
 function handleTabKeydown(event) {
+  if (window.isPortfolioLocked) return;
   const tab = event.target.closest('.page-tab');
   if (!tab || !['Enter', ' '].includes(event.key)) return;
 

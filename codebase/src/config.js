@@ -156,7 +156,7 @@ export const GLOBAL_CONFIG = {
     bandBlur: 10,             // px - blur at end
 
     // Cover rumble effect
-    coverRumbleMaxDeg: 5,    // deg - max rotation when scroll blocked
+    coverRumbleMaxDeg: 1.8, // subtler resistance knock
   },
 
   // 3D Notebook Depth Model - Controls Z-axis positioning of pages
@@ -192,7 +192,7 @@ export const GLOBAL_CONFIG = {
     // WORKING ✓ - Duration for snap-back or snap-forward animations
     // Used in: scrollEngine.js:406 as default duration for snapToPage()
     // How quickly pages snap when user doesn't complete a full flip gesture
-    snapDuration: 125, // ms - time for snap-back/forward animation
+    snapDuration: 150, // ms - quick fall with gravity, ease-out only
 
     // WORKING ✓ - Mouse wheel sensitivity for desktop
     // Used in: scrollEngine.js:37, config.js:298 in PAGE_ANIMATION
@@ -315,6 +315,46 @@ export const GLOBAL_CONFIG = {
       // Used in: scrollEngine.js:324 to prevent overly long momentum animations
       // Ensures momentum snaps don't take too long even for large distances
       maxSnapDuration: 300, // ms - maximum momentum snap duration
+    },
+
+    // === DIRECT SCROLL-TO-FLIP OPTIONS ===
+    momentumEnabled: false, // Disable momentum by default for 1-to-1 wheel mapping
+    autoSnap: true,         // Enable automatic completion when progress crosses threshold
+
+    // Flip feel parameters (tweakable in debug panel)
+    liftAccel: 1.0,        // Direct linear lift (unused in direct mode)
+    landingDamping: 0,     // No damping – direct mapping
+    liftSplit: 0.2,        // First 20% of progress is “lift” phase
+  },
+
+  // === AUDIO SETTINGS ===
+  SOUND: {
+    scrollWheel: {
+      enabled: false, // Disabled: using page flip sound instead of wheel ticks
+      baseGain: 0.15,            // very quiet clicks
+      minVelocityThreshold: 50,     // below -> stop
+      // Multiplier to convert wheel velocity (px/s) to click loop playback rate (Hz)
+      velocityToHzMultiplier: 0.02, // maps 50 px/s → 1 Hz (tweakable in debug panel)
+      maxPlaybackRate: 8,           // upper clamp (safety)
+      lockGainMul: 0.5,             // relative block gain factor
+      paperCutoffHz: 1000,        // high-pass for unlocked paper click
+      blockCutoffHz: 450,         // low-pass for blocked click
+      blockGainMul: 1.2,          // louder thunk when locked
+    },
+    pageFlip: {
+      enabled: true,
+      baseGain: 0.35,            // softer volume for page turn
+      minVelocityPxPerS: 0,      // play on every flip (threshold disabled)
+      velocityToRateMul: 0,      // no speed scaling – constant playback
+      // Deprecated: kept for debug panel compatibility (no effect)
+      velocityToGainMul: 0,
+    },
+    blockKnock: {
+      gain: 0.6,         // loudness of knock
+      cutoffHz: 400,     // low-pass cutoff for dull thud
+    },
+    rustle: {
+      baseGain: 0.25,    // master gain for continuous rustle
     },
   },
 
@@ -846,6 +886,16 @@ export const GLOBAL_CONFIG = {
       // Mute video by default
       muted: true,
     },
+  },
+
+  DEBUG: {
+    panel: true, // debug panel enabled by default
+    audio: false, // enable verbose audio logs
+  },
+
+  // === EXPERIMENTAL FEATURE FLAGS (toggle via Debug Panel) ===
+  EXPERIMENTS: {
+    physicsEnabled: false, // Disable physics solver until stable
   },
 };
 

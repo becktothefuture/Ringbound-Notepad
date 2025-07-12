@@ -17,7 +17,7 @@ import { clamp } from './utils.js';
 // User specification constants
 const BOTTOM_UNREAD_Z = GLOBAL_CONFIG.DEPTH.bottomUnreadZ; // 5px
 const SPACING_Z = GLOBAL_CONFIG.DEPTH.spacingZ; // 4px
-const LIFT_HEIGHT = GLOBAL_CONFIG.DEPTH.liftHeight; // 30px
+const LIFT_HEIGHT = GLOBAL_CONFIG.DEPTH.liftHeight * 1.5; // increase lift arc for heavier pages
 const DURATION = GLOBAL_CONFIG.ANIMATION.duration; // 600ms
 
 // Track the next landing Z position for flipped pages
@@ -132,14 +132,8 @@ function computeFlipTransform(pageIndex, progress, totalPages, microOffset) {
   const restingZ = getUnreadDepth(pageIndex, totalPages) + microOffset;
   const targetZ = getLandingDepth(pageIndex, totalPages) + microOffset;
 
-  // Apply aggressive easing to rotation - spends less time in middle states
-  // Using cubic-bezier(.17,.67,.83,.67) for fast middle, slower ends
-  const easedProgress = progress < 0.5 
-    ? 2 * progress * progress * progress  // Cubic ease-in for first half
-    : 1 - 2 * Math.pow(1 - progress, 3); // Cubic ease-out for second half
-  
-  // Rotation progresses with easing 0-180° (fast through middle)
-  const rotX = 180 * easedProgress;
+  // === Direct control – no easing or damping ===
+  const rotX = 180 * progress;
 
   // Implement lift height: page lifts up during the flip, creating an arc
   // Maximum lift occurs at 50% progress, but use linear progress for smooth arc

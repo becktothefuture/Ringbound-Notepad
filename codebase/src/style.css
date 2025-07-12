@@ -2425,18 +2425,6 @@ body.preloader-done nav.top-nav {
   100% { transform: translateZ(80px) scale(1.2); filter: blur(6px); opacity:0; }
 }
 
-/* Jitter notebook when locked */
-@keyframes lockJitter {
-  0% { transform: translateY(0); }
-  25% { transform: translateY(-4px); }
-  50% { transform: translateY(0); }
-  75% { transform: translateY(4px); }
-  100% { transform: translateY(0); }
-}
-.notebook--jitter {
-  animation: lockJitter 90ms linear 2;
-}
-
 /* Error flash for digits */
 @keyframes flashError {
   0%, 100% { opacity:1; }
@@ -2455,10 +2443,14 @@ body.preloader-done nav.top-nav {
 
 /* Rumble only cover front */
 @keyframes lockCoverRumble {
-  0% { transform: perspective(800px) rotateX(0deg); }
-  50% { transform: perspective(800px) rotateX(var(--rumble-deg,5deg)); }
-  100% { transform: perspective(800px) rotateX(0deg); }
+  0%   { transform: rotateX(0deg); }
+  25%  { transform: rotateX(var(--rumble-deg,5deg)); }
+  50%  { transform: rotateX(0deg); }
+  75%  { transform: rotateX(calc(0.6 * var(--rumble-deg,5deg))); }
+  100% { transform: rotateX(0deg); }
 }
 .cover-rumble {
-  animation: lockCoverRumble 90ms linear 2;
+  transform-origin: 50% -2%;
+  animation: lockCoverRumble 120ms linear 2;
+  will-change: transform;
 }

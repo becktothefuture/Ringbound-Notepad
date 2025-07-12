@@ -4,8 +4,8 @@ const fs = require('fs');
 const path = require('path');
 
 // Configuration
-const ASSET_ROOT = path.join(__dirname, 'src', 'assets', 'portfolio-pages');
-const OUTPUT_FILE = path.join(__dirname, 'src', 'portfolioManifest.js');
+const ASSET_ROOT = 'src/assets/portfolio-pages';
+const OUTPUT_FILE = 'src/portfolioManifest.js';
 const DIST_DIR = path.join(__dirname, 'dist');
 
 /**
@@ -19,22 +19,23 @@ function cleanDist() {
 }
 
 /**
- * Recursively walk a directory and return all files
+ * Custom directory walker
+ * @param {string} dir - Directory to walk
+ * @param {string[]} [filelist] - Array to store file paths
+ * @returns {string[]} - Array of file paths
  */
-function walkDir(dir) {
-  let files = [];
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-  
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files = files.concat(walkDir(fullPath));
+function walkDir(dir, filelist = []) {
+  const files = fs.readdirSync(dir);
+  files.forEach((file) => {
+    const filepath = path.join(dir, file);
+    if (fs.statSync(filepath).isDirectory()) {
+      walkDir(filepath, filelist);
     } else {
-      files.push(path.relative(ASSET_ROOT, fullPath));
+      // Push path relative to the initial pages directory
+      filelist.push(path.relative(path.join(ASSET_ROOT, 'pages'), filepath));
     }
-  }
-  
-  return files;
+  });
+  return filelist;
 }
 
 /**
@@ -55,18 +56,32 @@ function buildManifest() {
     process.exit(1);
   }
 
+  const sizes = {};
   // Collect all image and video files from the pages folder in natural filename order
   const pageFiles = walkDir(pagesDir)
     .filter((f) => /\.(png|jpe?g|gif|svg|webp|mp4|webm|mov)$/i.test(f))
     // localeCompare with {numeric: true} gives natural sorting
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
-    .map((f) => f.replace(/\\/g, '/')); // normalize path separators
+    .map((f) => {
+      const relativePath = f.replace(/\\/g, '/');
+      // The path for stat needs to be relative to CWD, which pagesDir is.
+      const fullPath = path.join(pagesDir, relativePath);
+      try {
+        const stats = fs.statSync(fullPath);
+        sizes[relativePath] = stats.size;
+      } catch (e) {
+        console.warn(`Could not stat file: ${fullPath}`);
+        sizes[relativePath] = 0;
+      }
+      return relativePath;
+    });
 
   console.log(`📑 Found ${pageFiles.length} portfolio files`);
 
   const manifest = {
     title: 'Portfolio Pages',
     pages: pageFiles,
+    sizes: sizes,
   };
 
   // Write to portfolioManifest.js

@@ -63,10 +63,11 @@ function addPageHoles(front, back) {
   back.appendChild(b);
 }
 
-function createMediaElement(type, src, alt) {
+function createMediaElement(type, src, alt, size) {
   if (type === 'video') {
     const v = document.createElement('video');
     v.dataset.src = src;
+    if (size) v.dataset.size = size;
     v.loop = v.muted = v.autoplay = true;
     v.playsInline = true;
     v.preload = 'none';
@@ -76,17 +77,18 @@ function createMediaElement(type, src, alt) {
   const img = document.createElement('img');
   img.dataset.src = src;
   img.alt = alt;
+  if (size) img.dataset.size = size;
   img.loading = 'lazy';
   img.className = 'page-content__inner page-content__media';
   return img;
 }
 
-function createPageElement(page, chapterId, pageIdx, globalIdx) {
-  const pageEl = document.createElement('div');
-  pageEl.className = `page page--positioned gpu-accelerated${page.type === 'video' ? ' page--video-page' : ''}`;
-  pageEl.dataset.commentary = page.commentary;
-  pageEl.dataset.chapterId = chapterId;
-  pageEl.dataset.pageIndex = pageIdx;
+function createPageElement(data, chapterId, pageIndexInChapter, globalIndex, size) {
+  const page = document.createElement('div');
+  page.className = `page page--positioned gpu-accelerated${data.type === 'video' ? ' page--video-page' : ''}`;
+  page.dataset.commentary = data.commentary;
+  page.dataset.chapterId = chapterId;
+  page.dataset.pageIndex = pageIndexInChapter;
 
   const front = document.createElement('div');
   front.className = 'page-front';
@@ -94,15 +96,23 @@ function createPageElement(page, chapterId, pageIdx, globalIdx) {
   back.className = 'page-back';
   addPageHoles(front, back);
 
-  const content = document.createElement('div');
-  content.className = `page-content page-content--${GLOBAL_CONFIG.LAYOUT.contentAlignment}` +
-    (page.type === 'video' ? ' page-content--video-container' : '');
-  content.appendChild(createMediaElement(page.type, resolveAssetPath(chapterId, page.asset), page.commentary));
-  front.appendChild(content);
+  const frontContent = document.createElement('div');
+  frontContent.className = 'page-content page-content--front';
+  backContent.className = 'page-content page-content--back';
 
-  pageEl.appendChild(front);
-  pageEl.appendChild(back);
-  return pageEl;
+  const media = createMediaElement(data.type, `assets/portfolio-pages/pages/${data.asset}`, data.commentary, size);
+  frontContent.appendChild(media);
+
+  const commentary = document.createElement('div');
+  commentary.className = 'page-content__commentary';
+  commentary.textContent = data.commentary;
+  frontContent.appendChild(commentary);
+
+  front.appendChild(frontContent);
+  front.appendChild(backContent);
+  page.appendChild(front);
+  page.appendChild(back);
+  return page;
 }
 
 function createCoverPage(kind, commentary, idx) {
@@ -139,6 +149,7 @@ function createCoverPage(kind, commentary, idx) {
     const numbers = document.createElement('div');
     numbers.className = 'cover-band__numbers';
     numbers.textContent = '000';
+    numbers.setAttribute('aria-live','polite');
     
     screen.appendChild(numbers);
     strapLeft.appendChild(screen);
@@ -178,7 +189,7 @@ export function createPagesFromPortfolioData(container, data) {
   chapters.forEach((chapter, chapterIdx) => {
     // Create regular pages for this chapter
     chapter.pages.forEach((pageData, pageIdx) => {
-      const el = createPageElement(pageData, chapter.id, pageIdx, globalIdx);
+      const el = createPageElement(pageData, chapter.id, pageIdx, globalIdx++, pageData.size);
       
       // If this is the first page of the chapter, mark it as chapter cover and add tab
       if (pageIdx === 0) {
@@ -263,10 +274,8 @@ function buildChaptersFromWebP(data) {
         }
         
         chapterGroups[chapterNum].push({
-          asset: page.asset,
-          type: page.type,
-          commentary: page.commentary,
-          pageNumber: pageNum
+          ...page,
+          pageNum,
         });
       }
     });

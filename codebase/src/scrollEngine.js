@@ -12,7 +12,9 @@
  */
 
 import { GLOBAL_CONFIG } from './config.js';
+import * as audio from './audioManager.js';
 import { clamp, lerp } from './utils.js';
+import { PagePhysics } from './physics.js';
 import { normalizeScrollPosition, shouldUseInfiniteLoop } from './infiniteLoop.js';
 import { getAdaptiveMomentumConfig } from './utils.js';
 
@@ -43,6 +45,8 @@ class VirtualScrollEngine {
     this.velocity = 0;
     this.lastScrollTime = 0;
 
+    // Scroll sound tracking now handled via audio.updateWheelVelocity – no per-tick state needed
+
     // Momentum system state
     this.momentumFrameId = null;
     this.momentumTimeout = null;
@@ -58,14 +62,82 @@ class VirtualScrollEngine {
     this.lastWheelTime = null;
     this.wheelAccumulator = 0;
     this.wheelLogCounter = 0;
+    this.wheelSilenceTimeout = null;
 
     // Keyboard flipping state
     // Tracks the latest requested page index for reliable, fast keyboard flipping.
     // Always animates to this page, even if animation is in progress.
     this.pendingTargetPage = Math.round(this.scrollPosition); // Initialize to current scroll position
 
+    this.prevPage = Math.floor(this.scrollPosition);
+    this.prevProgress = 0;
+
+    this.settleTimeout = null;
+
+    // ---- Physics settle integration ----
+    this.physics = null; // PagePhysics instance
+    this.physicsPage = null; // index of page under physics control
+
+    const physicsEnabled = GLOBAL_CONFIG.EXPERIMENTS?.physicsEnabled;
+
+    this.startPhysicsSettle = () => {
+      if (!physicsEnabled) {
+        this.settleToNearestPage();
+        return;
+      }
+      const pageIndex = Math.floor(this.scrollPosition);
+      const progress = this.scrollPosition - pageIndex;
+      // If already flat, nothing to do
+      if (progress === 0 || progress === 1) {
+        return;
+      }
+
+      // Map velocity to angular velocity estimate (deg/s)
+      const omegaDeg = this.velocity * 180; // heuristic mapping
+      const thetaDeg = progress * 180;
+
+      this.physics = new PagePhysics();
+      this.physics.release({ thetaDeg, omegaDeg });
+      this.physicsPage = pageIndex;
+
+      console.log(`🪂 Physics settle start page ${pageIndex}, θ=${thetaDeg.toFixed(1)}°, ω=${omegaDeg.toFixed(1)}°/s`);
+
+      // Kick render loop if not already
+      this.runPhysicsFrame();
+    };
+
+    this.runPhysicsFrame = () => {
+      if (!this.physics || !this.physics.isActive()) return;
+      const now = performance.now();
+      const dt = (this.lastPhysicsTime ? (now - this.lastPhysicsTime) : 16) / 1000;
+      this.lastPhysicsTime = now;
+
+      const theta = this.physics.step(dt); // radians
+      const progress = theta / Math.PI; // 0-1
+      this.scrollPosition = this.physicsPage + progress;
+      this.notifyObservers(this.scrollPosition);
+
+      if (this.physics.isActive()) {
+        requestAnimationFrame(this.runPhysicsFrame);
+      } else {
+        console.log('✅ Physics settle complete');
+        this.lastPhysicsTime = null;
+        this.physics = null;
+      }
+    };
+
     console.log('🎯 VirtualScrollEngine initialized');
     console.log('🚀 Momentum config:', this.momentumConfig);
+  }
+
+  settleToNearestPage() {
+    if (this.isSnapping) return;
+    const state = this.getScrollState();
+    const progress = state.progress;
+    const targetPage = progress > 0.5 ? Math.ceil(this.scrollPosition) : Math.floor(this.scrollPosition);
+    if (targetPage === this.scrollPosition) return;
+    // animate quick settle (300ms)
+    this.animateToPosition(targetPage, 300);
   }
 
   /**
@@ -96,7 +168,39 @@ class VirtualScrollEngine {
     this.scrollPosition = Math.max(0, Math.min(this.maxPages - 1, this.scrollPosition));
 
     this.notifyObservers(this.scrollPosition);
-    this.scheduleMomentum();
+
+    // ---- Page flip sound ----
+    const currPage = Math.floor(this.scrollPosition);
+
+    // --- Audio motion update ---
+    const progress = this.scrollPosition - currPage; // 0-1
+    const prevProgress = this.prevProgress;
+    this.prevProgress = progress;
+
+    // Angular velocity deg/s
+    const deltaProgress = Math.abs(progress - prevProgress);
+    const angularVel = (deltaProgress * 180) / Math.max(deltaTime, 1) * 1000;
+
+    // Crossing mid (~60°)
+    const midThreshold = 0.333;
+    const crossingMid = (prevProgress < midThreshold && progress >= midThreshold) ||
+                       (prevProgress > (1 - midThreshold) && progress <= (1 - midThreshold));
+
+    // Landing when page completed (current page changed)
+    const landing = currPage !== this.prevPage;
+
+    audio.updateMotion({ angularVel, crossingMid, landing });
+
+    this.prevPage = currPage;
+
+    // Wheel-click audio velocity update handled in handleWheel/touchMove
+
+    // If experimental physics is enabled we intentionally avoid scheduling
+    // momentum here (handled by the physics solver once input stops).
+    if (GLOBAL_CONFIG.EXPERIMENTS?.physicsEnabled) {
+      // With physics active, we rely on startPhysicsSettle() from the wheel
+      // silence timeout to handle release dynamics, so no extra work here.
+    }
   }
 
   /**
@@ -201,6 +305,7 @@ class VirtualScrollEngine {
    * Schedule momentum animation after input stops
    */
   scheduleMomentum() {
+    if (!GLOBAL_CONFIG.ANIMATION.momentumEnabled) return;
     // Clear any existing momentum timeout
     if (this.momentumTimeout) {
       clearTimeout(this.momentumTimeout);
@@ -231,7 +336,7 @@ class VirtualScrollEngine {
    * Start momentum-driven coasting animation
    */
   startMomentum() {
-    if (!this.momentumConfig.enabled) {
+    if (!GLOBAL_CONFIG.ANIMATION.momentumEnabled) {
       this.fallbackSnap();
       return;
     }
@@ -366,6 +471,7 @@ class VirtualScrollEngine {
    * Fallback snap for when momentum is disabled or velocity is too low
    */
   fallbackSnap() {
+    if (!GLOBAL_CONFIG.ANIMATION.autoSnap) return;
     const state = this.getScrollState();
     const rotationDegrees = state.rotation;
     const currentProgress = state.progress;
@@ -391,6 +497,7 @@ class VirtualScrollEngine {
    * @param {number} customDuration - Optional custom duration for the snap
    */
   snapToPage(targetPage, customDuration = null) {
+    if (!GLOBAL_CONFIG.ANIMATION.autoSnap) return;
     this.isSnapping = true;
     const target = clamp(targetPage, 0, this.maxPages - 1);
 
@@ -404,24 +511,24 @@ class VirtualScrollEngine {
 
     const startPosition = this.scrollPosition;
     const startTime = performance.now();
-    const duration = customDuration || GLOBAL_CONFIG.ANIMATION.snapDuration;
+    const duration = customDuration ?? GLOBAL_CONFIG.ANIMATION.snapDuration;
+
+    // If duration is zero or negative, jump instantly (no inertia)
+    if (duration <= 0) {
+      this.scrollPosition = target;
+      this.notifyObservers(this.scrollPosition);
+      this.isSnapping = false;
+      return;
+    }
+
     const distance = Math.abs(target - startPosition);
 
     const animate = currentTime => {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
 
-      // Use different easing based on distance (momentum vs regular snap)
-      let easeProgress;
-      if (distance > 1.5) {
-        // Long momentum flip: ease-in-out cubic for smooth feel
-        easeProgress = progress < 0.5 
-          ? 4 * progress * progress * progress
-          : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-      } else {
-        // Short snap: quadratic ease-out for quick settling
-        easeProgress = 1 - Math.pow(1 - progress, 2);
-      }
+      // Always quadratic ease-out (direct force release, no ease-in)
+      const easeProgress = 1 - Math.pow(1 - progress, 2);
 
       this.scrollPosition = lerp(startPosition, target, easeProgress);
       this.notifyObservers(this.scrollPosition);
@@ -429,6 +536,10 @@ class VirtualScrollEngine {
       if (progress < 1) {
         this.animationFrameId = requestAnimationFrame(animate);
       } else {
+        // Snap completed – play tactile click sound
+        if (typeof audio.playFlipClick === 'function') {
+          audio.playFlipClick();
+        }
         this.animationFrameId = null;
         this.isSnapping = false;
       }
@@ -466,16 +577,25 @@ class VirtualScrollEngine {
     } else {
       this.wheelAccumulator = Math.abs(wheelDelta);
     }
+
+    // === Audio velocity update ===
+    const velocityPxPerSec = (Math.abs(event.deltaY) / Math.max(timeSinceLastWheel, 1)) * 1000;
+    audio.updateWheelVelocity(velocityPxPerSec);
+
+    // Schedule silence if no more wheel events
+    clearTimeout(this.wheelSilenceTimeout);
+    this.wheelSilenceTimeout = setTimeout(() => {
+      audio.updateWheelVelocity(0);
+      this.startPhysicsSettle();
+    }, 120);
     
-    // Boost velocity for rapid wheel sequences (flicks)
-    const velocityBoost = isRapidSequence && this.wheelAccumulator > 0.5 ? 2.0 : 1.0;
-    const adjustedDelta = wheelDelta * velocityBoost;
-    
+    // Map wheel delta directly to scroll without artificial boost
+    const adjustedDelta = wheelDelta;
     // PERFORMANCE OPTIMIZATION: Only log every 10th wheel event to reduce console spam
     if (!this.wheelLogCounter) this.wheelLogCounter = 0;
     this.wheelLogCounter++;
     if (this.wheelLogCounter % 10 === 0) {
-      console.log(`🎯 Wheel: delta=${wheelDelta.toFixed(3)}, rapid=${isRapidSequence}, accumulator=${this.wheelAccumulator.toFixed(3)}, boost=${velocityBoost} [${this.wheelLogCounter} events]`);
+      console.log(`🎯 Wheel: delta=${wheelDelta.toFixed(3)}, rapid=${isRapidSequence} [${this.wheelLogCounter} events]`);
     }
     
     this.updateScrollPosition(adjustedDelta);
@@ -504,6 +624,12 @@ class VirtualScrollEngine {
       event.preventDefault();
       const currentY = event.touches[0].clientY;
       const delta = (this.lastY - currentY) * 3; // Multiply for natural feel
+      const now = performance.now();
+      const dt = now - (this.lastWheelTime || now);
+      this.lastWheelTime = now;
+      const velocityPxPerSec = Math.abs(delta) / Math.max(dt, 1) * 10; // heuristic scaling for touch
+      audio.updateWheelVelocity(velocityPxPerSec);
+
       this.lastY = currentY;
       this.updateScrollPosition(delta / 100);
     }
@@ -515,10 +641,12 @@ class VirtualScrollEngine {
    */
   handleTouchEnd(event) {
     this.lastY = null;
-    // Trigger momentum when user lifts finger
-    if (this.velocity !== 0) {
-      this.scheduleMomentum();
-    }
+    // No momentum: do nothing extra when finger lifts
+    clearTimeout(this.wheelSilenceTimeout);
+    this.wheelSilenceTimeout = setTimeout(() => {
+      audio.updateWheelVelocity(0);
+      this.settleToNearestPage();
+    }, 30); // Reduced from 120ms to 30ms for near-instant response
   }
 
   /**

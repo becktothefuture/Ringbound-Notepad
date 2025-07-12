@@ -36,6 +36,7 @@ class LockedPortfolio {
 
     this.buffer = '';
     this.state = STATES.LOCKED;
+    this.silenceTimeout = null;
 
     // Debug flag – verbose console logs
     this.debug = true;
@@ -47,12 +48,14 @@ class LockedPortfolio {
     if (this.persistence && this.hasCookie()) {
       this.setState(STATES.UNLOCKED);
       this.hideBandImmediate();
+      audio.setLockedState(false);
       return;
     }
 
     // Otherwise ensure band is visible
     this.band.style.display = 'flex';
     window.isPortfolioLocked = true;
+    audio.setLockedState(true);
     this.attachEventListeners();
     this.log('🔒 LockedPortfolio initialized');
   }
@@ -97,6 +100,8 @@ class LockedPortfolio {
     // Scroll block & jitter
     document.addEventListener('wheel', this.onBlockedScroll, { passive: false });
     document.addEventListener('touchmove', this.onBlockedScroll, { passive: false });
+
+    this.lastWheelTime = 0;
 
     // Mobile tap to open keypad
     this.screen.addEventListener('click', this.onScreenTap);
@@ -169,22 +174,68 @@ class LockedPortfolio {
   onBlockedScroll = (e) => {
     if (this.state !== STATES.LOCKED) return;
     e.preventDefault();
+    // no continuous wheel sound while locked; knocks handled in jitter
     this.triggerJitter();
   };
 
   triggerJitter() {
-    if (this.jitterTimeout) return; // throttle
+    if (this.jitterTimeout) return; // throttle so we don't stack vibrations
     if (!this.coverEl) return;
 
-    // Set custom property for angle
-    const maxDeg = GLOBAL_CONFIG.LOCK.coverRumbleMaxDeg || 5;
-    this.coverEl.style.setProperty('--rumble-deg', `${maxDeg}deg`);
+    /*
+     * REAL-WORLD MODEL
+     *  - The cover is hinged at the spiral (top edge) so rotation is around the X axis.
+     *  - A user pulls up; the lock resists like a stiff spring.
+     *  - Motion profile we simulate (ms):
+     *      0ms   : 0°   (rest)
+     *      40ms  : +max (initial tug)
+     *      80ms  : 0°   (strap yanks back)
+     *      100ms : +max*0.4 (tiny rebound)
+     *      140ms : 0°   (settled)
+     *
+     *  This short, critically-damped oscillation reads as resistance
+     *  while guaranteeing the page never stays open or drops Z-order.
+     */
 
-    this.coverEl.classList.add('cover-rumble');
-    this.jitterTimeout = setTimeout(() => {
-      this.coverEl.classList.remove('cover-rumble');
-      this.jitterTimeout = null;
-    }, 180);
+    const maxDeg = GLOBAL_CONFIG.LOCK.coverRumbleMaxDeg || 5;
+    const sequence = [maxDeg, 0, maxDeg * 0.4, 0];
+
+    // Capture current inline/computed transform so we append rotation without losing Z / translations
+    const baseTransform = this.coverEl.style.transform || window.getComputedStyle(this.coverEl).transform || '';
+
+    // Ensure hinge is top-edge for the duration, but restore afterwards
+    const originalOrigin = this.coverEl.style.transformOrigin;
+    this.coverEl.style.transformOrigin = '50% -2%';
+
+    let idx = 0;
+    const stepInterval = 40; // ms between frames (fast but readable)
+
+    const applyNext = () => {
+      const angle = sequence[idx++];
+      // Compose new transform
+      this.coverEl.style.transform = `${baseTransform} rotateX(${angle}deg)`;
+
+      if (angle !== 0) {
+        audio.playKnock();
+      }
+
+      if (idx < sequence.length) {
+        this.jitterTimeout = setTimeout(applyNext, stepInterval);
+      } else {
+        // Cleanup: restore original transform & origin, clear throttle flag
+        this.jitterTimeout = setTimeout(() => {
+          this.coverEl.style.transform = baseTransform;
+          if (originalOrigin) {
+            this.coverEl.style.transformOrigin = originalOrigin;
+          } else {
+            this.coverEl.style.removeProperty('transform-origin');
+          }
+          this.jitterTimeout = null;
+        }, stepInterval);
+      }
+    };
+
+    applyNext();
   }
 
   updateDisplay() {
@@ -200,6 +251,9 @@ class LockedPortfolio {
   handleValidation(isCorrect) {
     if (isCorrect) {
       this.setState(STATES.UNLOCKING);
+      // Allow scroll/audio immediately while straps animate
+      window.isPortfolioLocked = false;
+      audio.setLockedState(false);
       audio.play('unlock');
       this.playUnlockAnimation();
     } else {
@@ -265,6 +319,8 @@ class LockedPortfolio {
     // Clean up after full timeline (straps + band)
     setTimeout(() => {
       this.setState(STATES.UNLOCKED);
+      audio.updateWheelVelocity(0); // ensure loop stops when unlocked if not scrolling
+      audio.setLockedState(false);
       this.writeCookie();
       this.detachEventListeners();
       this.band.style.display = 'none';

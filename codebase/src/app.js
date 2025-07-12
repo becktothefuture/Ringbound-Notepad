@@ -311,9 +311,10 @@ function createRenderingPipeline(pages, scrollEngine) {
 
     // Subscribe to scroll state changes
     scrollEngine.addObserver(scrollState => {
-      ApplicationState.performanceManager.startRender();
+      const perf = ApplicationState.performanceManager;
+      if (perf && typeof perf.startRender === 'function') perf.startRender();
       renderPipeline(scrollState);
-      ApplicationState.performanceManager.endRender();
+      if (perf && typeof perf.endRender === 'function') perf.endRender();
     });
 
     return renderPipeline;
@@ -418,6 +419,11 @@ async function bootstrap() {
 
     console.log('🎉 Application bootstrap complete!');
     console.log('💡 TIP: Click anywhere on the notebook area to zoom in/out (80% ⇄ 100%)');
+
+    // Inject debug panel if enabled
+    if (GLOBAL_CONFIG.DEBUG?.panel) {
+      import('./debugPanel.js').then(m => m.init());
+    }
   } catch (error) {
     handleApplicationError(error, 'Application Bootstrap');
   }

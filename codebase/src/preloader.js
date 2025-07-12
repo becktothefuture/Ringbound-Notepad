@@ -51,6 +51,8 @@ const PreloaderState = {
   
   // Asset queues for sequential loading
   assetQueue: [],
+  totalAssetSize: 0, // Total size in bytes
+  loadedAssetSize: 0, // Loaded size in bytes
   currentChapter: 0,
   chaptersData: [],
   
@@ -272,7 +274,8 @@ function unloadPageAssets(pageElement) {
 function buildSequentialAssetQueue(pages) {
   const assetQueue = [];
   const chaptersData = [];
-  
+  let totalSize = 0;
+
   // Group pages by chapter
   let currentChapter = null;
   let chapterPages = [];
@@ -299,13 +302,16 @@ function buildSequentialAssetQueue(pages) {
     const videos = page.querySelectorAll('video[data-src]');
     
     [...images, ...videos].forEach((element, assetIndex) => {
+      const assetSize = parseInt(element.dataset.size, 10) || 0;
+      totalSize += assetSize;
       assetQueue.push({
         element,
         pageIndex: index,
         chapterId,
         assetIndex,
         type: element.tagName.toLowerCase(),
-        src: element.dataset.src
+        src: element.dataset.src,
+        size: assetSize,
       });
     });
   });
@@ -320,8 +326,9 @@ function buildSequentialAssetQueue(pages) {
   
   PreloaderState.chaptersData = chaptersData;
   PreloaderState.totalAssets = assetQueue.length;
+  PreloaderState.totalAssetSize = totalSize;
   
-  console.log(`📚 Built sequential asset queue: ${assetQueue.length} assets across ${chaptersData.length} chapters`);
+  console.log(`📚 Built sequential asset queue: ${assetQueue.length} assets, Total size: ${(totalSize / 1024 / 1024).toFixed(2)} MB`);
   
   return assetQueue;
 }
@@ -333,41 +340,52 @@ function buildSequentialAssetQueue(pages) {
  */
 function loadSingleAsset(assetInfo) {
   return new Promise((resolve, reject) => {
-    const { element, type, src } = assetInfo;
-    
-    if (type === 'img') {
-      const tempImg = new Image();
-      tempImg.onload = () => {
+    const { element, type, src, size } = assetInfo;
+
+    const onAssetLoad = () => {
+      PreloaderState.loadedAssetSize += size;
+      if (type === 'img') {
         element.src = src;
         element.removeAttribute('data-src');
-        console.log(`🖼️ Chapter asset loaded: ${src.split('/').pop()}`);
-        resolve();
-      };
-      tempImg.onerror = () => {
-        console.warn(`⚠️ Failed to load image: ${src}`);
-        resolve(); // Continue even if asset fails
-      };
-      tempImg.src = src;
-    } else if (type === 'video') {
-      const tempVideo = document.createElement('video');
-      tempVideo.oncanplaythrough = () => {
+        console.log(`🖼️ Chapter asset loaded: ${src.split('/').pop()} (${(size / 1024).toFixed(1)} KB)`);
+      } else if (type === 'video') {
         element.src = src;
         element.preload = 'auto';
         element.removeAttribute('data-src');
-        
         if (element.dataset.poster) {
           setPosterSafely(element, element.dataset.poster);
           element.removeAttribute('data-poster');
         }
-        
-        console.log(`🎬 Chapter video loaded: ${src.split('/').pop()}`);
-        resolve();
-      };
-      tempVideo.onerror = () => {
-        console.warn(`⚠️ Failed to load video: ${src}`);
-        resolve(); // Continue even if asset fails
-      };
-      tempVideo.src = src;
+        console.log(`🎬 Chapter video loaded: ${src.split('/').pop()} (${(size / 1024).toFixed(1)} KB)`);
+      }
+      resolve();
+    };
+
+    const onAssetError = () => {
+      console.warn(`⚠️ Failed to load asset: ${src}`);
+      // Still count it as "loaded" so progress isn't stuck
+      PreloaderState.loadedAssetSize += size;
+      resolve(); 
+    };
+
+    if (type === 'img') {
+      const tempImg = new Image();
+      tempImg.onload = onAssetLoad;
+      tempImg.onerror = onAssetError;
+      tempImg.src = src;
+    } else if (type === 'video') {
+      // For videos, we can't reliably wait for `oncanplaythrough` with many concurrent loads.
+      // We will use a fetch-based approach to track download progress accurately.
+      fetch(src)
+        .then(response => {
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          return response.blob();
+        })
+        .then(blob => {
+          element.src = URL.createObjectURL(blob);
+          onAssetLoad();
+        })
+        .catch(onAssetError);
     } else {
       resolve();
     }
@@ -379,39 +397,48 @@ function loadSingleAsset(assetInfo) {
  * @param {Array} assetQueue - Queue of assets to load sequentially
  */
 async function startSequentialLoading(assetQueue) {
-  const targetAssets = Math.ceil(PreloaderState.totalAssets * (PreloaderState.targetLoadPercentage / 100));
-  
-  console.log(`⏳ Starting sequential loading: ${targetAssets}/${PreloaderState.totalAssets} assets (${PreloaderState.targetLoadPercentage}%)`);
-  
-  for (let i = 0; i < targetAssets && i < assetQueue.length; i++) {
-    try {
-      await loadSingleAsset(assetQueue[i]);
+  const targetAssetSize = PreloaderState.totalAssetSize * (PreloaderState.targetLoadPercentage / 100);
+
+  console.log(`⏳ Starting byte-based loading: target is ${(targetAssetSize / 1024 / 1024).toFixed(2)} MB / ${(PreloaderState.totalAssetSize / 1024 / 1024).toFixed(2)} MB`);
+
+  const assetPromises = [];
+  for (let i = 0; i < assetQueue.length; i++) {
+    const assetInfo = assetQueue[i];
+    const promise = loadSingleAsset(assetInfo).then(() => {
       PreloaderState.loadedAssets++;
       
-      // Update progress from 5% to 100%
-      const progress = 5 + ((PreloaderState.loadedAssets / targetAssets) * 95);
-      updateProgress(progress);
-      
+      // Update progress bar based on bytes loaded
+      const progress = 5 + ( (PreloaderState.loadedAssetSize / targetAssetSize) * 95 );
+      updateProgress(Math.min(100, progress)); // Cap at 100
+
       // Log chapter progress
-      if (i === 0 || assetQueue[i].chapterId !== assetQueue[i-1]?.chapterId) {
-        console.log(`📖 Loading Chapter: ${assetQueue[i].chapterId}`);
+      if (i === 0 || assetInfo.chapterId !== assetQueue[i - 1]?.chapterId) {
+        console.log(`📖 Loading Chapter: ${assetInfo.chapterId}`);
       }
-      
-    } catch (error) {
-      console.warn(`⚠️ Asset load error (continuing):`, error);
-      PreloaderState.loadedAssets++;
+    });
+    assetPromises.push(promise);
+
+    // If we've dispatched enough assets to potentially meet the target, wait for them
+    if (PreloaderState.loadedAssetSize + assetInfo.size >= targetAssetSize) {
+      // Check if the currently loaded size has already passed the threshold
+      if (PreloaderState.loadedAssetSize >= targetAssetSize) {
+        break; // Exit loop, we have enough
+      }
     }
   }
+
+  // Wait for all dispatched promises to ensure assets are loaded before hiding preloader
+  await Promise.all(assetPromises);
   
-  console.log(`✅ Sequential loading complete: ${PreloaderState.loadedAssets}/${targetAssets} assets loaded`);
+  console.log(`✅ Initial load complete: ${(PreloaderState.loadedAssetSize / 1024 / 1024).toFixed(2)} MB loaded`);
   
-  // Ensure progress reaches 100%
+  // Ensure progress bar animates to 100%
   updateProgress(100);
   
-  // Wait for transition to complete (600ms) + 300ms delay before hiding preloader
+  // Wait for transition to complete before hiding
   setTimeout(() => {
     hidePreloader();
-  }, 900);
+  }, 600);
 }
 
 /**
@@ -443,8 +470,9 @@ function startBackgroundLoading() {
       await loadSingleAsset(remainingAssets[backgroundIndex]);
       backgroundIndex++;
       
-      const totalProgress = ((PreloaderState.loadedAssets + backgroundIndex) / PreloaderState.totalAssets) * 100;
-      console.log(`📊 Background progress: ${Math.round(totalProgress)}% (${PreloaderState.loadedAssets + backgroundIndex}/${PreloaderState.totalAssets})`);
+      const totalLoadedSize = PreloaderState.loadedAssetSize + remainingAssets.slice(0, backgroundIndex).reduce((acc, asset) => acc + asset.size, 0);
+      const totalProgress = (totalLoadedSize / PreloaderState.totalAssetSize) * 100;
+      console.log(`📊 Background progress: ${Math.round(totalProgress)}% (${(totalLoadedSize / 1024 / 1024).toFixed(2)} MB / ${(PreloaderState.totalAssetSize / 1024 / 1024).toFixed(2)} MB)`);
       
     } catch (error) {
       console.warn('Background loading error:', error);
