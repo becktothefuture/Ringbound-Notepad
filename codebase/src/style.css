@@ -656,13 +656,10 @@ main:not(.page-wrapper) {
 /* Back side holes - same positioning but on page-back elements */
 .page-holes--back {
   /* Inherit all styles from .page-holes */
-  /* Position on the inner spine side (same as front) for consistency */
-  /* Flip horizontally and anchor to the right so holes appear near spine
-     when the page back is visible. */
-  left: auto;
-  right: 0;
-  z-index: 15; /* Higher z-index to appear above page-back background */
-  transform: scaleX(-1) translateZ(1px); /* Mirror & bring forward */
+  /* Mirror horizontally so holes remain near spine when page is flipped */
+  transform: scaleX(-1) translateZ(1px);
+  transform-origin: center;
+  z-index: 15; /* Above page-back background */
 }
 
 /* =====================================================
