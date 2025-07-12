@@ -387,7 +387,7 @@ export const GLOBAL_CONFIG = {
     // WORKING ✓ - Vertical transform origin for page rotations
     // Used in: render.js:336, config.js:291 as CSS --transform-origin-y
     // -2% = slightly above page top, creates natural hinge effect above ring holes
-    transformOriginY: '-2%', // Vertical transform origin (-2% = above top edge)
+    transformOriginY: '-1%', // Vertical transform origin (-1% = 1% above top edge)
 
     // WORKING ✓ - Z-index for ring elements
     // Used in: app.js:161 as CSS --ring-z-index property
