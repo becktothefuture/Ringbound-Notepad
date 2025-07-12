@@ -1837,11 +1837,6 @@ body.preloader-done nav.top-nav {
   pointer-events: auto;
 }
 
-.overlay--hints--hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
 /* Inner container for flexbox centering */
 .overlay--hints__inner {
   display: flex;
@@ -2475,4 +2470,11 @@ body.preloader-done nav.top-nav {
 .header--minimized .heading-sub,
 .header--minimized .divider {
   opacity: 0;
+}
+
+/* ... after .overlay--hints --visible rule ... */
+.overlay--hints--hidden {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
 }
