@@ -1535,12 +1535,11 @@ body::before {
    ===================================================== */
 
 /* Video overlay covering entire viewport with overlay blend mode */
-.video-overlay {
+.ambient-light-overlay {
   position: fixed;
-  top: -2px;
-  left: -2px;
-  width: calc(100vw + 4px);
-  height: calc(100vh + 4px);
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
   pointer-events: none;
   z-index: 98000; /* Below noise (99999) and preloader (999999) but above everything else */
   mix-blend-mode: multiply;
@@ -1550,7 +1549,7 @@ body::before {
   margin: 0;
 }
 
-.video-overlay__video {
+.ambient-light-overlay__video {
   width: 100% !important;
   height: 100% !important;
   object-fit: fill !important;
@@ -1577,7 +1576,7 @@ body::before {
 
 /* Mobile optimizations for video overlay */
 @media (max-width: 768px) {
-  .video-overlay {
+  .ambient-light-overlay {
     /* Slightly reduce opacity on mobile for better performance */
     opacity: 0.8;
   }
@@ -1585,7 +1584,7 @@ body::before {
 
 /* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
-  .video-overlay {
+  .ambient-light-overlay {
     display: none;
   }
 }
@@ -1696,7 +1695,7 @@ body.preloader-active .notebook-background,
 body.preloader-active .heading-wrapper,
 body.preloader-active .head-bobble-wrapper,
 body.preloader-active .pixel-screen,
-body.preloader-active .video-overlay,
+body.preloader-active .ambient-light-overlay,
 body.preloader-active nav.top-nav {
   opacity: 0;
 }
@@ -1710,7 +1709,7 @@ body.preloader-finishing .notebook-background,
 body.preloader-finishing .heading-wrapper,
 body.preloader-finishing .head-bobble-wrapper,
 body.preloader-finishing .pixel-screen,
-body.preloader-finishing .video-overlay,
+body.preloader-finishing .ambient-light-overlay,
 body.preloader-finishing nav.top-nav {
   opacity: 1;
   filter: blur(5px);
@@ -1726,7 +1725,7 @@ body.preloader-done .notebook-background,
 body.preloader-done .heading-wrapper,
 body.preloader-done .head-bobble-wrapper,
 body.preloader-done .pixel-screen,
-body.preloader-done .video-overlay,
+body.preloader-done .ambient-light-overlay,
 body.preloader-done nav.top-nav {
   filter: blur(0px);
 }
