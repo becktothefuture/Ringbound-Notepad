@@ -1837,6 +1837,11 @@ body.preloader-done nav.top-nav {
   pointer-events: auto;
 }
 
+.overlay--hints--hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* Inner container for flexbox centering */
 .overlay--hints__inner {
   display: flex;

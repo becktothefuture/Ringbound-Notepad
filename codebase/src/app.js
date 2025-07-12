@@ -45,7 +45,7 @@ import { initBrowserTheme } from './browserTheme.js';
 import { initChapters } from './chapterManager.js';
 import { zoomManager } from './zoomManager.js';
 import { initializeDynamicNoise } from './noiseGenerator.js';
-import { overlayHints } from './overlay.js';
+import { initializeHintsController } from './hintsController.js';
 import { initPreloader, cleanupPreloader } from './preloader.js';
 import { headBobble } from './headBobble.js';
 import { initializeCookieVideo } from './cookieVideo.js';
@@ -412,8 +412,8 @@ async function bootstrap() {
     const clickContainer = document.querySelector('.page-wrapper');
     zoomManager.initialize(notebookContainer, clickContainer, ApplicationState.scrollEngine);
 
-    // Phase 6: Initialize overlay hints
-    overlayHints.initialize(ApplicationState.scrollEngine);
+    // Phase 6: Initialize hints controller
+    initializeHintsController(ApplicationState.scrollEngine);
 
     // Phase 7: Initialize cookie video system
     initializeCookieVideo();
@@ -452,9 +452,6 @@ function cleanup() {
       ApplicationState.zoomManager.destroy();
       ApplicationState.zoomManager = null;
     }
-
-    // Clean up overlay hints
-    overlayHints.destroy();
 
     // Clean up preloader resources
     cleanupPreloader();
