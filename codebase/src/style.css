@@ -660,6 +660,10 @@ main:not(.page-wrapper) {
   transform: scaleX(-1) translateZ(1px);
   transform-origin: center;
   z-index: 15; /* Above page-back background */
+  /* Position at bottom edge so holes align with spine after flip */
+  top: auto;
+  bottom: 0;
+  background-position: center bottom;
 }
 
 /* =====================================================
