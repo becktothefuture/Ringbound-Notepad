@@ -20,7 +20,10 @@ const BOTTOM_UNREAD_Z = GLOBAL_CONFIG.DEPTH.bottomUnreadZ;
 const SPACING_Z = GLOBAL_CONFIG.DEPTH.spacingZ;
 
 // Derived lift height from paper weight (gsm) for realism
-const LIFT_HEIGHT = getPageLiftHeight(GLOBAL_CONFIG.PHYSICAL.pageGSM);
+const LIFT_HEIGHT = getPageLiftHeight(
+  GLOBAL_CONFIG.PHYSICAL.pageGSM,
+  GLOBAL_CONFIG.PHYSICAL.baseLiftPx || 20
+);
 const DURATION = GLOBAL_CONFIG.ANIMATION.duration; // 600ms
 
 // Track the next landing Z position for flipped pages

@@ -179,7 +179,7 @@ export const GLOBAL_CONFIG = {
   // === PHYSICAL PROPERTIES (real materiality) ===
   PHYSICAL: {
     pageGSM: 150,      // default paper weight
-    baseLiftPx: 20,    // lift for 80 gsm baseline – tweak for look
+    baseLiftPx: 28,    // lift for 80 gsm baseline – increased to avoid shadow collision
   },
 
   // Flip Animation - Controls how pages flip and respond to input
@@ -387,7 +387,7 @@ export const GLOBAL_CONFIG = {
     // WORKING ✓ - Vertical transform origin for page rotations
     // Used in: render.js:336, config.js:291 as CSS --transform-origin-y
     // -2% = slightly above page top, creates natural hinge effect above ring holes
-    transformOriginY: '-1%', // Vertical transform origin (-1% = 1% above top edge)
+    transformOriginY: '2%', // Vertical transform origin (-1% = 1% above top edge)
 
     // WORKING ✓ - Z-index for ring elements
     // Used in: app.js:161 as CSS --ring-z-index property
