@@ -13,11 +13,14 @@
 
 import { GLOBAL_CONFIG } from './config.js';
 import { clamp } from './utils.js';
+import { getPageLiftHeight } from './physics.js';
 
 // User specification constants
-const BOTTOM_UNREAD_Z = GLOBAL_CONFIG.DEPTH.bottomUnreadZ; // 5px
-const SPACING_Z = GLOBAL_CONFIG.DEPTH.spacingZ; // 4px
-const LIFT_HEIGHT = GLOBAL_CONFIG.DEPTH.liftHeight * 1.5; // increase lift arc for heavier pages
+const BOTTOM_UNREAD_Z = GLOBAL_CONFIG.DEPTH.bottomUnreadZ;
+const SPACING_Z = GLOBAL_CONFIG.DEPTH.spacingZ;
+
+// Derived lift height from paper weight (gsm) for realism
+const LIFT_HEIGHT = getPageLiftHeight(GLOBAL_CONFIG.PHYSICAL.pageGSM);
 const DURATION = GLOBAL_CONFIG.ANIMATION.duration; // 600ms
 
 // Track the next landing Z position for flipped pages

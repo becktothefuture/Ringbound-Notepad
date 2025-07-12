@@ -20,6 +20,7 @@ import {
   easeOutDampedSpring,
   easeOutSingleSpring,
 } from './utils.js';
+import { getPageLiftHeight } from './physics.js';
 
 export const GLOBAL_CONFIG = {
   LAYOUT: {
@@ -171,10 +172,14 @@ export const GLOBAL_CONFIG = {
     // Each page is spacingZ pixels closer to camera than the one below it
     spacingZ: 2, // px - Z distance between adjacent pages in stack
 
-    // WORKING ✓ - Maximum height pages lift during flip animation
-    // Used in: pageTransforms.js:19 as LIFT_HEIGHT for page flip arc motion
-    // Creates the arc motion when pages flip - prevents intersection with other pages
-    liftHeight: 60, // px - maximum lift height during page flip animation
+    // Dynamically derived from paper weight for material realism
+    liftHeight: getPageLiftHeight(150), // 150 gsm default → 37.5 px
+  },
+
+  // === PHYSICAL PROPERTIES (real materiality) ===
+  PHYSICAL: {
+    pageGSM: 150,      // default paper weight
+    baseLiftPx: 20,    // lift for 80 gsm baseline – tweak for look
   },
 
   // Flip Animation - Controls how pages flip and respond to input

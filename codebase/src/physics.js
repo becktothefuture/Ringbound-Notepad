@@ -95,6 +95,19 @@ export class PagePhysics {
   }
 }
 
+// -------------------------------------------------------------
+// Helper: derive page lift height from paper weight (gsm)
+// A4 page area ≈ 0.06237 m². 80 gsm standard office paper gives
+//   baseLiftPx = 20 px (empirically looks natural). We scale
+//   proportionally with stiffnessFactor = gsm / 80.
+// You can override baseLiftPx in PHYSICAL config.
+
+export function getPageLiftHeight(gsm, baseLiftPx = 20) {
+  if (typeof gsm !== 'number' || gsm <= 0) return baseLiftPx;
+  const stiffnessFactor = gsm / 80; // 80 gsm baseline
+  return baseLiftPx * stiffnessFactor;
+}
+
 // Helper for debug panel integration
 export function createDefaultPagePhysics() {
   return new PagePhysics();
