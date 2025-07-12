@@ -63,6 +63,7 @@ class VirtualScrollEngine {
     this.wheelAccumulator = 0;
     this.wheelLogCounter = 0;
     this.wheelSilenceTimeout = null;
+    this.isRenderScheduled = false; // For direct force model render batching
 
     // Keyboard flipping state
     // Tracks the latest requested page index for reliable, fast keyboard flipping.
@@ -77,6 +78,9 @@ class VirtualScrollEngine {
     // ---- Physics settle integration ----
     this.physics = null; // PagePhysics instance
     this.physicsPage = null; // index of page under physics control
+
+    // Accessibility
+    this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const physicsEnabled = GLOBAL_CONFIG.EXPERIMENTS?.physicsEnabled;
 
@@ -99,6 +103,7 @@ class VirtualScrollEngine {
       this.physics = new PagePhysics();
       this.physics.release({ thetaDeg, omegaDeg });
       this.physicsPage = pageIndex;
+      this.lastSettleVelocity = omegaDeg; // Store the initial velocity
 
       console.log(`🪂 Physics settle start page ${pageIndex}, θ=${thetaDeg.toFixed(1)}°, ω=${omegaDeg.toFixed(1)}°/s`);
 
@@ -112,15 +117,33 @@ class VirtualScrollEngine {
       const dt = (this.lastPhysicsTime ? (now - this.lastPhysicsTime) : 16) / 1000;
       this.lastPhysicsTime = now;
 
+      const { stiffness, damping, mass } = GLOBAL_CONFIG.PAGE_ANIMATION.physics;
+
+      console.log('Physics Input:', {
+        position: this.scrollPosition,
+        velocity: this.velocity,
+        target: this.physicsPage,
+        stiffness,
+        damping,
+        mass,
+        dt,
+      });
+
       const theta = this.physics.step(dt); // radians
       const progress = theta / Math.PI; // 0-1
       this.scrollPosition = this.physicsPage + progress;
+
+      console.log('Physics Output:', {
+        newPosition: this.scrollPosition,
+      });
+
       this.notifyObservers(this.scrollPosition);
 
       if (this.physics.isActive()) {
         requestAnimationFrame(this.runPhysicsFrame);
       } else {
         console.log('✅ Physics settle complete');
+        audio.updateMotion({ landing: true, velocity: this.lastSettleVelocity });
         this.lastPhysicsTime = null;
         this.physics = null;
       }
@@ -130,13 +153,76 @@ class VirtualScrollEngine {
     console.log('🚀 Momentum config:', this.momentumConfig);
   }
 
-  settleToNearestPage() {
-    if (this.isSnapping) return;
+  /**
+   * Initialize event listeners based on device type
+   */
+  initEventListeners() {
+    // Standard event listeners
+    document.addEventListener('keydown', this.handleKeyDown.bind(this));
+
+    if (this.isMobile) {
+      document.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
+      document.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
+      document.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: false });
+    } else {
+      if (GLOBAL_CONFIG.EXPERIMENTS.directForce) {
+        document.addEventListener('wheel', this.handleDirectWheel.bind(this), { passive: false });
+        // We still need a way to know when the wheel stops to settle the page.
+        document.addEventListener('wheel', this.handleWheelEnd.bind(this), { passive: false });
+      } else {
+        document.addEventListener('wheel', this.handleWheel.bind(this), { passive: false });
+      }
+    }
+  }
+
+  /**
+   * Notify observers of scroll state changes
+   * @param {number} scrollPosition - Current scroll position
+   */
+  notifyObservers(scrollPosition) {
     const state = this.getScrollState();
-    const progress = state.progress;
-    const targetPage = progress > 0.5 ? Math.ceil(this.scrollPosition) : Math.floor(this.scrollPosition);
-    if (targetPage === this.scrollPosition) return;
-    // animate quick settle (300ms)
+    this.observers.forEach(observer => observer(state));
+  }
+
+  /**
+   * Handle keydown events for page navigation
+   * @param {KeyboardEvent} event - Keydown event
+   */
+  handleKeyDown(event) {
+    if (this.inputPaused) return;
+
+    let targetPage;
+    const currentPage = Math.round(this.scrollPosition);
+
+    if (event.key === 'ArrowRight' || event.key === 'PageDown') {
+      targetPage = currentPage + 1;
+    } else if (event.key === 'ArrowLeft' || event.key === 'PageUp') {
+      targetPage = currentPage - 1;
+    } else {
+      return; // Ignore other keys
+    }
+
+    // Clamp the target page to valid bounds
+    const clampedTarget = clamp(targetPage, 0, this.maxPages - 1);
+
+    // Only animate if the target is different from the current page
+    if (clampedTarget !== currentPage) {
+      this.jumpToPage(clampedTarget);
+    }
+  }
+
+  /**
+   * Settle page to nearest integer position after user interaction stops.
+   */
+  settleToNearestPage() {
+    if (this.prefersReducedMotion) {
+      this.scrollPosition = Math.round(this.scrollPosition);
+      this.notifyObservers(this.getScrollState());
+      return;
+    }
+
+    const targetPage = Math.round(this.scrollPosition);
+    // Use a short, simple animation to settle.
     this.animateToPosition(targetPage, 300);
   }
 
@@ -204,15 +290,6 @@ class VirtualScrollEngine {
   }
 
   /**
-   * Notify all observers of scroll state changes
-   * @param {number} scrollPosition - Current scroll position
-   */
-  notifyObservers(scrollPosition) {
-    const state = this.getScrollState();
-    this.observers.forEach(callback => callback(state));
-  }
-
-  /**
    * Get current scroll state
    * @returns {Object} Current scroll state
    */
@@ -265,7 +342,13 @@ class VirtualScrollEngine {
   jumpToPage(targetPage) {
     // Always update pendingTargetPage, clamp to valid range
     this.pendingTargetPage = clamp(targetPage, 0, this.maxPages - 1);
-    this.animateToPosition(this.pendingTargetPage);
+
+    if (this.prefersReducedMotion) {
+      this.scrollPosition = this.pendingTargetPage;
+      this.notifyObservers(this.getScrollState());
+    } else {
+      this.animateToPosition(this.pendingTargetPage);
+    }
   }
 
   /**
@@ -295,6 +378,48 @@ class VirtualScrollEngine {
         this.animationFrameId = requestAnimationFrame(animate);
       } else {
         this.animationFrameId = null;
+      }
+    };
+
+    this.animationFrameId = requestAnimationFrame(animate);
+  }
+
+  /**
+   * Animate to a target position with a given duration.
+   * Now accepts velocity to pass to the final sound.
+   */
+  animateToPosition(target, duration, velocity = 0) {
+    if (this.isSnapping) return;
+    this.stopMomentum();
+    const startPos = this.scrollPosition;
+    this.isSnapping = true;
+    this.lastSnapTarget = target;
+    this.lastSnapTime = Date.now();
+
+    if (duration <= 0) {
+      this.scrollPosition = target;
+      this.notifyObservers(this.scrollPosition);
+      this.isSnapping = false;
+      audio.updateMotion({ landing: true, velocity });
+      return;
+    }
+
+    let startTime = null;
+
+    const animate = (time) => {
+      if (!startTime) startTime = time;
+      const elapsed = time - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easedProgress = 0.5 * (1 - Math.cos(Math.PI * progress));
+      this.scrollPosition = lerp(startPos, target, easedProgress);
+      this.notifyObservers(this.scrollPosition);
+
+      if (progress < 1) {
+        this.animationFrameId = requestAnimationFrame(animate);
+      } else {
+        this.animationFrameId = null;
+        this.isSnapping = false;
+        audio.updateMotion({ landing: true, velocity });
       }
     };
 
@@ -492,85 +617,31 @@ class VirtualScrollEngine {
   }
 
   /**
-   * Snap to specific page
-   * @param {number} targetPage - Target page to snap to
-   * @param {number} customDuration - Optional custom duration for the snap
+   * Snaps the page to the nearest whole number.
+   * Retained for compatibility but animateToPosition is preferred.
    */
-  snapToPage(targetPage, customDuration = null) {
-    if (!GLOBAL_CONFIG.ANIMATION.autoSnap) return;
-    this.isSnapping = true;
-    const target = clamp(targetPage, 0, this.maxPages - 1);
-
-    // Record snap timing for dead zone logic
-    this.lastSnapTime = performance.now();
-    this.lastSnapTarget = target;
-
-    if (this.animationFrameId) {
-      cancelAnimationFrame(this.animationFrameId);
-    }
-
-    const startPosition = this.scrollPosition;
-    const startTime = performance.now();
-    const duration = customDuration ?? GLOBAL_CONFIG.ANIMATION.snapDuration;
-
-    // If duration is zero or negative, jump instantly (no inertia)
-    if (duration <= 0) {
-      this.scrollPosition = target;
-      this.notifyObservers(this.scrollPosition);
-      this.isSnapping = false;
-      return;
-    }
-
-    const distance = Math.abs(target - startPosition);
-
-    const animate = currentTime => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      // Always quadratic ease-out (direct force release, no ease-in)
-      const easeProgress = 1 - Math.pow(1 - progress, 2);
-
-      this.scrollPosition = lerp(startPosition, target, easeProgress);
-      this.notifyObservers(this.scrollPosition);
-
-      if (progress < 1) {
-        this.animationFrameId = requestAnimationFrame(animate);
-      } else {
-        // Snap completed – play tactile click sound
-        if (typeof audio.playFlipClick === 'function') {
-          audio.playFlipClick();
-        }
-        this.animationFrameId = null;
-        this.isSnapping = false;
-      }
-    };
-
-    this.animationFrameId = requestAnimationFrame(animate);
+  snapToPage(targetPage, customDuration = null, velocity = 0) {
+    this.animateToPosition(targetPage, customDuration ?? GLOBAL_CONFIG.ANIMATION.snapDuration, velocity);
   }
 
   /**
-   * Handle wheel events
+   * Handle wheel events for momentum-based scrolling
    * @param {WheelEvent} event - Wheel event
    */
   handleWheel(event) {
     if (window?.isPortfolioLocked) {
-      // Block scroll when portfolio locked
       event.preventDefault();
       return;
     }
     event.preventDefault();
     
-    // Calculate wheel velocity with proper scaling
     const wheelDelta = event.deltaY / 100;
     
-    // For wheel events, we need to simulate velocity since they're discrete
-    // Use a time-based approach to estimate scroll "speed"
     const now = performance.now();
     const timeSinceLastWheel = now - (this.lastWheelTime || now);
     this.lastWheelTime = now;
     
-    // Detect rapid wheel sequences (flicks)
-    const isRapidSequence = timeSinceLastWheel < 150; // Increased window for flick detection
+    const isRapidSequence = timeSinceLastWheel < 150;
     
     if (isRapidSequence) {
       this.wheelAccumulator += Math.abs(wheelDelta);
@@ -578,11 +649,9 @@ class VirtualScrollEngine {
       this.wheelAccumulator = Math.abs(wheelDelta);
     }
 
-    // === Audio velocity update ===
     const velocityPxPerSec = (Math.abs(event.deltaY) / Math.max(timeSinceLastWheel, 1)) * 1000;
     audio.updateWheelVelocity(velocityPxPerSec);
 
-    // Schedule silence if no more wheel events
     clearTimeout(this.wheelSilenceTimeout);
     this.wheelSilenceTimeout = setTimeout(() => {
       audio.updateWheelVelocity(0);
@@ -591,7 +660,6 @@ class VirtualScrollEngine {
     
     // Map wheel delta directly to scroll without artificial boost
     const adjustedDelta = wheelDelta;
-    // PERFORMANCE OPTIMIZATION: Only log every 10th wheel event to reduce console spam
     if (!this.wheelLogCounter) this.wheelLogCounter = 0;
     this.wheelLogCounter++;
     if (this.wheelLogCounter % 10 === 0) {
@@ -599,6 +667,65 @@ class VirtualScrollEngine {
     }
     
     this.updateScrollPosition(adjustedDelta);
+  }
+
+  /**
+   * NEW (Direct Force Model): Handle wheel events directly.
+   * @param {WheelEvent} event - Wheel event
+   */
+  handleDirectWheel(event) {
+    if (this.inputPaused) return;
+    event.preventDefault();
+
+    // --- Audio Velocity Calculation ---
+    const currentTime = performance.now();
+    if (this.lastWheelTime) {
+      const deltaTime = currentTime - this.lastWheelTime;
+      // Avoid division by zero and extreme values from stale timestamps
+      if (deltaTime > 0 && deltaTime < 500) {
+        const velocityPxPerSec = (Math.abs(event.deltaY) / deltaTime) * 1000;
+        audio.updateWheelVelocity(velocityPxPerSec);
+      }
+    }
+    this.lastWheelTime = currentTime;
+    // --- End Audio Calculation ---
+
+    // Stop any settling animations
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+      this.isSnapping = false;
+    }
+
+    const delta = event.deltaY * this.scrollSensitivity;
+    let newScrollPosition = this.scrollPosition + delta;
+
+    // Clamp scroll position within bounds
+    if (!shouldUseInfiniteLoop(this.maxPages)) {
+      newScrollPosition = clamp(newScrollPosition, 0, this.maxPages - 1);
+    }
+    this.scrollPosition = newScrollPosition;
+
+    if (!this.isRenderScheduled) {
+      this.isRenderScheduled = true;
+      requestAnimationFrame(() => {
+        this.notifyObservers(this.getScrollState());
+        this.isRenderScheduled = false;
+      });
+    }
+  }
+
+  /**
+   * NEW (Direct Force Model): Detect when wheel events stop to trigger settling.
+   */
+  handleWheelEnd() {
+    // Clear any existing timeout
+    clearTimeout(this.wheelSilenceTimeout);
+    // Set a new timeout
+    this.wheelSilenceTimeout = setTimeout(() => {
+      this.settleToNearestPage();
+      audio.updateWheelVelocity(0); // Ensure audio loop stops
+    }, 150); // 150ms of silence indicates the user has stopped scrolling
   }
 
   /**
@@ -641,12 +768,11 @@ class VirtualScrollEngine {
    */
   handleTouchEnd(event) {
     this.lastY = null;
-    // No momentum: do nothing extra when finger lifts
     clearTimeout(this.wheelSilenceTimeout);
     this.wheelSilenceTimeout = setTimeout(() => {
       audio.updateWheelVelocity(0);
-      this.settleToNearestPage();
-    }, 30); // Reduced from 120ms to 30ms for near-instant response
+      this.startPhysicsSettle();
+    }, 30);
   }
 
   /**

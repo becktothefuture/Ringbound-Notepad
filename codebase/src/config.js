@@ -256,7 +256,7 @@ export const GLOBAL_CONFIG = {
       // WORKING ✓ - Whether momentum system is active
       // Used in: scrollEngine.js:48 via getAdaptiveMomentumConfig()
       // Enables physics-based momentum after user stops scrolling
-      enabled: true, // Enable momentum-driven page flipping
+      enabled: false, // Enable momentum-driven page flipping
 
       // Physics parameters for momentum calculations
       // WORKING ✓ - Velocity decay rate for desktop
@@ -516,11 +516,11 @@ export const GLOBAL_CONFIG = {
       // WORKING ✓ - Vertical offset from page center when unflipped
       // Used in: render.js as CSS --rings-back-offset-y
       // More negative than front rings to create depth separation
-      offsetYStart: -30, // % - vertical offset when stack is unflipped
+      offsetYStart: 10, // % - vertical offset when stack is unflipped (moved down to align with spine)
 
       // WORKING ✓ - Vertical offset from page center when fully flipped
       // Used in: render.js for back ring animation calculations
-      offsetYEnd: -30, // % - vertical offset when stack is fully flipped
+      offsetYEnd: 10, // % - vertical offset when stack is fully flipped (kept constant for now)
 
       // WORKING ✓ - Horizontal scale factor for back rings when unflipped
       // Used in: render.js in transform calculations
@@ -888,14 +888,20 @@ export const GLOBAL_CONFIG = {
     },
   },
 
+  // --- Developer experience & debugging tools ---
+  // Enables logging for key events and state changes, and activates debug panels.
   DEBUG: {
     panel: true, // debug panel enabled by default
     audio: false, // enable verbose audio logs
   },
 
-  // === EXPERIMENTAL FEATURE FLAGS (toggle via Debug Panel) ===
+  // --- Experimental feature flags ---
+  // Use these to toggle new features during development without breaking main functionality.
   EXPERIMENTS: {
-    physicsEnabled: false, // Disable physics solver until stable
+    // Enables the new direct force scroll model, bypassing momentum and easing.
+    directForce: true,
+    // When enabled, uses the PagePhysics module for settling animations.
+    physicsEnabled: false,
   },
 };
 

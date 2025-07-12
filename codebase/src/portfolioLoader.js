@@ -98,7 +98,6 @@ function createPageElement(data, chapterId, pageIndexInChapter, globalIndex, siz
 
   const frontContent = document.createElement('div');
   frontContent.className = 'page-content page-content--front';
-  backContent.className = 'page-content page-content--back';
 
   const media = createMediaElement(data.type, `assets/portfolio-pages/pages/${data.asset}`, data.commentary, size);
   frontContent.appendChild(media);
@@ -109,7 +108,6 @@ function createPageElement(data, chapterId, pageIndexInChapter, globalIndex, siz
   frontContent.appendChild(commentary);
 
   front.appendChild(frontContent);
-  front.appendChild(backContent);
   page.appendChild(front);
   page.appendChild(back);
   return page;

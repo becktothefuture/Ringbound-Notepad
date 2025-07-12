@@ -14,8 +14,9 @@ const state = {
 /**
  * Initializes the debug panel, loads settings, and sets up listeners.
  */
-function initialize() {
+export function initialize() {
   loadSettings();
+  injectStyles();
   createPanel();
   setupEventListeners();
   console.log('🔧 Debug Panel v2 Initialized');
@@ -250,37 +251,130 @@ function createSlider(key, label, min, max, step) {
   `;
 }
 
-// --- Styles ---
 function injectStyles() {
-    const css = `
+  const css = `
     #debug-panel-v2 {
-        /* Main panel styles */
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10000;
+      width: 320px;
+      background-color: rgba(40, 40, 45, 0.9);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: #f0f0f0;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: none; /* Initially hidden */
+      flex-direction: column;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    #debug-panel-v2.visible {
+      display: flex;
+    }
+    .debug-panel__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: move;
+      user-select: none;
+    }
+    .debug-panel__header h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .debug-panel__close {
+      background: none;
+      border: none;
+      color: #aaa;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0 5px;
+    }
+    .debug-panel__tabs {
+      display: flex;
+      padding: 8px;
+      gap: 4px;
+      background-color: rgba(0,0,0,0.2);
+    }
+    .debug-panel__tab-button {
+      flex: 1;
+      padding: 6px 4px;
+      background-color: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background-color 0.2s, color 0.2s;
+    }
+    .debug-panel__tab-button .icon {
+      margin-right: 4px;
     }
     .debug-panel__tab-button.active {
-        /* Active tab styles */
+      background-color: #4a90e2;
+      color: white;
+      border-color: #4a90e2;
+    }
+    .debug-panel__tab-button:hover:not(.active) {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    .debug-panel__content {
+      padding: 12px;
+    }
+    .debug-panel__tab-pane {
+      display: none;
+    }
+    .debug-panel__tab-pane.active {
+      display: block;
+    }
+    .debug-panel__group {
+      margin-bottom: 16px;
+    }
+    .debug-panel__group h4 {
+      margin: 0 0 8px 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: #4a90e2;
+    }
+    .debug-panel__group p {
+      font-size: 11px;
+      color: #aaa;
+      margin: -4px 0 12px 0;
+    }
+    .debug-control {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .debug-control label {
+      font-size: 12px;
+    }
+    .debug-control input[type="range"] {
+      width: 120px;
+    }
+    .debug-control__value {
+      font-size: 12px;
+      font-family: "SF Mono", "Menlo", monospace;
+      width: 40px;
+      text-align: right;
     }
     .master-group {
-        background: rgba(20, 100, 255, 0.1);
-        border-left: 3px solid rgba(20, 100, 255, 0.8);
+      background-color: rgba(74, 144, 226, 0.1);
+      border: 1px solid rgba(74, 144, 226, 0.3);
+      padding: 10px;
+      border-radius: 6px;
     }
-    .master-group::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: radial-gradient(circle at 50% 50%, rgba(20, 100, 255, 0.2), transparent 70%);
-        animation: pulse 2s infinite ease-in-out;
-        pointer-events: none;
-    }
-    @keyframes pulse {
-        0% { transform: scale(0.9); opacity: 0.5; }
-        50% { transform: scale(1.1); opacity: 1; }
-        100% { transform: scale(0.9); opacity: 0.5; }
-    }
-    /* Add other styles for sliders, labels, etc. */
   `;
-  const styleEl = document.createElement('style');
-  styleEl.textContent = css;
-  document.head.appendChild(styleEl);
+  const style = document.createElement('style');
+  style.id = 'debug-panel-styles';
+  style.textContent = css;
+  document.head.appendChild(style);
 }
 
 // --- Public API ---

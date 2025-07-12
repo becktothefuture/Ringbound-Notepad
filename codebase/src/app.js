@@ -422,7 +422,7 @@ async function bootstrap() {
 
     // Inject debug panel if enabled
     if (GLOBAL_CONFIG.DEBUG?.panel) {
-      import('./debugPanel.js').then(m => m.init());
+      import('./debugPanel.js').then(m => m.initialize());
     }
   } catch (error) {
     handleApplicationError(error, 'Application Bootstrap');
