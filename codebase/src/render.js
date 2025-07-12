@@ -246,6 +246,12 @@ function updatePageShadow(page, pageIndex, scrollPos) {
   const rotationProgress = clamp(scrollPos - pageAboveIndex, 0, 1);
   const rotationDegrees = rotationProgress * 180; // 0° to 180°
 
+  // Hide shadow entirely when the page above is lying flat (0°)
+  if (rotationDegrees === 0) {
+    shadowEl.style.opacity = '0';
+    return;
+  }
+
   // PERFORMANCE OPTIMIZATION: Cache shadow state for pages far from flip zone
   const rel = scrollPos - pageIndex;
   if (Math.abs(rel) > 1.1) {
