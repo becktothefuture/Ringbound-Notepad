@@ -1550,27 +1550,18 @@ body::before {
 }
 
 .ambient-light-overlay__video {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: fill !important;
-  object-position: center !important;
-  display: block !important;
-  /* Ensure video fills container completely - stretch to fill */
-  min-width: 100% !important;
-  min-height: 100% !important;
-  max-width: none !important;
-  max-height: none !important;
-  /* Additional safeguard for full coverage */
-  transform: scale(1.02);
-  /* Override any global video styles */
   position: absolute;
   top: 0;
   left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  object-position: center;
+  display: block;
   border: none;
   outline: none;
   margin: 0;
   padding: 0;
-  will-change: auto;
   backface-visibility: hidden;
 }
 
@@ -2464,4 +2455,19 @@ body.preloader-done nav.top-nav {
   transform-origin: 50% -2%;
   animation: lockCoverRumble 120ms linear 2;
   will-change: transform;
+}
+
+/* ================= HEADER MINIMIZE ================= */
+.heading-wrapper {
+  transition: transform 300ms ease, opacity 300ms ease;
+  transform-origin: top center;
+}
+
+.heading-wrapper.header--minimized {
+  transform: scale(0.8) translateY(-20px);
+}
+
+.header--minimized .heading-sub,
+.header--minimized .divider {
+  opacity: 0;
 }

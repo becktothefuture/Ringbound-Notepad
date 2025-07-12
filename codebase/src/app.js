@@ -49,6 +49,7 @@ import { overlayHints } from './overlay.js';
 import { initPreloader, cleanupPreloader } from './preloader.js';
 import { headBobble } from './headBobble.js';
 import { initializeCookieVideo } from './cookieVideo.js';
+import { initializeHeaderController } from './headerController.js';
 
 // === APPLICATION STATE ===
 /**
@@ -398,6 +399,9 @@ async function bootstrap() {
 
     ApplicationState.scrollEngine = initializeScrollEngine(container, ApplicationState.pageCount);
     initializeChapterSystem(pages, ApplicationState.scrollEngine);
+
+    // Initialize header controller for minimize-on-scroll/zoom
+    initializeHeaderController(ApplicationState.scrollEngine, zoomManager);
 
     // Phase 4: Create render pipeline
     ApplicationState.renderPipeline = createRenderingPipeline(pages, ApplicationState.scrollEngine);
