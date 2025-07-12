@@ -110,6 +110,14 @@ function createPageElement(data, chapterId, pageIndexInChapter, globalIndex, siz
   front.appendChild(frontContent);
   page.appendChild(front);
   page.appendChild(back);
+
+  // === Dynamic shadow overlay for skewing effect ===
+  const shadowWrapper = document.createElement('div');
+  shadowWrapper.className = 'page-shadow-wrapper';
+  const shadowEl = document.createElement('div');
+  shadowEl.className = 'page-shadow';
+  shadowWrapper.appendChild(shadowEl);
+  page.appendChild(shadowWrapper);
   return page;
 }
 
@@ -161,6 +169,14 @@ function createCoverPage(kind, commentary, idx) {
 
   cover.appendChild(front);
   cover.appendChild(back);
+
+  // Add shadow overlay (kept invisible for covers)
+  const shadowWrapper = document.createElement('div');
+  shadowWrapper.className = 'page-shadow-wrapper';
+  const shadowEl = document.createElement('div');
+  shadowEl.className = 'page-shadow';
+  shadowWrapper.appendChild(shadowEl);
+  cover.appendChild(shadowWrapper);
   return cover;
 }
 
