@@ -657,8 +657,12 @@ main:not(.page-wrapper) {
 .page-holes--back {
   /* Inherit all styles from .page-holes */
   /* Position on the inner spine side (same as front) for consistency */
+  /* Flip horizontally and anchor to the right so holes appear near spine
+     when the page back is visible. */
+  left: auto;
+  right: 0;
   z-index: 15; /* Higher z-index to appear above page-back background */
-  transform: translateZ(1px); /* Ensure holes appear above the page surface */
+  transform: scaleX(-1) translateZ(1px); /* Mirror & bring forward */
 }
 
 /* =====================================================
